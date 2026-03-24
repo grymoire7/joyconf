@@ -14,10 +14,25 @@ defmodule JoyconfWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :admin do
+    plug JoyconfWeb.AdminAuth
+  end
+
   scope "/", JoyconfWeb do
     pipe_through :browser
 
     get "/", PageController, :home
+  end
+
+  scope "/admin", JoyconfWeb do
+    pipe_through [:browser, :admin]
+    live "/", AdminLive, :index
+    live "/talks/new", AdminLive, :new
+  end
+
+  scope "/t", JoyconfWeb do
+    pipe_through :browser
+    live "/:slug", TalkLive
   end
 
   # Other scopes may use custom stacks.
