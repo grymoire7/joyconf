@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "JoyConf",
+  "version": "1.0.0",
+  "description": "Live emoji reactions overlay for conference talks",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "JoyConf"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://docs.google.com/presentation/*"],
+      "js": ["lib/phoenix.js", "content/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
