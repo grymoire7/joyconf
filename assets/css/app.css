@@ -103,3 +103,17 @@
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 /* This file is for your main application CSS */
+
+.floating-emoji {
+  position: absolute;
+  bottom: 0;
+  font-size: 2rem;
+  animation: floatUp 1.5s ease-out forwards;
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes floatUp {
+  0%   { transform: translateY(0);    opacity: 1; }
+  100% { transform: translateY(-60px); opacity: 0; }
+}
