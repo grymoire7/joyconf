@@ -14,6 +14,7 @@ defmodule Joyconf.Application do
       {Phoenix.PubSub, name: Joyconf.PubSub},
       # Start a worker by calling: Joyconf.Worker.start_link(arg)
       # {Joyconf.Worker, arg},
+      Joyconf.RateLimiter,
       # Start to serve requests, typically the last entry
       JoyconfWeb.Endpoint
     ]
