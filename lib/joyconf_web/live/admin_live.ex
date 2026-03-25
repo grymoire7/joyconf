@@ -10,7 +10,6 @@ defmodule JoyconfWeb.AdminLive do
        talks: Talks.list_talks(),
        form: to_form(Talk.changeset(%Talk{}, %{})),
        created_talk: nil,
-       qr_data_uri: nil,
        selected_talk: nil,
        selected_qr_data_uri: nil
      )}
@@ -30,6 +29,18 @@ defmodule JoyconfWeb.AdminLive do
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
+  def handle_event("delete_talk", %{"id" => id}, socket) do
+    talk = Talks.get_talk!(String.to_integer(id))
+    {:ok, _} = Talks.delete_talk(talk)
+
+    {:noreply,
+     assign(socket,
+       talks: Talks.list_talks(),
+       selected_talk: nil,
+       selected_qr_data_uri: nil
+     )}
+  end
+
   def handle_event("show_qr", %{"id" => id}, socket) do
     talk = Talks.get_talk!(String.to_integer(id))
     url = JoyconfWeb.Endpoint.url() <> "/t/#{talk.slug}"
@@ -47,9 +58,10 @@ defmodule JoyconfWeb.AdminLive do
         {:noreply,
          assign(socket,
            created_talk: talk,
-           qr_data_uri: qr,
            talks: Talks.list_talks(),
-           form: to_form(Talk.changeset(%Talk{}, %{}))
+           form: to_form(Talk.changeset(%Talk{}, %{})),
+           selected_talk: talk,
+           selected_qr_data_uri: qr
          )}
 
       {:error, changeset} ->

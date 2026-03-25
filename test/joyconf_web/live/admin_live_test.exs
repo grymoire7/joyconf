@@ -32,15 +32,16 @@ defmodule JoyconfWeb.AdminLiveTest do
     assert has_element?(view, "input[value='elixir-for-rubyists']")
   end
 
-  test "creates talk and shows QR code", %{conn: conn} do
+  test "creates talk, shows banner, and selects talk in list with QR code", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/admin/talks/new")
 
     view
     |> form("#talk-form", talk: %{title: "Elixir for Rubyists", slug: "elixir-for-rubyists"})
     |> render_submit()
 
-    assert has_element?(view, "#qr-code")
     assert has_element?(view, "#created-talk")
+    refute has_element?(view, "#qr-code")
+    assert has_element?(view, "#selected-talk-qr")
   end
 
   test "shows validation errors for blank fields", %{conn: conn} do
@@ -62,5 +63,24 @@ defmodule JoyconfWeb.AdminLiveTest do
     view |> element("#talk-list button", "Prime Talk") |> render_click()
 
     assert has_element?(view, "#selected-talk-qr")
+  end
+
+  test "trashcan button appears next to selected talk", %{conn: conn} do
+    {:ok, talk} = Joyconf.Talks.create_talk(%{title: "Prime Talk", slug: "prime"})
+    {:ok, view, _html} = live(conn, "/admin")
+
+    view |> element("#talk-list button", "Prime Talk") |> render_click()
+
+    assert has_element?(view, "#delete-talk-#{talk.id}")
+  end
+
+  test "clicking trashcan deletes the talk and removes it from the list", %{conn: conn} do
+    {:ok, talk} = Joyconf.Talks.create_talk(%{title: "Prime Talk", slug: "prime"})
+    {:ok, view, _html} = live(conn, "/admin")
+
+    view |> element("#talk-list button", "Prime Talk") |> render_click()
+    view |> element("#delete-talk-#{talk.id}") |> render_click()
+
+    refute has_element?(view, "#talk-list button", "Prime Talk")
   end
 end
