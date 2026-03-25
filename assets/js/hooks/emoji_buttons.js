@@ -14,7 +14,7 @@ const EmojiButtons = {
         buttons.forEach(b => b.setAttribute("disabled", "true"));
         this.el.classList.add("cooling-down");
 
-        let remaining = 5;
+        let remaining = 3;
         if (label) label.textContent = `Cooling down… ${remaining}s`;
 
         const tick = setInterval(() => {

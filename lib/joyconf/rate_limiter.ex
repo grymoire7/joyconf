@@ -1,7 +1,7 @@
 defmodule Joyconf.RateLimiter do
   use GenServer
 
-  @cooldown_ms 5_000
+  @cooldown_ms 3_000
   @table :rate_limiter
 
   def start_link(_opts), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)

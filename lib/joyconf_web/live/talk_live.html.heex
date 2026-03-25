@@ -1,15 +1,17 @@
 <Layouts.app flash={@flash}>
   <div class="talk-page p-6 max-w-md mx-auto">
     <h1 class="text-2xl font-bold mb-2">{@talk.title}</h1>
-    <p class="text-gray-600 mb-6">React live — your emoji appears on the speaker's screen</p>
+    <p class="text-gray-300 mb-6">React live — your emoji appears on the speaker's screen</p>
 
     <div id="emoji-stream" phx-hook="EmojiStream" phx-update="ignore" class="relative h-32 w-full overflow-hidden mb-6"></div>
 
-    <div id="emoji-buttons" phx-hook="EmojiButtons" class="flex gap-3 flex-wrap items-center">
-      <%= for emoji <- @emojis do %>
-        <button phx-click="react" phx-value-emoji={emoji} class="text-3xl hover:scale-125 transition-transform disabled:opacity-35 disabled:cursor-not-allowed">{emoji}</button>
-      <% end %>
-      <span class="cooldown-label text-sm text-gray-500">Tap to react</span>
+    <div id="emoji-buttons" phx-hook="EmojiButtons" class="flex flex-col gap-2">
+      <div class="flex gap-3 flex-wrap">
+        <%= for emoji <- @emojis do %>
+          <button phx-click="react" phx-value-emoji={emoji} class="text-3xl hover:scale-125 transition-transform disabled:opacity-35 disabled:cursor-not-allowed">{emoji}</button>
+        <% end %>
+      </div>
+      <span class="cooldown-label text-sm text-gray-300">Tap to react</span>
     </div>
   </div>
 </Layouts.app>
