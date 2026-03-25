@@ -1,8 +1,8 @@
 // Phoenix UMD build loaded before this file exposes window.Phoenix
 const { Socket } = window.Phoenix;
 
-// const HOST = "wss://joyconf.fly.dev";
-const HOST = "ws://localhost:4000";
+const HOST = "wss://joyconf.fly.dev";
+// const HOST = "ws://localhost:4000";
 
 let socket = null;
 let channel = null;
@@ -36,6 +36,20 @@ function getOrCreateOverlay() {
   }
   return overlay;
 }
+
+// When the browser enters/exits fullscreen, the fullscreen element forms its own
+// stacking context — elements appended to <body> won't appear on top of it.
+// Re-parent the overlay into the fullscreen element so it remains visible.
+document.addEventListener("fullscreenchange", () => {
+  const overlay = document.getElementById("joyconf-overlay");
+  if (!overlay) return;
+
+  if (document.fullscreenElement) {
+    document.fullscreenElement.appendChild(overlay);
+  } else {
+    document.body.appendChild(overlay);
+  }
+});
 
 function spawnEmoji(emoji) {
   const overlay = getOrCreateOverlay();
