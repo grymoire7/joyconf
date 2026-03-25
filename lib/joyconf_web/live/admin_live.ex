@@ -10,7 +10,9 @@ defmodule JoyconfWeb.AdminLive do
        talks: Talks.list_talks(),
        form: to_form(Talk.changeset(%Talk{}, %{})),
        created_talk: nil,
-       qr_data_uri: nil
+       qr_data_uri: nil,
+       selected_talk: nil,
+       selected_qr_data_uri: nil
      )}
   end
 
@@ -26,6 +28,14 @@ defmodule JoyconfWeb.AdminLive do
 
     changeset = Talk.changeset(%Talk{}, Map.put(attrs, "slug", slug))
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
+  end
+
+  def handle_event("show_qr", %{"id" => id}, socket) do
+    talk = Talks.get_talk!(String.to_integer(id))
+    url = JoyconfWeb.Endpoint.url() <> "/t/#{talk.slug}"
+    qr = Joyconf.QRCode.to_data_uri(url)
+
+    {:noreply, assign(socket, selected_talk: talk, selected_qr_data_uri: qr)}
   end
 
   def handle_event("save", %{"talk" => attrs}, socket) do

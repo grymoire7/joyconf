@@ -5,7 +5,10 @@ defmodule JoyconfWeb.AdminLiveTest do
 
   setup %{conn: conn} do
     Application.put_env(:joyconf, :admin_password, "testpassword")
-    authed = put_req_header(conn, "authorization", "Basic " <> Base.encode64("admin:testpassword"))
+
+    authed =
+      put_req_header(conn, "authorization", "Basic " <> Base.encode64("admin:testpassword"))
+
     {:ok, conn: authed}
   end
 
@@ -21,7 +24,11 @@ defmodule JoyconfWeb.AdminLiveTest do
 
   test "auto-generates slug from title on validate", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/admin/talks/new")
-    view |> element("#talk-form") |> render_change(%{"talk" => %{"title" => "Elixir for Rubyists", "slug" => ""}})
+
+    view
+    |> element("#talk-form")
+    |> render_change(%{"talk" => %{"title" => "Elixir for Rubyists", "slug" => ""}})
+
     assert has_element?(view, "input[value='elixir-for-rubyists']")
   end
 
@@ -46,5 +53,14 @@ defmodule JoyconfWeb.AdminLiveTest do
     {:ok, _} = Joyconf.Talks.create_talk(%{title: "My Talk", slug: "my-talk"})
     {:ok, _view, html} = live(conn, "/admin")
     assert html =~ "My Talk"
+  end
+
+  test "clicking a talk in the list shows its QR code", %{conn: conn} do
+    {:ok, _} = Joyconf.Talks.create_talk(%{title: "Prime Talk", slug: "prime"})
+    {:ok, view, _html} = live(conn, "/admin")
+
+    view |> element("#talk-list button", "Prime Talk") |> render_click()
+
+    assert has_element?(view, "#selected-talk-qr")
   end
 end

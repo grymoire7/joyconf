@@ -4,6 +4,8 @@ defmodule Joyconf.Talks do
 
   def list_talks, do: Repo.all(Talk)
 
+  def get_talk!(id), do: Repo.get!(Talk, id)
+
   def get_talk_by_slug(slug), do: Repo.get_by(Talk, slug: slug)
 
   def create_talk(attrs) do
