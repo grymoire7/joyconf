@@ -8,6 +8,8 @@ defmodule Joyconf.Talks do
 
   def get_talk_by_slug(slug), do: Repo.get_by(Talk, slug: slug)
 
+  def delete_talk(%Talk{} = talk), do: Repo.delete(talk)
+
   def create_talk(attrs) do
     %Talk{}
     |> Talk.changeset(attrs)
