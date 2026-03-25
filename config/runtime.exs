@@ -53,8 +53,10 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  config :joyconf, :admin_password,
-    System.get_env("ADMIN_PASSWORD") || raise "ADMIN_PASSWORD environment variable is missing"
+  config :joyconf,
+         :admin_password,
+         System.get_env("ADMIN_PASSWORD") ||
+           raise("ADMIN_PASSWORD environment variable is missing")
 
   host = System.get_env("PHX_HOST") || "example.com"
 

@@ -4,7 +4,9 @@ defmodule JoyconfWeb.TalkLiveTest do
   import Phoenix.LiveViewTest
 
   setup do
-    {:ok, talk} = Joyconf.Talks.create_talk(%{title: "Elixir for Rubyists", slug: "elixir-for-rubyists"})
+    {:ok, talk} =
+      Joyconf.Talks.create_talk(%{title: "Elixir for Rubyists", slug: "elixir-for-rubyists"})
+
     {:ok, talk: talk}
   end
 

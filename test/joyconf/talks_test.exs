@@ -38,7 +38,9 @@ defmodule Joyconf.TalksTest do
 
   describe "create_talk/1" do
     test "creates a talk with valid attrs" do
-      assert {:ok, talk} = Talks.create_talk(%{title: "Elixir for Rubyists", slug: "elixir-for-rubyists"})
+      assert {:ok, talk} =
+               Talks.create_talk(%{title: "Elixir for Rubyists", slug: "elixir-for-rubyists"})
+
       assert talk.title == "Elixir for Rubyists"
       assert talk.slug == "elixir-for-rubyists"
     end
