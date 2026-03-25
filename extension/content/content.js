@@ -60,7 +60,7 @@ function spawnEmoji(emoji) {
     "bottom: 0",
     `left: ${Math.floor(Math.random() * 70)}%`,
     "font-size: 28px",
-    "animation: joyconfFloat 1.5s ease-out forwards",
+    "animation: joyconfFloat 2.5s ease-out forwards",
     "pointer-events: none",
   ].join(";");
   overlay.appendChild(el);
