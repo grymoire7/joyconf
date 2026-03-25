@@ -11,6 +11,8 @@ presentation via a Chrome extension.
 3. Reactions broadcast in real time via Phoenix PubSub
 4. Chrome extension connected to the same talk slug shows floating emoji overlay on Google Slides
 
+For a full explainer on the technical implementation see [this explainer](docs/explainer.md).
+
 ---
 
 ## Running locally
