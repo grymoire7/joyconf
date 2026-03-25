@@ -15,6 +15,14 @@ For a full explainer on the technical implementation see [this explainer](docs/e
 
 ---
 
+![Architecture](docs/architecture.png)
+
+---
+
+![Chrome extension](docs/chrome_extension.png)
+
+---
+
 ## Running locally
 
 ### Prerequisites
