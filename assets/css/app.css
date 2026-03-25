@@ -108,7 +108,7 @@
   position: absolute;
   bottom: 0;
   font-size: 2rem;
-  animation: floatUp 1.5s ease-out forwards;
+  animation: floatUp 2.5s ease-out forwards;
   pointer-events: none;
   user-select: none;
 }
