@@ -3,7 +3,7 @@ defmodule JoyconfWeb.TalkLive do
 
   alias Joyconf.{Talks, RateLimiter}
 
-  @emojis ["❤️", "😂", "🔥", "👏", "🤯"]
+  @emojis ["❤️", "😂", "👏", "🤯", "🙋🏻", "🎉", "💩", "😮", "🎯"]
 
   def mount(%{"slug" => slug}, _session, socket) do
     case Talks.get_talk_by_slug(slug) do
