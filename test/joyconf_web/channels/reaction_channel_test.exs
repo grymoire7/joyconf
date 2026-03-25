@@ -16,9 +16,9 @@ defmodule JoyconfWeb.ReactionChannelTest do
              subscribe_and_join(socket, "reactions:nonexistent", %{})
   end
 
-  test "pushes new_reaction to client when PubSub broadcasts", %{socket: socket, talk: talk} do
+  test "pushes new_reaction to client when Endpoint broadcasts", %{socket: socket, talk: talk} do
     {:ok, _, _socket} = subscribe_and_join(socket, "reactions:#{talk.slug}", %{})
-    Phoenix.PubSub.broadcast(Joyconf.PubSub, "reactions:#{talk.slug}", {:reaction, "❤️"})
+    JoyconfWeb.Endpoint.broadcast!("reactions:#{talk.slug}", "new_reaction", %{emoji: "❤️"})
     assert_push "new_reaction", %{emoji: "❤️"}
   end
 end

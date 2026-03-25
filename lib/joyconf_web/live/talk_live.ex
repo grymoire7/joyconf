@@ -21,13 +21,13 @@ defmodule JoyconfWeb.TalkLive do
 
   def handle_event("react", %{"emoji" => emoji}, socket) do
     if RateLimiter.allow?(socket.assigns.session_id) do
-      Phoenix.PubSub.broadcast(Joyconf.PubSub, "reactions:#{socket.assigns.talk.slug}", {:reaction, emoji})
+      JoyconfWeb.Endpoint.broadcast!("reactions:#{socket.assigns.talk.slug}", "new_reaction", %{emoji: emoji})
     end
 
     {:noreply, socket}
   end
 
-  def handle_info({:reaction, emoji}, socket) do
+  def handle_info(%Phoenix.Socket.Broadcast{event: "new_reaction", payload: %{emoji: emoji}}, socket) do
     {:noreply, push_event(socket, "new_reaction", %{emoji: emoji})}
   end
 end

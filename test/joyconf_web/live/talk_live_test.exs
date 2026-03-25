@@ -22,13 +22,13 @@ defmodule JoyconfWeb.TalkLiveTest do
     assert {:error, {:redirect, _}} = live(conn, "/t/nonexistent")
   end
 
-  test "react event broadcasts via PubSub when rate limit allows", %{conn: conn, talk: talk} do
+  test "react event broadcasts via Endpoint when rate limit allows", %{conn: conn, talk: talk} do
     {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
     Phoenix.PubSub.subscribe(Joyconf.PubSub, "reactions:#{talk.slug}")
 
     render_click(view, "react", %{"emoji" => "❤️"})
 
-    assert_receive {:reaction, "❤️"}, 500
+    assert_receive %Phoenix.Socket.Broadcast{event: "new_reaction", payload: %{emoji: "❤️"}}, 500
   end
 
   test "react event is silently dropped when rate limited", %{conn: conn, talk: talk} do
@@ -36,15 +36,15 @@ defmodule JoyconfWeb.TalkLiveTest do
     Phoenix.PubSub.subscribe(Joyconf.PubSub, "reactions:#{talk.slug}")
 
     render_click(view, "react", %{"emoji" => "❤️"})
-    assert_receive {:reaction, "❤️"}, 500
+    assert_receive %Phoenix.Socket.Broadcast{event: "new_reaction", payload: %{emoji: "❤️"}}, 500
 
     render_click(view, "react", %{"emoji" => "❤️"})
-    refute_receive {:reaction, _}, 200
+    refute_receive %Phoenix.Socket.Broadcast{event: "new_reaction"}, 200
   end
 
-  test "receives PubSub broadcast and page still renders correctly", %{conn: conn, talk: talk} do
+  test "receives Endpoint broadcast and page still renders correctly", %{conn: conn, talk: talk} do
     {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
-    Phoenix.PubSub.broadcast(Joyconf.PubSub, "reactions:#{talk.slug}", {:reaction, "🔥"})
+    JoyconfWeb.Endpoint.broadcast!("reactions:#{talk.slug}", "new_reaction", %{emoji: "🔥"})
     assert render(view) =~ talk.title
   end
 end
