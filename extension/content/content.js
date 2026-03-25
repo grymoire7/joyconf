@@ -1,7 +1,8 @@
 // Phoenix UMD build loaded before this file exposes window.Phoenix
 const { Socket } = window.Phoenix;
 
-const HOST = "wss://joyconf.fly.dev";
+// const HOST = "wss://joyconf.fly.dev";
+const HOST = "ws://localhost:4000";
 
 let socket = null;
 let channel = null;
@@ -59,14 +60,19 @@ function connect(slug) {
     channel = null;
   }
 
-  socket = new Socket(`${HOST}/socket`, {});
+  socket = new Socket(`${HOST}/socket`, {
+    logger: (kind, msg, data) => console.debug(`[JoyConf] ${kind}: ${msg}`, data)
+  });
+  socket.onError(() => console.error("[JoyConf] Socket error — check HOST and that the server is running"));
   socket.connect();
 
   channel = socket.channel(`reactions:${slug}`, {});
   channel.on("new_reaction", ({ emoji }) => spawnEmoji(emoji));
   channel
     .join()
-    .receive("error", () => {
+    .receive("ok", () => console.log(`[JoyConf] Joined reactions:${slug}`))
+    .receive("error", ({ reason }) => {
+      console.error(`[JoyConf] Channel join failed: ${reason}`);
       socket.disconnect();
       socket = null;
     });
