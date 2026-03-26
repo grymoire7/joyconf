@@ -71,8 +71,8 @@ There's one database table: `talks`.
 
 ```elixir
 schema "talks" do
-  field :title, :string   # e.g. "Prime talk"
-  field :slug,  :string   # e.g. "prime-talk"  ← used in URL and PubSub topic
+  field :title, :string   # e.g. "My talk"
+  field :slug,  :string   # e.g. "my-talk"  ← used in URL and PubSub topic
   timestamps(type: :utc_datetime)
 end
 ```
@@ -121,7 +121,7 @@ sequenceDiagram
         LV-->>Phone: (silently ignored)
     else allowed
         RL-->>LV: true
-        LV->>PS: Endpoint.broadcast!("reactions:prime-talk",\n"new_reaction", %{emoji: "🔥"})
+        LV->>PS: Endpoint.broadcast!("reactions:my-talk",\n"new_reaction", %{emoji: "🔥"})
         PS-->>LV: handle_info({:new_reaction, "🔥"})
         PS-->>CH: push("new_reaction", %{emoji: "🔥"})
         LV->>Phone: push_event("new_reaction", %{emoji: "🔥"})
@@ -157,7 +157,7 @@ passed, the event is silently dropped.
 **3. Broadcasting**
 
 `Endpoint.broadcast!/3` sends the message through `Phoenix.PubSub` to *all
-subscribers* of the topic `"reactions:prime-talk"`. Two things are subscribed:
+subscribers* of the topic `"reactions:my-talk"`. Two things are subscribed:
 
 - **The LiveView process itself** (subscribed during `mount/3`)
 - **Any ReactionChannel processes** (subscribed when the extension joins)
@@ -217,7 +217,7 @@ end
 ```
 
 The `"reactions:*"` pattern means the extension can join any topic matching
-that prefix (e.g. `"reactions:prime-talk"`).
+that prefix (e.g. `"reactions:my-talk"`).
 
 `check_origin: false` is set on this socket (in `endpoint.ex`) so that the
 Chrome extension, which runs from a `chrome-extension://` origin, is allowed
@@ -238,7 +238,7 @@ to the topic. This is what makes the architecture clean. The `handle_event` in
 
 ```mermaid
 graph TD
-    HE["TalkLive.handle_event\n(react)"] --> BC["Endpoint.broadcast!\nreactions:prime-talk\nnew_reaction"]
+    HE["TalkLive.handle_event\n(react)"] --> BC["Endpoint.broadcast!\nreactions:my-talk\nnew_reaction"]
     BC --> PS["Phoenix.PubSub"]
     PS --> LV["TalkLive process\n(handle_info)"]
     PS --> RC["ReactionChannel process\n(push to extension)"]
@@ -332,7 +332,7 @@ document.addEventListener("fullscreenchange", () => {
 
 ## LiveView mount and subscription
 
-When an attendee navigates to `/t/prime-talk`, Phoenix renders `TalkLive`. The
+When an attendee navigates to `/t/my-talk`, Phoenix renders `TalkLive`. The
 `mount/3` callback runs twice: once server-side for the initial HTML render,
 and once after the WebSocket connects:
 
@@ -373,7 +373,7 @@ From there, an organiser can:
    encoded as a base64 data URI, ready to embed in an `<img>` tag or download
 
 The QR code encodes the full attendee URL
-(`https://joyconf.fly.dev/t/prime-talk`), so speakers can display it on their
+(`https://joyconf.fly.dev/t/my-talk`), so speakers can display it on their
 first slide.
 
 ---
