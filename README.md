@@ -12,6 +12,7 @@ presentation via a Chrome extension.
 4. Chrome extension connected to the same talk slug shows floating emoji overlay on Google Slides
 
 For a full explainer on the technical implementation see [this explainer](docs/explainer.md).
+For the story of writing the project (the whys and the bugs), see [this blog post](https://tracyatteberry.com/posts/joyconf/).
 
 ---
 
