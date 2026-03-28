@@ -69,7 +69,7 @@ npm test        # run all Jest tests
 4. A QR code appears — note the slug (e.g. `my-talk`)
 5. Open `http://localhost:4000/t/my-talk` in another tab
 6. Tap an emoji — it should float up on the attendee page
-7. (Optional) Load the Chrome extension pointed at `my-talk` and open a Google Slides presentation to see the overlay
+7. (Optional) Load the Chrome extension pointed at `my-talk` and open a Google Slides presentation to see the overlay. Open the extension popup — it shows the current slide number ("Slide 3") updating in real time, confirming the adapter is reading the DOM correctly
 8. (Optional) In the extension popup, click **Start Session** — reactions are now persisted with slide numbers
 9. After tapping some emojis, go to `http://localhost:4000/admin` → select the talk → click **Analytics** next to the session to see the per-slide breakdown
 

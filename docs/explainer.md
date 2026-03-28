@@ -511,6 +511,8 @@ function startSlideObserver() {
 
 Slide `0` is a sentinel for "unknown" and is never sent — the server silently ignores it too.
 
+The popup also displays the current slide number in real time ("Slide 3" or "Slide —" for unknown). This serves as an immediate sanity check that the adapter is reading the DOM correctly — if the number doesn't update when you advance slides, the DOM structure has changed and the adapter selector needs updating.
+
 ### Server-side handling
 
 `ReactionChannel` handles `slide_changed` and broadcasts to a separate `"slides:#{slug}"` PubSub topic:

@@ -118,6 +118,9 @@ function startSlideObserver() {
       if (channel) {
         channel.push("slide_changed", { slide: currentSlide });
       }
+      chrome.runtime.sendMessage({ type: "SLIDE_CHANGED", slide: currentSlide }, () => {
+        void chrome.runtime.lastError; // suppress "no listener" error when popup is closed
+      });
     }
   });
 
@@ -142,7 +145,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     const connected = connect(msg.slug);
     sendResponse({ connected });
   } else if (msg.type === "GET_STATUS") {
-    sendResponse({ connected: isConnected() });
+    sendResponse({ connected: isConnected(), slide: currentSlide });
   } else if (msg.type === "START_SESSION") {
     if (!channel) {
       sendResponse({ error: "not_connected" });
