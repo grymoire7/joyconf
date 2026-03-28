@@ -10,11 +10,24 @@
  * tests/fixtures/google_slides_dom.html to match the new structure.
  */
 function getSlide() {
-  const el = document.querySelector('.punch-viewer-svgpage-a11yelement[aria-label*="Slide"]');
-  if (!el) return 0;
+  const docs = [document];
+  for (const iframe of document.querySelectorAll("iframe")) {
+    try {
+      if (iframe.contentDocument) docs.push(iframe.contentDocument);
+    } catch (e) {
+      // cross-origin iframe — skip
+    }
+  }
 
-  const match = el.getAttribute("aria-label").match(/^Slide (\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
+  for (const doc of docs) {
+    const el = doc.querySelector('.punch-viewer-svgpage-a11yelement[aria-label*="Slide"]');
+    if (el) {
+      const match = el.getAttribute("aria-label").match(/^Slide (\d+)/);
+      if (match) return parseInt(match[1], 10);
+    }
+  }
+
+  return 0;
 }
 
 if (typeof module !== "undefined" && module.exports) {

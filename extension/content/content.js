@@ -1,12 +1,12 @@
 // Phoenix UMD build loaded before this file exposes window.Phoenix
 const { Socket } = window.Phoenix;
 
-const HOST = "wss://joyconf.fly.dev";
-// const HOST = "ws://localhost:4000";
+// const HOST = "wss://joyconf.fly.dev";
+const HOST = "ws://localhost:4000";
 
 let socket = null;
 let channel = null;
-let slideObserver = null;
+let slideInterval = null;
 let currentSlide = 0;
 
 // Inject animation keyframes once
@@ -111,7 +111,7 @@ function startSlideObserver() {
 
   const adapter = registry.getAdapter(window.location.href);
 
-  slideObserver = new MutationObserver(() => {
+  function checkSlide() {
     const slide = adapter.getSlide();
     if (slide !== currentSlide) {
       currentSlide = slide;
@@ -122,20 +122,16 @@ function startSlideObserver() {
         void chrome.runtime.lastError; // suppress "no listener" error when popup is closed
       });
     }
-  });
+  }
 
-  slideObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["value", "aria-label"],
-  });
+  checkSlide(); // read immediately on connect
+  slideInterval = setInterval(checkSlide, 500);
 }
 
 function stopSlideObserver() {
-  if (slideObserver) {
-    slideObserver.disconnect();
-    slideObserver = null;
+  if (slideInterval) {
+    clearInterval(slideInterval);
+    slideInterval = null;
   }
   currentSlide = 0;
 }
