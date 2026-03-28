@@ -39,4 +39,29 @@ defmodule Joyconf.ReactionsTest do
       assert Reactions.count_reactions(session.id) == 0
     end
   end
+
+  describe "slide_reaction_totals/1" do
+    test "returns per-slide per-emoji counts ordered by slide number", %{session: session} do
+      Reactions.create_reaction(session, "❤️", 1)
+      Reactions.create_reaction(session, "❤️", 1)
+      Reactions.create_reaction(session, "😂", 1)
+      Reactions.create_reaction(session, "❤️", 3)
+      Reactions.create_reaction(session, "❤️", 0)
+
+      totals = Reactions.slide_reaction_totals(session.id)
+
+      # Ordered by slide number ascending
+      assert Enum.map(totals, & &1.slide_number) == [0, 1, 1, 3]
+
+      slide1_heart = Enum.find(totals, &(&1.slide_number == 1 and &1.emoji == "❤️"))
+      assert slide1_heart.count == 2
+
+      slide1_laugh = Enum.find(totals, &(&1.slide_number == 1 and &1.emoji == "😂"))
+      assert slide1_laugh.count == 1
+    end
+
+    test "returns empty list for session with no reactions", %{session: session} do
+      assert Reactions.slide_reaction_totals(session.id) == []
+    end
+  end
 end
