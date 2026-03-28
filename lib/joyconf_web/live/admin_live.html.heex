@@ -76,7 +76,10 @@
             <% else %>
               <ul id="session-list" class="space-y-2">
                 <%= for %{session: session, reaction_count: count} <- @sessions do %>
-                  <li id={"session-#{session.id}"} class="p-3 rounded-lg border border-zinc-700 text-sm">
+                  <li
+                    id={"session-#{session.id}"}
+                    class="p-3 rounded-lg border border-zinc-700 text-sm"
+                  >
                     <%= if @renaming_session_id == session.id do %>
                       <.form
                         for={@rename_form}
@@ -104,7 +107,9 @@
                         <span id={"session-label-#{session.id}"} class="font-medium flex-1">
                           {session.label}
                         </span>
-                        <span class="text-zinc-400">{count} {if count == 1, do: "reaction", else: "reactions"}</span>
+                        <span class="text-zinc-400">
+                          {count} {if count == 1, do: "reaction", else: "reactions"}
+                        </span>
                         <span class="text-zinc-500">
                           {Calendar.strftime(session.started_at, "%b %d %H:%M")}
                         </span>
