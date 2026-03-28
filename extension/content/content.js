@@ -105,6 +105,26 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     sendResponse({ connected });
   } else if (msg.type === "GET_STATUS") {
     sendResponse({ connected: isConnected() });
+  } else if (msg.type === "START_SESSION") {
+    if (!channel) {
+      sendResponse({ error: "not_connected" });
+      return;
+    }
+    channel
+      .push("start_session", {})
+      .receive("ok", ({ session_id, label }) => sendResponse({ session_id, label }))
+      .receive("error", ({ reason }) => sendResponse({ error: reason }));
+    return true; // keep the message channel open for the async reply
+  } else if (msg.type === "STOP_SESSION") {
+    if (!channel) {
+      sendResponse({ error: "not_connected" });
+      return;
+    }
+    channel
+      .push("stop_session", { session_id: msg.sessionId })
+      .receive("ok", () => sendResponse({ stopped: true }))
+      .receive("error", ({ reason }) => sendResponse({ error: reason }));
+    return true; // keep the message channel open for the async reply
   }
 });
 

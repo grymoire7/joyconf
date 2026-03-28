@@ -1,7 +1,7 @@
 defmodule JoyconfWeb.TalkLive do
   use JoyconfWeb, :live_view
 
-  alias Joyconf.{Talks, RateLimiter}
+  alias Joyconf.{Talks, RateLimiter, Reactions}
 
   @emojis ["❤️", "😂", "👏", "🤯", "🙋🏻", "🎉", "💩", "😮", "🎯"]
 
@@ -21,9 +21,16 @@ defmodule JoyconfWeb.TalkLive do
 
   def handle_event("react", %{"emoji" => emoji}, socket) do
     if RateLimiter.allow?(socket.assigns.session_id) do
-      JoyconfWeb.Endpoint.broadcast!("reactions:#{socket.assigns.talk.slug}", "new_reaction", %{
-        emoji: emoji
-      })
+      case Talks.get_active_session(socket.assigns.talk.id) do
+        nil -> :ok
+        session -> Reactions.create_reaction(session, emoji)
+      end
+
+      JoyconfWeb.Endpoint.broadcast!(
+        "reactions:#{socket.assigns.talk.slug}",
+        "new_reaction",
+        %{emoji: emoji}
+      )
     end
 
     {:noreply, socket}
