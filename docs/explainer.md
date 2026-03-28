@@ -64,7 +64,7 @@ extension/
   content/content.js    # Content script: WebSocket, overlay, slide observer
   popup/popup.{html,js} # Extension popup UI
   manifest.json
-  __tests__/            # Jest tests for adapters
+  tests/                # Jest tests for adapters
 
 assets/js/hooks/
   emoji_buttons.js      # Disables buttons + shows cooldown countdown
@@ -487,7 +487,7 @@ function getSlide() {
 }
 ```
 
-This is brittle by nature (Google could change the DOM), but it's the only option without a first-party API. The fixture-based Jest tests in `extension/__tests__/` snapshot the relevant DOM so regressions are caught before they ship.
+This is brittle by nature (Google could change the DOM), but it's the only option without a first-party API. The fixture-based Jest tests in `extension/tests/` snapshot the relevant DOM so regressions are caught before they ship.
 
 ### MutationObserver
 
