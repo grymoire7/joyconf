@@ -5,6 +5,12 @@
  * Returns 0 if the element is absent or the value cannot be parsed — this
  * is the "unknown slide" sentinel used by the server (reactions go to slide 0).
  *
+ * The element lives inside a same-origin presentation iframe that Google Slides
+ * loads when the slideshow is running (fullscreen or windowed). It is NOT present
+ * in the editor view. Slide tracking therefore only works once the slideshow has
+ * started. The adapter searches all accessible iframes so no changes to
+ * content.js are needed if Google moves the element to a different iframe.
+ *
  * BRITTLE: depends on Google Slides DOM structure. When this test starts
  * failing, update the selector here and the fixture in
  * tests/fixtures/google_slides_dom.html to match the new structure.
