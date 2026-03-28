@@ -29,7 +29,7 @@ defmodule JoyconfWeb.ReactionChannelTest do
     end
 
     test "start_session creates a session and replies with session_id and label",
-         %{joined: joined, talk: talk} do
+         %{joined: joined} do
       ref = push(joined, "start_session", %{})
       assert_reply ref, :ok, %{session_id: session_id, label: "Session 1"}
       assert Joyconf.Talks.get_session(session_id) != nil
