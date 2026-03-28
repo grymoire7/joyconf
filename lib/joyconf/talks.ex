@@ -44,6 +44,10 @@ defmodule Joyconf.Talks do
     end
   end
 
+  def stop_session(%TalkSession{ended_at: ended_at} = session) when not is_nil(ended_at) do
+    {:ok, session}
+  end
+
   def stop_session(%TalkSession{} = session) do
     session
     |> TalkSession.changeset(%{ended_at: DateTime.utc_now() |> DateTime.truncate(:second)})

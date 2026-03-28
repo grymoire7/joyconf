@@ -60,6 +60,13 @@ defmodule Joyconf.SessionsTest do
       assert {:ok, stopped} = Talks.stop_session(session)
       assert stopped.ended_at != nil
     end
+
+    test "does not overwrite ended_at when called twice", %{talk: talk} do
+      {:ok, session} = Talks.start_session(talk)
+      {:ok, stopped} = Talks.stop_session(session)
+      {:ok, stopped2} = Talks.stop_session(stopped)
+      assert stopped.ended_at == stopped2.ended_at
+    end
   end
 
   describe "get_active_session/1" do
