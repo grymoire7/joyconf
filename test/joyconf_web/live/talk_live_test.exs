@@ -2,6 +2,7 @@ defmodule JoyconfWeb.TalkLiveTest do
   use JoyconfWeb.ConnCase
 
   import Phoenix.LiveViewTest
+  import Ecto.Query
 
   setup do
     {:ok, talk} =
@@ -69,6 +70,48 @@ defmodule JoyconfWeb.TalkLiveTest do
 
       assert_receive %Phoenix.Socket.Broadcast{event: "new_reaction"}, 500
       # No session exists, so nothing to count — just verify no crash
+    end
+  end
+
+  describe "slide-stamped reaction persistence" do
+    test "stamps reaction with current_slide when slide has been set", %{conn: conn, talk: talk} do
+      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
+
+      # Simulate the extension broadcasting a slide change
+      JoyconfWeb.Endpoint.broadcast!(
+        "slides:#{talk.slug}",
+        "slide_changed",
+        %{slide: 7}
+      )
+
+      # Give the LiveView process a moment to handle the broadcast
+      _ = :sys.get_state(view.pid)
+
+      render_click(view, "react", %{"emoji" => "❤️"})
+
+      reaction =
+        Joyconf.Repo.one(
+          from r in Joyconf.Reactions.Reaction,
+            where: r.talk_session_id == ^session.id
+        )
+
+      assert reaction.slide_number == 7
+    end
+
+    test "stamps reaction with slide 0 when no slide has been set", %{conn: conn, talk: talk} do
+      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
+
+      render_click(view, "react", %{"emoji" => "❤️"})
+
+      reaction =
+        Joyconf.Repo.one(
+          from r in Joyconf.Reactions.Reaction,
+            where: r.talk_session_id == ^session.id
+        )
+
+      assert reaction.slide_number == 0
     end
   end
 end
