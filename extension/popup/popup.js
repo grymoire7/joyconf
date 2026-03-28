@@ -5,6 +5,7 @@ const statusText = document.getElementById("status-text");
 const sessionSection = document.getElementById("session-section");
 const sessionStatus = document.getElementById("session-status");
 const sessionBtn = document.getElementById("session-btn");
+const slideIndicator = document.getElementById("slide-indicator");
 
 let currentSessionId = null;
 
@@ -27,6 +28,10 @@ function setSessionUI(active, label) {
   sessionStatus.textContent = active ? label : "No active session";
   sessionBtn.textContent = active ? "Stop Session" : "Start Session";
   sessionBtn.className = active ? "stop" : "";
+}
+
+function setSlideIndicator(slide) {
+  slideIndicator.textContent = slide > 0 ? `Slide ${slide}` : "Slide —";
 }
 
 connectBtn.addEventListener("click", () => {
@@ -72,5 +77,12 @@ sessionBtn.addEventListener("click", () => {
 chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
   chrome.tabs.sendMessage(tab.id, { type: "GET_STATUS" }, (response) => {
     setStatus(response?.connected ?? false);
+    setSlideIndicator(response?.slide ?? 0);
   });
+});
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === "SLIDE_CHANGED") {
+    setSlideIndicator(msg.slide);
+  }
 });
