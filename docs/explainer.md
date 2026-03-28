@@ -36,50 +36,85 @@ Two different WebSocket connections are used:
 ```
 lib/
   joyconf/
-    application.ex        # OTP supervision tree
-    talks.ex              # Talk context (CRUD, slug generation)
-    talks/talk.ex         # Ecto schema
-    rate_limiter.ex       # GenServer + ETS rate limiting
-    qr_code.ex            # QR code generation for admin
+    application.ex              # OTP supervision tree
+    talks.ex                    # Talk + session context (CRUD, lifecycle)
+    talks/talk.ex               # Talk Ecto schema
+    talks/talk_session.ex       # TalkSession Ecto schema
+    reactions.ex                # Reactions context (create, totals query)
+    reactions/reaction.ex       # Reaction Ecto schema
+    rate_limiter.ex             # GenServer + ETS rate limiting
+    qr_code.ex                  # QR code generation for admin
   joyconf_web/
     live/
-      talk_live.ex        # Attendee reaction page (LiveView)
-      admin_live.ex       # Admin: create talks, view QR codes
+      talk_live.ex              # Attendee reaction page (LiveView)
+      admin_live.ex             # Admin: talks, sessions panel
+      session_analytics_live.ex # Per-session analytics (LiveView)
     channels/
-      user_socket.ex      # Socket definition for Chrome extension
-      reaction_channel.ex # Channel for extension to receive reactions
+      user_socket.ex            # Socket definition for Chrome extension
+      reaction_channel.ex       # Channel: reactions, sessions, slide_changed
     plugs/
-      admin_auth.ex       # Basic auth for /admin routes
-    endpoint.ex           # Mounts both socket types
-    router.ex             # Route definitions
+      admin_auth.ex             # Basic auth for /admin routes
+    endpoint.ex                 # Mounts both socket types
+    router.ex                   # Route definitions
 
 extension/
-  content/content.js      # Content script: WebSocket + emoji overlay
-  popup/popup.{html,js}   # Extension popup UI
+  adapters/
+    google_slides.js    # Reads current slide number from Google Slides DOM
+    index.js            # Adapter registry (returns adapter for current URL)
+  content/content.js    # Content script: WebSocket, overlay, slide observer
+  popup/popup.{html,js} # Extension popup UI
   manifest.json
+  __tests__/            # Jest tests for adapters
 
 assets/js/hooks/
-  emoji_buttons.js        # Disables buttons + shows cooldown countdown
-  emoji_stream.js         # Animates incoming emojis in the browser
+  emoji_buttons.js      # Disables buttons + shows cooldown countdown
+  emoji_stream.js       # Animates incoming emojis in the browser
 ```
 
 ---
 
 ## The data model
 
-There's one database table: `talks`.
+There are three database tables.
+
+**`talks`** — one row per conference talk:
 
 ```elixir
 schema "talks" do
   field :title, :string   # e.g. "My talk"
   field :slug,  :string   # e.g. "my-talk"  ← used in URL and PubSub topic
+  has_many :talk_sessions, TalkSession
   timestamps(type: :utc_datetime)
 end
 ```
 
-Slugs are auto-generated from the title (lowercase, spaces → hyphens, special
-chars stripped) and are unique. The slug is the key that ties all three actors
-together. It's in the URL, the PubSub topic name, and the Channel topic name.
+Slugs are auto-generated from the title (lowercase, spaces → hyphens, special chars stripped) and are unique. The slug is the key that ties all three actors together: it's in the URL, the PubSub topic, and the Channel topic.
+
+**`talk_sessions`** — a recording window within a talk (e.g. "Session 1", "Denver Practice"):
+
+```elixir
+schema "talk_sessions" do
+  field :label,      :string
+  field :started_at, :utc_datetime
+  field :ended_at,   :utc_datetime   # nil while active
+  belongs_to :talk, Talk
+  has_many :reactions, Reaction, on_delete: :delete_all
+end
+```
+
+Sessions are started and stopped by the speaker via the Chrome extension. `label` auto-increments ("Session 1", "Session 2", …) but can be renamed from the admin panel.
+
+**`reactions`** — one row per emoji tap:
+
+```elixir
+schema "reactions" do
+  field :emoji,       :string
+  field :slide_number, :integer, default: 0   # 0 = unknown/before session start
+  belongs_to :talk_session, TalkSession
+end
+```
+
+`slide_number` is `0` when no adapter could read the current slide (e.g. before a session starts, or on a non-Google-Slides presentation). All slide-`0` reactions group under a "General" label in the analytics view.
 
 ---
 
@@ -94,8 +129,10 @@ end
 # Admin (HTTP Basic Auth required)
 scope "/admin" do
   pipe_through [:browser, :admin]
-  live "/",          AdminLive, :index
-  live "/talks/new", AdminLive, :new
+  live "/",                                  AdminLive,            :index
+  live "/talks/new",                         AdminLive,            :new
+  live "/sessions/:id",                      SessionAnalyticsLive, :show
+  live "/sessions/:id/compare/:other_id",    SessionAnalyticsLive, :compare
 end
 ```
 
@@ -139,16 +176,22 @@ The template uses `phx-click="react"` and `phx-value-emoji="🔥"`. Phoenix
 LiveView sends this over the existing WebSocket to `TalkLive.handle_event/3` on
 the server. No HTTP request is made.
 
-**2. Rate limiting**
+**2. Rate limiting and persistence**
 
 ```elixir
 def handle_event("react", %{"emoji" => emoji}, socket) do
   if RateLimiter.allow?(socket.id) do
-    Endpoint.broadcast!("reactions:#{socket.assigns.talk.slug}", "new_reaction", %{emoji: emoji})
+    slug = socket.assigns.talk.slug
+    if session = Talks.get_active_session(socket.assigns.talk.id) do
+      Reactions.create_reaction(session, emoji, socket.assigns.current_slide)
+    end
+    Endpoint.broadcast!("reactions:#{slug}", "new_reaction", %{emoji: emoji})
   end
   {:noreply, socket}
 end
 ```
+
+If a session is active, the reaction is persisted to the database with the current slide number. `current_slide` is tracked in the socket assigns and updated whenever a `slide_changed` message arrives over PubSub (see the Slide Tracking section below).
 
 `RateLimiter` uses an ETS table (an in-memory key/value store built into the
 BEAM) to track the last reaction time per session. If less than 3 seconds have
@@ -399,7 +442,122 @@ cooldown state is lost and everyone gets a fresh window to react.
 
 ---
 
-## Key concepts recap
+## Talk sessions
+
+A *session* is a recording window. The speaker starts one (via the extension popup or `start_session` channel message) before presenting, and stops it afterward. Reactions recorded while a session is active are persisted with a slide number for later analytics.
+
+Session lifecycle is managed in `Joyconf.Talks`:
+
+- `start_session/1` — idempotent: returns the existing active session if one is open, otherwise creates a new one labeled "Session N" where N is one more than the total number of sessions for that talk.
+- `stop_session/1` — idempotent: if `ended_at` is already set, returns the session unchanged.
+- `get_active_session/1` — queries for a session with `ended_at IS NULL`.
+- `list_sessions/1` — returns sessions with reaction counts, newest first.
+- `rename_session/2`, `delete_session/1` — admin operations.
+
+The `ReactionChannel` exposes `start_session` and `stop_session` as channel messages so the Chrome extension can control sessions without going through the web UI.
+
+---
+
+## Slide tracking
+
+When the speaker's Chrome extension is connected, it detects the current slide number and sends `slide_changed` messages to the server so reactions can be stamped with slide context.
+
+### Adapter registry
+
+Different presentation tools expose the current slide number differently. The extension uses an **adapter registry** (`extension/adapters/index.js`) that picks the right adapter based on the current page URL:
+
+```javascript
+// index.js
+function getAdapter(url) {
+  if (url.includes("docs.google.com/presentation")) {
+    return GoogleSlidesAdapter;
+  }
+  return { getSlide: () => 0 };  // fallback for unknown platforms
+}
+```
+
+The Google Slides adapter (`adapters/google_slides.js`) reads the slide number from the DOM:
+
+```javascript
+function getSlide() {
+  const input = document.querySelector('input[aria-label*="Slide"]');
+  if (!input) return 0;
+  const n = parseInt(input.value, 10);
+  return isNaN(n) ? 0 : n;
+}
+```
+
+This is brittle by nature (Google could change the DOM), but it's the only option without a first-party API. The fixture-based Jest tests in `extension/__tests__/` snapshot the relevant DOM so regressions are caught before they ship.
+
+### MutationObserver
+
+The content script sets up a `MutationObserver` to watch for attribute changes on the slide input:
+
+```javascript
+function startSlideObserver() {
+  const observer = new MutationObserver(() => {
+    const slide = getAdapter(window.location.href).getSlide();
+    if (slide !== currentSlide && slide > 0) {
+      currentSlide = slide;
+      channel.push("slide_changed", { slide });
+    }
+  });
+  observer.observe(document.body, {
+    subtree: true,
+    attributeFilter: ["value", "aria-label"]
+  });
+}
+```
+
+Slide `0` is a sentinel for "unknown" and is never sent — the server silently ignores it too.
+
+### Server-side handling
+
+`ReactionChannel` handles `slide_changed` and broadcasts to a separate `"slides:#{slug}"` PubSub topic:
+
+```elixir
+def handle_in("slide_changed", %{"slide" => slide}, socket)
+    when is_integer(slide) and slide > 0 do
+  Endpoint.broadcast!("slides:#{socket.assigns.talk.slug}", "slide_changed", %{slide: slide})
+  {:reply, :ok, socket}
+end
+```
+
+`TalkLive` subscribes to this topic and updates `current_slide` in its assigns, so the next reaction tap carries the correct slide number.
+
+---
+
+## Analytics dashboard
+
+After a talk, the speaker can review per-slide engagement at `/admin/sessions/:id`.
+
+### The query
+
+`Reactions.slide_reaction_totals/1` aggregates reactions by `(slide_number, emoji)`:
+
+```elixir
+def slide_reaction_totals(session_id) do
+  from(r in Reaction,
+    where: r.talk_session_id == ^session_id,
+    group_by: [r.slide_number, r.emoji],
+    select: %{slide_number: r.slide_number, emoji: r.emoji, count: count(r.id)},
+    order_by: [asc: r.slide_number]
+  )
+  |> Repo.all()
+end
+```
+
+`SessionAnalyticsLive` groups these by `slide_number` into a map and renders a Tailwind bar chart per slide — no JS charting library needed.
+
+### Comparison mode
+
+At `/admin/sessions/:id/compare/:other_id`, `SessionAnalyticsLive` loads both sessions and renders two charts side by side. The comparison covers all slides that appeared in *either* session (union of slide numbers), so gaps are visible.
+
+The admin sessions panel links to the analytics view for each session via `navigate={"/admin/sessions/#{session.id}"}`.
+
+---
+
+
 
 | Concept                 | What it does in JoyConf                                                         |
 | ----------------------- | ------------------------------------------------------------------------------- |
@@ -411,4 +569,10 @@ cooldown state is lost and everyone gets a fresh window to react.
 | **phx-hook**            | Bridges server events to client-side JavaScript (EmojiStream, EmojiButtons)     |
 | **push_event**          | Server → client event delivery over the LiveView socket                         |
 | **check_origin: false** | Allows the Chrome extension (different origin) to open a socket                 |
+| **TalkSession**         | A recording window; reactions are persisted against the active session          |
+| **slide_number**        | Stamped on each reaction; `0` is the sentinel for "unknown slide"               |
+| **Adapter registry**    | Picks the right DOM scraper based on the presentation platform URL              |
+| **MutationObserver**    | Watches the Google Slides DOM for slide changes without polling                 |
+| **slide_changed**       | Channel event from extension → server → PubSub → TalkLive assigns              |
+| **SessionAnalyticsLive**| Admin-only LiveView: per-slide bar charts and session comparison mode           |
 

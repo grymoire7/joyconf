@@ -10,6 +10,8 @@ presentation via a Chrome extension.
 2. Attendees scan the QR code → land on `/t/<slug>` → tap emojis
 3. Reactions broadcast in real time via Phoenix PubSub
 4. Chrome extension connected to the same talk slug shows floating emoji overlay on Google Slides
+5. Speaker starts a session from the extension (or via the channel) — reactions are persisted with a slide number
+6. After the talk, the admin analytics view shows per-slide reaction breakdowns; sessions from the same talk can be compared side-by-side
 
 For a full explainer on the technical implementation see [this explainer](docs/explainer.md).
 For the story of writing the project (the whys and the bugs), see [this blog post](https://tracyatteberry.com/posts/joyconf/).
@@ -46,9 +48,17 @@ any username and password `devpassword` (the dev default set in
 ### Running tests
 
 ```bash
-mix test                        # run all tests
+mix test                        # run all Elixir tests
 mix test test/path/to/file.exs  # run a single test file
 mix test --failed               # re-run only previously failing tests
+```
+
+The Chrome extension has its own Jest test suite:
+
+```bash
+cd extension
+npm install
+npm test        # run all Jest tests
 ```
 
 ### End-to-end test flow
@@ -60,6 +70,8 @@ mix test --failed               # re-run only previously failing tests
 5. Open `http://localhost:4000/t/my-talk` in another tab
 6. Tap an emoji — it should float up on the attendee page
 7. (Optional) Load the Chrome extension pointed at `my-talk` and open a Google Slides presentation to see the overlay
+8. (Optional) In the extension popup, click **Start Session** — reactions are now persisted with slide numbers
+9. After tapping some emojis, go to `http://localhost:4000/admin` → select the talk → click **Analytics** next to the session to see the per-slide breakdown
 
 ---
 
@@ -150,17 +162,22 @@ fly secrets list
 
 ## Project structure
 
-| Path                                           | What it does                                        |
-| ---------------------------------------------- | --------------------------------------------------- |
-| `lib/joyconf/talks.ex`                         | Context: create/list/find talks, generate slugs     |
-| `lib/joyconf/talks/talk.ex`                    | Ecto schema + changeset validation                  |
-| `lib/joyconf/rate_limiter.ex`                  | ETS-backed GenServer: 1 reaction per session per 5s |
-| `lib/joyconf/qr_code.ex`                       | Wraps `eqrcode` → base64 PNG data URI               |
-| `lib/joyconf_web/live/admin_live.ex`           | Admin panel: create talks, show QR codes            |
-| `lib/joyconf_web/live/talk_live.ex`            | Attendee page: emoji buttons, PubSub reactions      |
-| `lib/joyconf_web/channels/reaction_channel.ex` | Phoenix Channel consumed by Chrome extension        |
-| `lib/joyconf_web/plugs/admin_auth.ex`          | HTTP Basic Auth plug for `/admin` routes            |
-| `assets/js/hooks/emoji_buttons.js`             | Client-side 5s cooldown UI                          |
-| `assets/js/hooks/emoji_stream.js`              | Floating emoji animation on `new_reaction` event    |
-| `extension/`                                   | Chrome Manifest V3 extension                        |
+| Path                                              | What it does                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------- |
+| `lib/joyconf/talks.ex`                            | Context: talks + session lifecycle (start, stop, rename, etc.) |
+| `lib/joyconf/talks/talk.ex`                       | Ecto schema + changeset validation                             |
+| `lib/joyconf/talks/talk_session.ex`               | TalkSession schema (label, started_at, ended_at)               |
+| `lib/joyconf/reactions.ex`                        | Context: create reactions, per-slide totals query              |
+| `lib/joyconf/reactions/reaction.ex`               | Reaction schema (emoji, slide_number, talk_session_id)         |
+| `lib/joyconf/rate_limiter.ex`                     | ETS-backed GenServer: 1 reaction per session per 5s            |
+| `lib/joyconf/qr_code.ex`                          | Wraps `eqrcode` → base64 PNG data URI                          |
+| `lib/joyconf_web/live/admin_live.ex`              | Admin panel: talks, QR codes, sessions panel                   |
+| `lib/joyconf_web/live/session_analytics_live.ex`  | Per-session analytics: slide breakdown + comparison mode       |
+| `lib/joyconf_web/live/talk_live.ex`               | Attendee page: emoji buttons, stamps reactions with slide      |
+| `lib/joyconf_web/channels/reaction_channel.ex`    | Channel: reactions, session start/stop, slide_changed          |
+| `lib/joyconf_web/plugs/admin_auth.ex`             | HTTP Basic Auth plug for `/admin` routes                       |
+| `assets/js/hooks/emoji_buttons.js`                | Client-side 5s cooldown UI                                     |
+| `assets/js/hooks/emoji_stream.js`                 | Floating emoji animation on `new_reaction` event               |
+| `extension/`                                      | Chrome Manifest V3 extension                                   |
+| `extension/adapters/`                             | Adapter registry + Google Slides slide-number reader           |
 
