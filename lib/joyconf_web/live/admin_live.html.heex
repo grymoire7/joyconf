@@ -138,6 +138,13 @@
                         >
                           Delete
                         </button>
+                        <.link
+                          id={"analytics-link-#{session.id}"}
+                          navigate={"/admin/sessions/#{session.id}"}
+                          class="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                        >
+                          Analytics
+                        </.link>
                       </div>
                     <% end %>
                   </li>

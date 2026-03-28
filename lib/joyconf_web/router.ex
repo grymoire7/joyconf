@@ -28,6 +28,8 @@ defmodule JoyconfWeb.Router do
     pipe_through [:browser, :admin]
     live "/", AdminLive, :index
     live "/talks/new", AdminLive, :new
+    live "/sessions/:id", SessionAnalyticsLive, :show
+    live "/sessions/:id/compare/:other_id", SessionAnalyticsLive, :compare
   end
 
   scope "/t", JoyconfWeb do

@@ -175,5 +175,14 @@ defmodule JoyconfWeb.AdminLiveTest do
       view |> element("#delete-talk-#{talk.id}") |> render_click()
       refute has_element?(view, "#sessions-panel")
     end
+
+    test "sessions panel shows link to analytics for each session", %{conn: conn, talk: talk} do
+      {:ok, session} = Joyconf.Talks.start_session(talk)
+
+      {:ok, view, _html} = live(conn, "/admin")
+      view |> element("#talk-list button", "Prime Talk") |> render_click()
+
+      assert has_element?(view, "#analytics-link-#{session.id}")
+    end
   end
 end

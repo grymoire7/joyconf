@@ -14,4 +14,14 @@ defmodule Joyconf.Reactions do
   def count_reactions(session_id) do
     Repo.aggregate(from(r in Reaction, where: r.talk_session_id == ^session_id), :count)
   end
+
+  def slide_reaction_totals(session_id) do
+    from(r in Reaction,
+      where: r.talk_session_id == ^session_id,
+      group_by: [r.slide_number, r.emoji],
+      select: %{slide_number: r.slide_number, emoji: r.emoji, count: count(r.id)},
+      order_by: [asc: r.slide_number]
+    )
+    |> Repo.all()
+  end
 end
