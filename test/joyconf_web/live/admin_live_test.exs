@@ -155,8 +155,6 @@ defmodule JoyconfWeb.AdminLiveTest do
 
       # Form stays open with an error — session label is unchanged
       assert has_element?(view, "#rename-form-#{session.id}")
-      assert has_element?(view, "#session-label-#{session.id}", "Session 1") == false or
-               has_element?(view, "#rename-form-#{session.id}")
     end
 
     test "cancel_rename hides the rename form", %{conn: conn, talk: talk} do
