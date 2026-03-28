@@ -6,6 +6,8 @@ const HOST = "wss://joyconf.fly.dev";
 
 let socket = null;
 let channel = null;
+let slideObserver = null;
+let currentSlide = 0;
 
 // Inject animation keyframes once
 const style = document.createElement("style");
@@ -72,6 +74,7 @@ function connect(slug) {
     socket.disconnect();
     socket = null;
     channel = null;
+    stopSlideObserver();
   }
 
   socket = new Socket(`${HOST}/socket`, {
@@ -84,7 +87,10 @@ function connect(slug) {
   channel.on("new_reaction", ({ emoji }) => spawnEmoji(emoji));
   channel
     .join()
-    .receive("ok", () => console.log(`[JoyConf] Joined reactions:${slug}`))
+    .receive("ok", () => {
+      console.log(`[JoyConf] Joined reactions:${slug}`);
+      startSlideObserver();
+    })
     .receive("error", ({ reason }) => {
       console.error(`[JoyConf] Channel join failed: ${reason}`);
       socket.disconnect();
@@ -97,6 +103,38 @@ function connect(slug) {
 
 function isConnected() {
   return socket !== null && socket.isConnected();
+}
+
+function startSlideObserver() {
+  const registry = window.JoyconfAdapterRegistry;
+  if (!registry) return;
+
+  const adapter = registry.getAdapter(window.location.href);
+
+  slideObserver = new MutationObserver(() => {
+    const slide = adapter.getSlide();
+    if (slide !== currentSlide) {
+      currentSlide = slide;
+      if (channel) {
+        channel.push("slide_changed", { slide: currentSlide });
+      }
+    }
+  });
+
+  slideObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["value", "aria-label"],
+  });
+}
+
+function stopSlideObserver() {
+  if (slideObserver) {
+    slideObserver.disconnect();
+    slideObserver = null;
+  }
+  currentSlide = 0;
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {

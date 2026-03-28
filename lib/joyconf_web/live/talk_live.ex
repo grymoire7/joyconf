@@ -13,9 +13,11 @@ defmodule JoyconfWeb.TalkLive do
       talk ->
         if connected?(socket) do
           Phoenix.PubSub.subscribe(Joyconf.PubSub, "reactions:#{slug}")
+          Phoenix.PubSub.subscribe(Joyconf.PubSub, "slides:#{slug}")
         end
 
-        {:ok, assign(socket, talk: talk, emojis: @emojis, session_id: socket.id)}
+        {:ok,
+         assign(socket, talk: talk, emojis: @emojis, session_id: socket.id, current_slide: 0)}
     end
   end
 
@@ -23,7 +25,7 @@ defmodule JoyconfWeb.TalkLive do
     if RateLimiter.allow?(socket.assigns.session_id) do
       case Talks.get_active_session(socket.assigns.talk.id) do
         nil -> :ok
-        session -> Reactions.create_reaction(session, emoji)
+        session -> Reactions.create_reaction(session, emoji, socket.assigns.current_slide)
       end
 
       JoyconfWeb.Endpoint.broadcast!(
@@ -41,5 +43,12 @@ defmodule JoyconfWeb.TalkLive do
         socket
       ) do
     {:noreply, push_event(socket, "new_reaction", %{emoji: emoji})}
+  end
+
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "slide_changed", payload: %{slide: slide}},
+        socket
+      ) do
+    {:noreply, assign(socket, :current_slide, slide)}
   end
 end

@@ -41,4 +41,19 @@ defmodule JoyconfWeb.ReactionChannel do
         {:reply, {:error, %{reason: "unauthorized"}}, socket}
     end
   end
+
+  def handle_in("slide_changed", %{"slide" => slide}, socket)
+      when is_integer(slide) and slide > 0 do
+    JoyconfWeb.Endpoint.broadcast!(
+      "slides:#{socket.assigns.talk.slug}",
+      "slide_changed",
+      %{slide: slide}
+    )
+
+    {:reply, :ok, socket}
+  end
+
+  def handle_in("slide_changed", _payload, socket) do
+    {:reply, :ok, socket}
+  end
 end
