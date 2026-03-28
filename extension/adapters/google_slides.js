@@ -17,4 +17,8 @@ function getSlide() {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-module.exports = { getSlide };
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { getSlide };
+} else {
+  window.JoyconfGoogleSlidesAdapter = { getSlide };
+}
