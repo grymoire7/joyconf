@@ -1,11 +1,19 @@
+const fs = require("fs");
+const path = require("path");
 const { getAdapter } = require("../adapters/index");
 
 describe("adapter registry", () => {
-  test("returns Google Slides adapter for Google Slides URLs", () => {
+  test("returns Google Slides adapter that reads slide number from the DOM", () => {
+    const fixture = fs.readFileSync(
+      path.join(__dirname, "fixtures", "google_slides_dom.html"),
+      "utf-8"
+    );
+    document.body.innerHTML = fixture;
     const adapter = getAdapter(
       "https://docs.google.com/presentation/d/abc123/edit"
     );
-    expect(typeof adapter.getSlide).toBe("function");
+    expect(adapter.getSlide()).toBe(3);
+    document.body.innerHTML = "";
   });
 
   test("returns fallback adapter for unknown URLs", () => {
