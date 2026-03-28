@@ -50,20 +50,96 @@
       </ul>
 
       <%= if @selected_talk do %>
-        <div class="flex flex-col items-center gap-2">
-          <img
-            id="selected-talk-qr"
-            src={@selected_qr_data_uri}
-            alt={"QR code for #{@selected_talk.slug}"}
-            width="200"
-          />
-          <a
-            href={@selected_qr_data_uri}
-            download={"#{@selected_talk.slug}-qr.png"}
-            class="text-blue-400 underline text-sm"
-          >
-            Download QR Code (PNG)
-          </a>
+        <div class="flex flex-col gap-6 flex-1">
+          <div class="flex flex-col items-center gap-2">
+            <img
+              id="selected-talk-qr"
+              src={@selected_qr_data_uri}
+              alt={"QR code for #{@selected_talk.slug}"}
+              width="200"
+            />
+            <a
+              href={@selected_qr_data_uri}
+              download={"#{@selected_talk.slug}-qr.png"}
+              class="text-blue-400 underline text-sm"
+            >
+              Download QR Code (PNG)
+            </a>
+          </div>
+
+          <div id="sessions-panel">
+            <h3 class="text-lg font-semibold mb-3">Sessions</h3>
+            <%= if @sessions == [] do %>
+              <p id="no-sessions" class="text-zinc-500 text-sm">
+                No sessions yet. Start one from the extension popup.
+              </p>
+            <% else %>
+              <ul id="session-list" class="space-y-2">
+                <%= for %{session: session, reaction_count: count} <- @sessions do %>
+                  <li id={"session-#{session.id}"} class="p-3 rounded-lg border border-zinc-700 text-sm">
+                    <%= if @renaming_session_id == session.id do %>
+                      <.form
+                        for={@rename_form}
+                        id={"rename-form-#{session.id}"}
+                        phx-submit="save_rename"
+                        class="flex gap-2 items-end"
+                      >
+                        <.input field={@rename_form[:label]} label="Label" />
+                        <button
+                          type="submit"
+                          class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs mb-2"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          phx-click="cancel_rename"
+                          class="px-3 py-2 border border-zinc-600 hover:border-zinc-400 rounded text-xs mb-2"
+                        >
+                          Cancel
+                        </button>
+                      </.form>
+                    <% else %>
+                      <div class="flex items-center gap-3 flex-wrap">
+                        <span id={"session-label-#{session.id}"} class="font-medium flex-1">
+                          {session.label}
+                        </span>
+                        <span class="text-zinc-400">{count} {if count == 1, do: "reaction", else: "reactions"}</span>
+                        <span class="text-zinc-500">
+                          {Calendar.strftime(session.started_at, "%b %d %H:%M")}
+                        </span>
+                        <%= if session.ended_at do %>
+                          <span class="text-zinc-500">
+                            → {Calendar.strftime(session.ended_at, "%H:%M")}
+                          </span>
+                        <% else %>
+                          <span class="session-active-badge text-xs px-2 py-0.5 bg-green-900 text-green-300 rounded-full">
+                            Active
+                          </span>
+                        <% end %>
+                        <button
+                          id={"rename-session-#{session.id}"}
+                          phx-click="rename_session"
+                          phx-value-id={session.id}
+                          class="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          Rename
+                        </button>
+                        <button
+                          id={"delete-session-#{session.id}"}
+                          phx-click="delete_session"
+                          phx-value-id={session.id}
+                          class="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>

@@ -11,7 +11,10 @@ defmodule JoyconfWeb.AdminLive do
        form: to_form(Talk.changeset(%Talk{}, %{})),
        created_talk: nil,
        selected_talk: nil,
-       selected_qr_data_uri: nil
+       selected_qr_data_uri: nil,
+       sessions: [],
+       renaming_session_id: nil,
+       rename_form: nil
      )}
   end
 
@@ -37,7 +40,10 @@ defmodule JoyconfWeb.AdminLive do
      assign(socket,
        talks: Talks.list_talks(),
        selected_talk: nil,
-       selected_qr_data_uri: nil
+       selected_qr_data_uri: nil,
+       sessions: [],
+       renaming_session_id: nil,
+       rename_form: nil
      )}
   end
 
@@ -45,8 +51,16 @@ defmodule JoyconfWeb.AdminLive do
     talk = Talks.get_talk!(String.to_integer(id))
     url = JoyconfWeb.Endpoint.url() <> "/t/#{talk.slug}"
     qr = Joyconf.QRCode.to_data_uri(url)
+    sessions = Talks.list_sessions(talk.id)
 
-    {:noreply, assign(socket, selected_talk: talk, selected_qr_data_uri: qr)}
+    {:noreply,
+     assign(socket,
+       selected_talk: talk,
+       selected_qr_data_uri: qr,
+       sessions: sessions,
+       renaming_session_id: nil,
+       rename_form: nil
+     )}
   end
 
   def handle_event("save", %{"talk" => attrs}, socket) do
@@ -61,11 +75,50 @@ defmodule JoyconfWeb.AdminLive do
            talks: Talks.list_talks(),
            form: to_form(Talk.changeset(%Talk{}, %{})),
            selected_talk: talk,
-           selected_qr_data_uri: qr
+           selected_qr_data_uri: qr,
+           sessions: [],
+           renaming_session_id: nil,
+           rename_form: nil
          )}
 
       {:error, changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
+  end
+
+  def handle_event("rename_session", %{"id" => id}, socket) do
+    session = Talks.get_session!(String.to_integer(id))
+
+    {:noreply,
+     assign(socket,
+       renaming_session_id: session.id,
+       rename_form: to_form(%{"label" => session.label}, as: :rename)
+     )}
+  end
+
+  def handle_event("cancel_rename", _params, socket) do
+    {:noreply, assign(socket, renaming_session_id: nil, rename_form: nil)}
+  end
+
+  def handle_event("save_rename", %{"rename" => %{"label" => label}}, socket) do
+    session = Talks.get_session!(socket.assigns.renaming_session_id)
+
+    case Talks.rename_session(session, label) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> assign(renaming_session_id: nil, rename_form: nil)
+         |> assign(sessions: Talks.list_sessions(socket.assigns.selected_talk.id))}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, rename_form: to_form(changeset, action: :validate))}
+    end
+  end
+
+  def handle_event("delete_session", %{"id" => id}, socket) do
+    session = Talks.get_session!(String.to_integer(id))
+    {:ok, _} = Talks.delete_session(session)
+
+    {:noreply, assign(socket, sessions: Talks.list_sessions(socket.assigns.selected_talk.id))}
   end
 end
