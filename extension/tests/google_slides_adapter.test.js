@@ -16,7 +16,7 @@ describe("Google Slides adapter", () => {
     document.body.innerHTML = "";
   });
 
-  test("returns the current slide number from the toolbar input", () => {
+  test("returns the current slide number from the a11y element", () => {
     expect(getSlide()).toBe(3);
   });
 
@@ -25,9 +25,9 @@ describe("Google Slides adapter", () => {
     expect(getSlide()).toBe(0);
   });
 
-  test("returns 0 when the value is not a valid number", () => {
-    const input = document.querySelector('input[aria-label*="Slide"]');
-    input.value = "abc";
+  test("returns 0 when the aria-label does not contain a valid slide number", () => {
+    const el = document.querySelector(".punch-viewer-svgpage-a11yelement");
+    el.setAttribute("aria-label", "Slide of something");
     expect(getSlide()).toBe(0);
   });
 });

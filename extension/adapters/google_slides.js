@@ -1,20 +1,20 @@
 /**
  * Google Slides adapter.
  *
- * Reads the current slide number from the slide-indicator toolbar input.
+ * Reads the current slide number from the a11y element's aria-label attribute.
  * Returns 0 if the element is absent or the value cannot be parsed — this
  * is the "unknown slide" sentinel used by the server (reactions go to slide 0).
  *
  * BRITTLE: depends on Google Slides DOM structure. When this test starts
  * failing, update the selector here and the fixture in
- * __tests__/fixtures/google_slides_dom.html to match the new structure.
+ * tests/fixtures/google_slides_dom.html to match the new structure.
  */
 function getSlide() {
-  const input = document.querySelector('input[aria-label*="Slide"]');
-  if (!input) return 0;
+  const el = document.querySelector('.punch-viewer-svgpage-a11yelement[aria-label*="Slide"]');
+  if (!el) return 0;
 
-  const n = parseInt(input.value, 10);
-  return Number.isFinite(n) && n > 0 ? n : 0;
+  const match = el.getAttribute("aria-label").match(/^Slide (\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
 }
 
 if (typeof module !== "undefined" && module.exports) {
