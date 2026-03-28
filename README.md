@@ -69,7 +69,7 @@ npm test        # run all Jest tests
 4. A QR code appears — note the slug (e.g. `my-talk`)
 5. Open `http://localhost:4000/t/my-talk` in another tab
 6. Tap an emoji — it should float up on the attendee page
-7. (Optional) Load the Chrome extension pointed at `my-talk` and open a Google Slides presentation to see the overlay. Open the extension popup — it shows the current slide number ("Slide 3") updating in real time, confirming the adapter is reading the DOM correctly
+7. (Optional) Load the Chrome extension pointed at `my-talk` and open a Google Slides presentation. Connect the extension, then start the slideshow (click **Slideshow** or press F5 — it stays on the same tab and goes fullscreen). Open the extension popup — it shows the current slide number ("Slide 3") updating in real time, confirming the adapter is reading the DOM correctly. The slide number only appears once the slideshow is running; it shows "Slide —" in the editor view.
 8. (Optional) In the extension popup, click **Start Session** — reactions are now persisted with slide numbers
 9. After tapping some emojis, go to `http://localhost:4000/admin` → select the talk → click **Analytics** next to the session to see the per-slide breakdown
 
@@ -90,8 +90,11 @@ npm test        # run all Jest tests
 2. Click the JoyConf extension icon
 3. Enter the talk slug (e.g. `elixir-for-rubyists`)
 4. Click **Connect** — the dot turns green when connected
+5. Start the slideshow (**Slideshow** button or F5) — the popup will show the current slide number once the slideshow is running
 
 The extension auto-reconnects on page reload if a slug was previously saved.
+
+> **Note:** Slide number tracking requires the slideshow to be running. The popup shows "Slide —" in the editor view because the slide indicator element only appears in the presentation iframe that Google Slides loads when the slideshow starts.
 
 ### Pointing at a different server
 
