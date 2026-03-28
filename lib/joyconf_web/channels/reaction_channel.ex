@@ -42,7 +42,8 @@ defmodule JoyconfWeb.ReactionChannel do
     end
   end
 
-  def handle_in("slide_changed", %{"slide" => slide}, socket) when is_integer(slide) and slide > 0 do
+  def handle_in("slide_changed", %{"slide" => slide}, socket)
+      when is_integer(slide) and slide > 0 do
     JoyconfWeb.Endpoint.broadcast!(
       "slides:#{socket.assigns.talk.slug}",
       "slide_changed",

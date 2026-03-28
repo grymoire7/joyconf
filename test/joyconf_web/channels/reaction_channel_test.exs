@@ -98,11 +98,13 @@ defmodule JoyconfWeb.ReactionChannelTest do
     test "broadcasts slide number to the slides PubSub topic", %{joined: joined} do
       ref = push(joined, "slide_changed", %{"slide" => 5})
       assert_reply ref, :ok
+
       assert_receive %Phoenix.Socket.Broadcast{
-        topic: "slides:" <> _slug,
-        event: "slide_changed",
-        payload: %{slide: 5}
-      }, 500
+                       topic: "slides:" <> _slug,
+                       event: "slide_changed",
+                       payload: %{slide: 5}
+                     },
+                     500
     end
 
     test "does not broadcast for slide 0 (unknown slide sentinel)", %{joined: joined} do
