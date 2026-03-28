@@ -93,4 +93,51 @@ defmodule Joyconf.SessionsTest do
       assert_raise Ecto.NoResultsError, fn -> Talks.get_session!(999_999) end
     end
   end
+
+  describe "list_sessions/1" do
+    test "returns sessions with reaction counts ordered newest first", %{talk: talk} do
+      {:ok, s1} = Talks.start_session(talk)
+      {:ok, _} = Talks.stop_session(s1)
+      {:ok, s2} = Talks.start_session(talk)
+
+      Joyconf.Reactions.create_reaction(s1, "❤️")
+      Joyconf.Reactions.create_reaction(s1, "😂")
+
+      entries = Talks.list_sessions(talk.id)
+
+      assert length(entries) == 2
+      [first, second] = entries
+      assert first.session.id == s2.id
+      assert first.reaction_count == 0
+      assert second.session.id == s1.id
+      assert second.reaction_count == 2
+    end
+
+    test "returns empty list for a talk with no sessions", %{talk: talk} do
+      assert Talks.list_sessions(talk.id) == []
+    end
+  end
+
+  describe "rename_session/2" do
+    test "updates the session label", %{talk: talk} do
+      {:ok, session} = Talks.start_session(talk)
+      assert {:ok, renamed} = Talks.rename_session(session, "Denver Practice")
+      assert renamed.label == "Denver Practice"
+    end
+  end
+
+  describe "delete_session/1" do
+    test "removes the session", %{talk: talk} do
+      {:ok, session} = Talks.start_session(talk)
+      assert {:ok, _} = Talks.delete_session(session)
+      assert Talks.get_session(session.id) == nil
+    end
+
+    test "cascade-deletes its reactions", %{talk: talk} do
+      {:ok, session} = Talks.start_session(talk)
+      {:ok, reaction} = Joyconf.Reactions.create_reaction(session, "❤️")
+      Talks.delete_session(session)
+      assert Joyconf.Repo.get(Joyconf.Reactions.Reaction, reaction.id) == nil
+    end
+  end
 end

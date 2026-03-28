@@ -61,6 +61,27 @@ defmodule Joyconf.Talks do
   def get_session(id), do: Repo.get(TalkSession, id)
   def get_session!(id), do: Repo.get!(TalkSession, id)
 
+  def list_sessions(talk_id) do
+    from(s in TalkSession,
+      where: s.talk_id == ^talk_id,
+      left_join: r in assoc(s, :reactions),
+      group_by: s.id,
+      select: %{session: s, reaction_count: count(r.id)},
+      order_by: [desc: s.started_at, desc: s.id]
+    )
+    |> Repo.all()
+  end
+
+  def rename_session(%TalkSession{} = session, label) when is_binary(label) do
+    session
+    |> TalkSession.changeset(%{label: label})
+    |> Repo.update()
+  end
+
+  def delete_session(%TalkSession{} = session) do
+    Repo.delete(session)
+  end
+
   defp count_sessions(talk_id) do
     Repo.aggregate(from(s in TalkSession, where: s.talk_id == ^talk_id), :count)
   end
