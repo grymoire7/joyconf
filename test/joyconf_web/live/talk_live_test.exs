@@ -49,4 +49,26 @@ defmodule JoyconfWeb.TalkLiveTest do
     JoyconfWeb.Endpoint.broadcast!("reactions:#{talk.slug}", "new_reaction", %{emoji: "🔥"})
     assert render(view) =~ talk.title
   end
+
+  describe "reaction persistence" do
+    test "persists reaction to active session when one exists", %{conn: conn, talk: talk} do
+      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
+
+      render_click(view, "react", %{"emoji" => "❤️"})
+
+      assert Joyconf.Reactions.count_reactions(session.id) == 1
+    end
+
+    test "does not persist reaction when no active session", %{conn: conn, talk: talk} do
+      # No session started — reaction should broadcast fine but not persist
+      {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
+      Phoenix.PubSub.subscribe(Joyconf.PubSub, "reactions:#{talk.slug}")
+
+      render_click(view, "react", %{"emoji" => "❤️"})
+
+      assert_receive %Phoenix.Socket.Broadcast{event: "new_reaction"}, 500
+      # No session exists, so nothing to count — just verify no crash
+    end
+  end
 end
