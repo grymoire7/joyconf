@@ -5,6 +5,9 @@ defmodule Joyconf.Talks.Talk do
   schema "talks" do
     field :title, :string
     field :slug, :string
+
+    has_many :talk_sessions, Joyconf.Talks.TalkSession
+
     timestamps(type: :utc_datetime)
   end
 
