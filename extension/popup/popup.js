@@ -1,4 +1,4 @@
-const DEV_MODE = true; // set to false before shipping
+const DEV_MODE = false; // set to true locally for testing
 
 const slugInput = document.getElementById("slug-input");
 const connectBtn = document.getElementById("connect-btn");
@@ -35,15 +35,16 @@ fireworksToggle.addEventListener("change", () => {
   });
 });
 
-if (DEV_MODE) testFireworksBtn.style.display = "block";
-
-testFireworksBtn.addEventListener("click", () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-    chrome.tabs.sendMessage(tab.id, { type: "TEST_FIREWORKS" }, () => {
-      void chrome.runtime.lastError;
+if (DEV_MODE) {
+  testFireworksBtn.style.display = "block";
+  testFireworksBtn.addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+      chrome.tabs.sendMessage(tab.id, { type: "TEST_FIREWORKS" }, () => {
+        void chrome.runtime.lastError;
+      });
     });
   });
-});
+}
 
 function setStatus(connected) {
   dot.className = "dot" + (connected ? " connected" : "");

@@ -246,8 +246,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   } else if (msg.type === "SET_FIREWORKS") {
     fireworksEnabled = msg.enabled;
   } else if (msg.type === "TEST_FIREWORKS") {
-    const testEmojis = ["❤️", "🔥", "👏", "🎉", "😂"];
-    spawnFireworks(testEmojis[Math.floor(Math.random() * testEmojis.length)]);
+    if (!fireworksActive) {
+      const testEmojis = ["❤️", "🔥", "👏", "🎉", "😂"];
+      spawnFireworks(testEmojis[Math.floor(Math.random() * testEmojis.length)]);
+    }
   }
 });
 
