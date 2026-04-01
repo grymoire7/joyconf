@@ -15,7 +15,7 @@ const FIREWORKS_COOLDOWN_MS = 8000;
 const FIREWORKS_BURST_COUNT = 16;
 
 const inFlight = {};
-let fireworksEnabled = true;
+let fireworksEnabled = false;
 let fireworksActive = false;
 let lastFireworksTime = 0;
 
@@ -245,6 +245,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true; // keep the message channel open for the async reply
   } else if (msg.type === "SET_FIREWORKS") {
     fireworksEnabled = msg.enabled;
+    // no response needed — popup fires and forgets
   } else if (msg.type === "TEST_FIREWORKS") {
     if (!fireworksActive) {
       const testEmojis = ["❤️", "🔥", "👏", "🎉", "😂"];
