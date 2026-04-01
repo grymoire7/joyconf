@@ -87,6 +87,60 @@ function spawnEmoji(emoji) {
   maybeSpawnFireworks(emoji);
 }
 
+function maybeSpawnFireworks(emoji) {
+  if (!fireworksEnabled) return;
+  if (fireworksActive) return;
+  if (Date.now() - lastFireworksTime < FIREWORKS_COOLDOWN_MS) return;
+  if (window.JoyconfFireworks.checkFireworksTrigger(inFlight, emoji, {
+    minCount: FIREWORKS_MIN_COUNT,
+    minPercent: FIREWORKS_MIN_PERCENT,
+  })) {
+    spawnFireworks(emoji);
+  }
+}
+
+function spawnFireworks(emoji) {
+  fireworksActive = true;
+  lastFireworksTime = Date.now();
+
+  const overlay = getOrCreateOverlay();
+  const cx = overlay.offsetWidth / 2;
+  const cy = overlay.offsetHeight / 2;
+  let remaining = FIREWORKS_BURST_COUNT;
+
+  for (let i = 0; i < FIREWORKS_BURST_COUNT; i++) {
+    const angle = (i / FIREWORKS_BURST_COUNT) * 2 * Math.PI;
+    const dist = 60 + Math.random() * 40;
+    const tx = Math.round(Math.cos(angle) * dist);
+    const ty = Math.round(Math.sin(angle) * dist);
+    const delay = Math.random() * 300;
+
+    const el = document.createElement("span");
+    el.textContent = emoji;
+    el.style.cssText = [
+      "position: absolute",
+      `left: ${cx}px`,
+      `top: ${cy}px`,
+      "font-size: 24px",
+      "pointer-events: none",
+    ].join(";");
+    overlay.appendChild(el);
+
+    const anim = el.animate(
+      [
+        { transform: "translate(0, 0) scale(1)", opacity: 1 },
+        { transform: `translate(${tx}px, ${ty}px) scale(0.3)`, opacity: 0 },
+      ],
+      { duration: 1200, delay, easing: "ease-out", fill: "forwards" }
+    );
+    anim.addEventListener("finish", () => {
+      el.remove();
+      remaining--;
+      if (remaining === 0) fireworksActive = false;
+    });
+  }
+}
+
 function connect(slug) {
   if (socket) {
     socket.disconnect();
