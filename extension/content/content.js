@@ -245,7 +245,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true; // keep the message channel open for the async reply
   } else if (msg.type === "SET_FIREWORKS") {
     fireworksEnabled = msg.enabled;
-    sendResponse({});
   }
 });
 

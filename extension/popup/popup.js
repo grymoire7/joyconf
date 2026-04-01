@@ -27,7 +27,9 @@ fireworksToggle.addEventListener("change", () => {
   const enabled = fireworksToggle.checked;
   chrome.storage.sync.set({ fireworksEnabled: enabled });
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-    chrome.tabs.sendMessage(tab.id, { type: "SET_FIREWORKS", enabled });
+    chrome.tabs.sendMessage(tab.id, { type: "SET_FIREWORKS", enabled }, () => {
+      void chrome.runtime.lastError;
+    });
   });
 });
 
