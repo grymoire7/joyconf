@@ -103,10 +103,16 @@ function spawnFireworks(emoji) {
   fireworksActive = true;
   lastFireworksTime = Date.now();
 
+  if (FIREWORKS_BURST_COUNT === 0) {
+    fireworksActive = false;
+    return;
+  }
+
   const overlay = getOrCreateOverlay();
-  const cx = overlay.offsetWidth / 2;
-  const cy = overlay.offsetHeight / 2;
+  const cx = 80;  // overlay is always 160px wide
+  const cy = 100; // overlay is always 200px tall
   let remaining = FIREWORKS_BURST_COUNT;
+  const safetyTimer = setTimeout(() => { fireworksActive = false; }, 2000);
 
   for (let i = 0; i < FIREWORKS_BURST_COUNT; i++) {
     const angle = (i / FIREWORKS_BURST_COUNT) * 2 * Math.PI;
@@ -136,7 +142,10 @@ function spawnFireworks(emoji) {
     anim.addEventListener("finish", () => {
       el.remove();
       remaining--;
-      if (remaining === 0) fireworksActive = false;
+      if (remaining === 0) {
+        clearTimeout(safetyTimer);
+        fireworksActive = false;
+      }
     });
   }
 }
