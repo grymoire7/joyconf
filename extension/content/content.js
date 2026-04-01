@@ -245,6 +245,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true; // keep the message channel open for the async reply
   } else if (msg.type === "SET_FIREWORKS") {
     fireworksEnabled = msg.enabled;
+  } else if (msg.type === "TEST_FIREWORKS") {
+    const testEmojis = ["❤️", "🔥", "👏", "🎉", "😂"];
+    spawnFireworks(testEmojis[Math.floor(Math.random() * testEmojis.length)]);
   }
 });
 

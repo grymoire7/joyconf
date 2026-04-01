@@ -1,3 +1,5 @@
+const DEV_MODE = true; // set to false before shipping
+
 const slugInput = document.getElementById("slug-input");
 const connectBtn = document.getElementById("connect-btn");
 const dot = document.getElementById("dot");
@@ -28,6 +30,16 @@ fireworksToggle.addEventListener("change", () => {
   chrome.storage.sync.set({ fireworksEnabled: enabled });
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     chrome.tabs.sendMessage(tab.id, { type: "SET_FIREWORKS", enabled }, () => {
+      void chrome.runtime.lastError;
+    });
+  });
+});
+
+if (DEV_MODE) testFireworksBtn.style.display = "block";
+
+testFireworksBtn.addEventListener("click", () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+    chrome.tabs.sendMessage(tab.id, { type: "TEST_FIREWORKS" }, () => {
       void chrome.runtime.lastError;
     });
   });
