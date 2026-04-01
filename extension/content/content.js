@@ -9,6 +9,16 @@ let channel = null;
 let slideInterval = null;
 let currentSlide = 0;
 
+const FIREWORKS_MIN_COUNT = 5;
+const FIREWORKS_MIN_PERCENT = 0.4;
+const FIREWORKS_COOLDOWN_MS = 8000;
+const FIREWORKS_BURST_COUNT = 16;
+
+const inFlight = {};
+let fireworksEnabled = true;
+let fireworksActive = false;
+let lastFireworksTime = 0;
+
 // Inject animation keyframes once
 const style = document.createElement("style");
 style.textContent = `
@@ -54,6 +64,8 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 function spawnEmoji(emoji) {
+  inFlight[emoji] = (inFlight[emoji] || 0) + 1;
+
   const overlay = getOrCreateOverlay();
   const el = document.createElement("span");
   el.textContent = emoji;
@@ -66,7 +78,13 @@ function spawnEmoji(emoji) {
     "pointer-events: none",
   ].join(";");
   overlay.appendChild(el);
-  el.addEventListener("animationend", () => el.remove());
+  el.addEventListener("animationend", () => {
+    el.remove();
+    inFlight[emoji] = Math.max(0, (inFlight[emoji] || 0) - 1);
+    if (inFlight[emoji] === 0) delete inFlight[emoji];
+  });
+
+  maybeSpawnFireworks(emoji);
 }
 
 function connect(slug) {
