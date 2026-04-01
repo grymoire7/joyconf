@@ -1,4 +1,4 @@
-const DEV_MODE = false; // set to true locally for testing
+const DEV_MODE = true; // set to true locally for testing
 
 const slugInput = document.getElementById("slug-input");
 const connectBtn = document.getElementById("connect-btn");
