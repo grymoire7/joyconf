@@ -9,7 +9,7 @@ presentation via a Chrome extension.
 1. Speaker creates a talk in the admin panel → gets a QR code
 2. Attendees scan the QR code → land on `/t/<slug>` → tap emojis
 3. Reactions broadcast in real time via Phoenix PubSub
-4. Chrome extension connected to the same talk slug shows floating emoji overlay on Google Slides
+4. Chrome extension connected to the same talk slug shows floating emoji overlay on Google Slides — when enough attendees send the same emoji at once, a fireworks burst animation plays
 5. Speaker starts a session from the extension (or via the channel) — reactions are persisted with a slide number
 6. After the talk, the admin analytics view shows per-slide reaction breakdowns; sessions from the same talk can be compared side-by-side
 
@@ -93,6 +93,14 @@ npm test        # run all Jest tests
 5. Start the slideshow (**Slideshow** button or F5) — the popup will show the current slide number once the slideshow is running
 
 The extension auto-reconnects on page reload if a slug was previously saved.
+
+### Fireworks animation
+
+When a large proportion of in-flight reactions are the same emoji (default: at least 5 reactions and ≥ 40% of all emojis currently animating), a radial burst fireworks animation plays in the overlay. A global cooldown (8 seconds) prevents back-to-back bursts.
+
+The presenter can toggle fireworks on or off at any time from the **Fireworks animations** checkbox in the popup. The preference is saved to `chrome.storage.sync` (persists across devices and page reloads).
+
+The trigger thresholds (`FIREWORKS_MIN_COUNT`, `FIREWORKS_MIN_PERCENT`, `FIREWORKS_COOLDOWN_MS`) are named constants at the top of `extension/content/content.js` and can be tuned without touching any other code.
 
 > **Note:** Slide number tracking requires the slideshow to be running. The popup shows "Slide —" in the editor view because the slide indicator element only appears in the presentation iframe that Google Slides loads when the slideshow starts.
 
@@ -182,5 +190,6 @@ fly secrets list
 | `assets/js/hooks/emoji_buttons.js`                | Client-side 5s cooldown UI                                     |
 | `assets/js/hooks/emoji_stream.js`                 | Floating emoji animation on `new_reaction` event               |
 | `extension/`                                      | Chrome Manifest V3 extension                                   |
+| `extension/lib/fireworks.js`                      | Pure trigger logic: `checkFireworksTrigger(inFlight, emoji, opts)` |
 | `extension/adapters/`                             | Adapter registry + Google Slides slide-number reader           |
 

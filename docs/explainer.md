@@ -61,10 +61,12 @@ extension/
   adapters/
     google_slides.js    # Reads current slide number from Google Slides DOM
     index.js            # Adapter registry (returns adapter for current URL)
-  content/content.js    # Content script: WebSocket, overlay, slide observer
-  popup/popup.{html,js} # Extension popup UI
+  lib/
+    fireworks.js        # Pure trigger logic for fireworks animation (dual-export: CJS + window global)
+  content/content.js    # Content script: WebSocket, overlay, in-flight tracking, fireworks spawner
+  popup/popup.{html,js} # Extension popup UI (connection, session, fireworks toggle)
   manifest.json
-  tests/                # Jest tests for adapters
+  tests/                # Jest tests for adapters and fireworks trigger logic
 
 assets/js/hooks/
   emoji_buttons.js      # Disables buttons + shows cooldown countdown
@@ -354,6 +356,36 @@ graph LR
     CS --> OV["Overlay div\n(floats over slides)"]
 ```
 
+### Fireworks animation
+
+When the crowd converges on a single emoji, a radial burst animation fires in the overlay instead of individual floaters. The trigger condition is intentionally compound:
+
+```
+count(emoji) >= FIREWORKS_MIN_COUNT  &&  count(emoji) / total_in_flight >= FIREWORKS_MIN_PERCENT
+```
+
+The absolute count guard (`MIN_COUNT = 5`) prevents bursts from firing with tiny audiences. The percentage guard (`MIN_PERCENT = 0.4`) prevents bursts from firing when the crowd is sending many different emojis — it requires this emoji to be dominant, not merely frequent. A global cooldown (`FIREWORKS_COOLDOWN_MS = 8000`) prevents back-to-back bursts, and only one burst can play at a time (`fireworksActive` flag).
+
+**In-flight tracking** — `spawnEmoji()` increments a per-emoji counter (`inFlight["❤️"]++`) when an element is created, and decrements it in the `animationend` listener when the element is removed. The 2.5s animation duration acts as a natural sliding window: `total_in_flight` reflects reactions from the last ~2.5 seconds, making it a real-time proxy for current crowd engagement.
+
+**Trigger logic** is extracted to `extension/lib/fireworks.js` as a pure function (`checkFireworksTrigger(inFlight, emoji, opts)`) that is easy to unit test with Jest without a browser environment. The file uses the same dual-export pattern as the adapter modules — `module.exports` for Jest, `window.JoyconfFireworks` for the browser.
+
+**Burst animation** — `spawnFireworks()` creates `FIREWORKS_BURST_COUNT` (16) `<span>` elements at the overlay center, each animated outward at a unique angle using the Web Animations API:
+
+```javascript
+el.animate(
+  [
+    { transform: "translate(0, 0) scale(1)", opacity: 1 },
+    { transform: `translate(${tx}px, ${ty}px) scale(0.3)`, opacity: 0 },
+  ],
+  { duration: 1200, delay, easing: "ease-out", fill: "forwards" }
+);
+```
+
+The Web Animations API is used (rather than CSS `@keyframes`) because each element needs a unique computed `translate(tx, ty)` target. A safety timeout resets `fireworksActive` after 2 seconds in case `finish` events fail to fire (e.g., when the overlay is re-parented during a fullscreen transition).
+
+**Presenter toggle** — The popup's "Fireworks animations" checkbox writes to `chrome.storage.sync` and sends a `SET_FIREWORKS` message to the content script. `content.js` reads the stored value on init so the preference survives page reloads.
+
 One tricky detail: when the speaker enters fullscreen mode in Google Slides,
 the browser creates a new stacking context for the fullscreen element.  Any
 `position: fixed` elements on `<body>` become invisible. The extension handles
@@ -577,4 +609,8 @@ The admin sessions panel links to the analytics view for each session via `navig
 | **MutationObserver**    | Watches the Google Slides DOM for slide changes without polling                 |
 | **slide_changed**       | Channel event from extension → server → PubSub → TalkLive assigns              |
 | **SessionAnalyticsLive**| Admin-only LiveView: per-slide bar charts and session comparison mode           |
+| **in-flight tracking**  | Per-emoji count of currently animating spans; the 2.5s animation is a sliding window |
+| **checkFireworksTrigger** | Pure function: `count >= minCount && count/total >= minPercent`               |
+| **fireworksActive**     | Global flag preventing concurrent bursts; safety-reset by timeout after 2s     |
+| **Web Animations API**  | Used for fireworks burst so each particle gets a unique computed trajectory     |
 
