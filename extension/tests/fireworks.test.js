@@ -35,4 +35,9 @@ describe("checkFireworksTrigger", () => {
     // count=5, total=12, percent=0.41 — both pass at boundary
     expect(checkFireworksTrigger({ "❤️": 5, "👍": 7 }, "❤️", opts)).toBe(true);
   });
+
+  test("returns true when percent is exactly at minPercent boundary", () => {
+    // count=10, total=25, percent=0.4 exactly — both pass at boundary
+    expect(checkFireworksTrigger({ "❤️": 10, "👍": 15 }, "❤️", opts)).toBe(true);
+  });
 });

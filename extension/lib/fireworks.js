@@ -5,7 +5,7 @@ function checkFireworksTrigger(inFlight, emoji, { minCount, minPercent }) {
   return count >= minCount && percent >= minPercent;
 }
 
-if (typeof module !== "undefined") {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = { checkFireworksTrigger };
 } else {
   window.JoyconfFireworks = { checkFireworksTrigger };
