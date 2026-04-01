@@ -6,6 +6,8 @@ const sessionSection = document.getElementById("session-section");
 const sessionStatus = document.getElementById("session-status");
 const sessionBtn = document.getElementById("session-btn");
 const slideIndicator = document.getElementById("slide-indicator");
+const fireworksToggle = document.getElementById("fireworks-toggle");
+const testFireworksBtn = document.getElementById("test-fireworks-btn");
 
 let currentSessionId = null;
 
@@ -15,6 +17,18 @@ chrome.storage.local.get(["slug", "sessionId"], ({ slug, sessionId }) => {
     currentSessionId = sessionId;
     setSessionUI(true, "Session active");
   }
+});
+
+chrome.storage.sync.get({ fireworksEnabled: true }, ({ fireworksEnabled }) => {
+  fireworksToggle.checked = fireworksEnabled;
+});
+
+fireworksToggle.addEventListener("change", () => {
+  const enabled = fireworksToggle.checked;
+  chrome.storage.sync.set({ fireworksEnabled: enabled });
+  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+    chrome.tabs.sendMessage(tab.id, { type: "SET_FIREWORKS", enabled });
+  });
 });
 
 function setStatus(connected) {

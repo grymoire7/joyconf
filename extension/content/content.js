@@ -243,10 +243,17 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       .receive("ok", () => sendResponse({ stopped: true }))
       .receive("error", ({ reason }) => sendResponse({ error: reason }));
     return true; // keep the message channel open for the async reply
+  } else if (msg.type === "SET_FIREWORKS") {
+    fireworksEnabled = msg.enabled;
+    sendResponse({});
   }
 });
 
 // Auto-connect on page load if slug is saved
 chrome.storage.local.get("slug", ({ slug }) => {
   if (slug) connect(slug);
+});
+
+chrome.storage.sync.get({ fireworksEnabled: true }, ({ fireworksEnabled: val }) => {
+  fireworksEnabled = val;
 });
