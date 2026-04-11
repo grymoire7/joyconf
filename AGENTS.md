@@ -1,5 +1,8 @@
 This is a web application written using the Phoenix web framework.
 
+Use Tidewave's tools for evaluating code, querying the database, etc.
+Use `get_docs` to access documentation and the `get_source_location` tool to find module/function definitions.
+
 ## Project guidelines
 
 - **Never use git worktrees.** Use feature branches instead.
