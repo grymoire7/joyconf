@@ -119,6 +119,12 @@ Change this to `ws://localhost:4000` for local testing, then:
 
 To debug connection issues, open Chrome DevTools on the Google Slides tab (F12) and check the **Console** for `[JoyConf]` log messages.
 
+### Troubleshooting
+
+**Emojis appear multiple times in the overlay**
+
+If each reaction shows up more than once in the extension overlay, the content script likely has a stale channel connection from a previous session (e.g., after the extension was reloaded or the server was restarted). **Reload the Google Slides tab** to reset the connection — this clears the old channel state and establishes a fresh one.
+
 ---
 
 ## Changing the emoji set
