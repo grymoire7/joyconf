@@ -248,7 +248,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     // no response needed — popup fires and forgets
   } else if (msg.type === "TEST_FIREWORKS") {
     if (!fireworksActive) {
-      const testEmojis = ["❤️", "🔥", "👏", "🎉", "😂"];
+      const testEmojis = ["❤️", "😂", "👏", "🤯", "🙋🏻", "🎉", "💩", "😮", "🎯"];
       spawnFireworks(testEmojis[Math.floor(Math.random() * testEmojis.length)]);
     }
   }
