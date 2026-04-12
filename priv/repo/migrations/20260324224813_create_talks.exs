@@ -1,4 +1,4 @@
-defmodule Joyconf.Repo.Migrations.CreateTalks do
+defmodule Speechwave.Repo.Migrations.CreateTalks do
   use Ecto.Migration
 
   def change do

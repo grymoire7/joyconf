@@ -5,23 +5,23 @@ import Config
 # The MIX_TEST_PARTITION environment variable can be used
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
-config :joyconf, Joyconf.Repo,
+config :speechwave, Speechwave.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "joyconf_test#{System.get_env("MIX_TEST_PARTITION")}",
+  database: "speechwave_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :joyconf, JoyconfWeb.Endpoint,
+config :speechwave, SpeechwaveWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
   secret_key_base: "ZNi8x7OBa7XcA37WQBQLYngfsJBZMA4Wmy+pkwb/YA0xYh9EDh82k1v5lZ2hpO8O",
   server: false
 
 # In test we don't send emails
-config :joyconf, Joyconf.Mailer, adapter: Swoosh.Adapters.Test
+config :speechwave, Speechwave.Mailer, adapter: Swoosh.Adapters.Test
 
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false

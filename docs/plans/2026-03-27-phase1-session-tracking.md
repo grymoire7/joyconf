@@ -15,22 +15,22 @@
 **Create:**
 - `priv/repo/migrations/TIMESTAMP_create_talk_sessions.exs`
 - `priv/repo/migrations/TIMESTAMP_create_reactions.exs`
-- `lib/joyconf/talks/talk_session.ex` — TalkSession schema + changeset
-- `lib/joyconf/reactions.ex` — Reactions context (create, count)
-- `lib/joyconf/reactions/reaction.ex` — Reaction schema + changeset
-- `test/joyconf/sessions_test.exs` — session lifecycle + admin function tests
-- `test/joyconf/reactions_test.exs` — reaction creation + count tests
+- `lib/speechwave/talks/talk_session.ex` — TalkSession schema + changeset
+- `lib/speechwave/reactions.ex` — Reactions context (create, count)
+- `lib/speechwave/reactions/reaction.ex` — Reaction schema + changeset
+- `test/speechwave/sessions_test.exs` — session lifecycle + admin function tests
+- `test/speechwave/reactions_test.exs` — reaction creation + count tests
 
 **Modify:**
-- `lib/joyconf/talks/talk.ex` — add `has_many :talk_sessions`
-- `lib/joyconf/talks.ex` — add session functions
-- `lib/joyconf_web/channels/reaction_channel.ex` — add `handle_in` for session events
-- `lib/joyconf_web/live/talk_live.ex` — persist reaction when active session exists
-- `lib/joyconf_web/live/admin_live.ex` — sessions assigns + events
-- `lib/joyconf_web/live/admin_live.html.heex` — sessions panel
-- `test/joyconf_web/channels/reaction_channel_test.exs` — session channel tests
-- `test/joyconf_web/live/admin_live_test.exs` — session UI tests
-- `test/joyconf_web/live/talk_live_test.exs` — reaction persistence tests
+- `lib/speechwave/talks/talk.ex` — add `has_many :talk_sessions`
+- `lib/speechwave/talks.ex` — add session functions
+- `lib/speechwave_web/channels/reaction_channel.ex` — add `handle_in` for session events
+- `lib/speechwave_web/live/talk_live.ex` — persist reaction when active session exists
+- `lib/speechwave_web/live/admin_live.ex` — sessions assigns + events
+- `lib/speechwave_web/live/admin_live.html.heex` — sessions panel
+- `test/speechwave_web/channels/reaction_channel_test.exs` — session channel tests
+- `test/speechwave_web/live/admin_live_test.exs` — session UI tests
+- `test/speechwave_web/live/talk_live_test.exs` — reaction persistence tests
 - `extension/popup/popup.html` — Start/Stop Session button + session status
 - `extension/popup/popup.js` — session state management
 - `extension/content/content.js` — channel push for start/stop session
@@ -53,7 +53,7 @@ mix ecto.gen.migration create_talk_sessions
 Open the file at `priv/repo/migrations/*_create_talk_sessions.exs` and replace its contents:
 
 ```elixir
-defmodule Joyconf.Repo.Migrations.CreateTalkSessions do
+defmodule Speechwave.Repo.Migrations.CreateTalkSessions do
   use Ecto.Migration
 
   def change do
@@ -91,20 +91,20 @@ git commit -m "feat: add talk_sessions migration"
 ## Task 2: `TalkSession` Schema
 
 **Files:**
-- Create: `lib/joyconf/talks/talk_session.ex`
-- Modify: `lib/joyconf/talks/talk.ex`
-- Test: `test/joyconf/sessions_test.exs` (partial — changeset tests only)
+- Create: `lib/speechwave/talks/talk_session.ex`
+- Modify: `lib/speechwave/talks/talk.ex`
+- Test: `test/speechwave/sessions_test.exs` (partial — changeset tests only)
 
 - [ ] **Step 1: Write the failing changeset tests**
 
-Create `test/joyconf/sessions_test.exs`:
+Create `test/speechwave/sessions_test.exs`:
 
 ```elixir
-defmodule Joyconf.SessionsTest do
-  use Joyconf.DataCase
+defmodule Speechwave.SessionsTest do
+  use Speechwave.DataCase
 
-  alias Joyconf.Talks
-  alias Joyconf.Talks.TalkSession
+  alias Speechwave.Talks
+  alias Speechwave.Talks.TalkSession
 
   setup do
     {:ok, talk} = Talks.create_talk(%{title: "Test Talk", slug: "test-talk"})
@@ -138,15 +138,15 @@ end
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```bash
-mix test test/joyconf/sessions_test.exs
+mix test test/speechwave/sessions_test.exs
 ```
 
 Expected: compile error — `TalkSession` module not found.
 
-- [ ] **Step 3: Create `lib/joyconf/talks/talk_session.ex`**
+- [ ] **Step 3: Create `lib/speechwave/talks/talk_session.ex`**
 
 ```elixir
-defmodule Joyconf.Talks.TalkSession do
+defmodule Speechwave.Talks.TalkSession do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -155,8 +155,8 @@ defmodule Joyconf.Talks.TalkSession do
     field :started_at, :utc_datetime
     field :ended_at, :utc_datetime
 
-    belongs_to :talk, Joyconf.Talks.Talk
-    has_many :reactions, Joyconf.Reactions.Reaction
+    belongs_to :talk, Speechwave.Talks.Talk
+    has_many :reactions, Speechwave.Reactions.Reaction
 
     timestamps(type: :utc_datetime)
   end
@@ -169,18 +169,18 @@ defmodule Joyconf.Talks.TalkSession do
 end
 ```
 
-- [ ] **Step 4: Add `has_many :talk_sessions` to `lib/joyconf/talks/talk.ex`**
+- [ ] **Step 4: Add `has_many :talk_sessions` to `lib/speechwave/talks/talk.ex`**
 
 In the schema block, after the existing fields, add:
 
 ```elixir
-has_many :talk_sessions, Joyconf.Talks.TalkSession
+has_many :talk_sessions, Speechwave.Talks.TalkSession
 ```
 
 - [ ] **Step 5: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf/sessions_test.exs
+mix test test/speechwave/sessions_test.exs
 ```
 
 Expected: 3 tests, 0 failures.
@@ -188,7 +188,7 @@ Expected: 3 tests, 0 failures.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add lib/joyconf/talks/talk_session.ex lib/joyconf/talks/talk.ex test/joyconf/sessions_test.exs
+git add lib/speechwave/talks/talk_session.ex lib/speechwave/talks/talk.ex test/speechwave/sessions_test.exs
 git commit -m "feat: add TalkSession schema"
 ```
 
@@ -208,7 +208,7 @@ mix ecto.gen.migration create_reactions
 - [ ] **Step 2: Fill in the generated file**
 
 ```elixir
-defmodule Joyconf.Repo.Migrations.CreateReactions do
+defmodule Speechwave.Repo.Migrations.CreateReactions do
   use Ecto.Migration
 
   def change do
@@ -245,19 +245,19 @@ git commit -m "feat: add reactions migration"
 ## Task 4: `Reaction` Schema + `Reactions` Context
 
 **Files:**
-- Create: `lib/joyconf/reactions/reaction.ex`
-- Create: `lib/joyconf/reactions.ex`
-- Test: `test/joyconf/reactions_test.exs`
+- Create: `lib/speechwave/reactions/reaction.ex`
+- Create: `lib/speechwave/reactions.ex`
+- Test: `test/speechwave/reactions_test.exs`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `test/joyconf/reactions_test.exs`:
+Create `test/speechwave/reactions_test.exs`:
 
 ```elixir
-defmodule Joyconf.ReactionsTest do
-  use Joyconf.DataCase
+defmodule Speechwave.ReactionsTest do
+  use Speechwave.DataCase
 
-  alias Joyconf.{Talks, Reactions}
+  alias Speechwave.{Talks, Reactions}
 
   setup do
     {:ok, talk} = Talks.create_talk(%{title: "Test Talk", slug: "test-talk"})
@@ -301,15 +301,15 @@ end
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```bash
-mix test test/joyconf/reactions_test.exs
+mix test test/speechwave/reactions_test.exs
 ```
 
 Expected: compile error — `Reactions` module and `Talks.start_session/1` not found yet. That's expected.
 
-- [ ] **Step 3: Create `lib/joyconf/reactions/reaction.ex`**
+- [ ] **Step 3: Create `lib/speechwave/reactions/reaction.ex`**
 
 ```elixir
-defmodule Joyconf.Reactions.Reaction do
+defmodule Speechwave.Reactions.Reaction do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -317,7 +317,7 @@ defmodule Joyconf.Reactions.Reaction do
     field :emoji, :string
     field :slide_number, :integer, default: 0
 
-    belongs_to :talk_session, Joyconf.Talks.TalkSession
+    belongs_to :talk_session, Speechwave.Talks.TalkSession
 
     timestamps(type: :utc_datetime)
   end
@@ -330,15 +330,15 @@ defmodule Joyconf.Reactions.Reaction do
 end
 ```
 
-- [ ] **Step 4: Create `lib/joyconf/reactions.ex`**
+- [ ] **Step 4: Create `lib/speechwave/reactions.ex`**
 
 ```elixir
-defmodule Joyconf.Reactions do
+defmodule Speechwave.Reactions do
   import Ecto.Query
 
-  alias Joyconf.Repo
-  alias Joyconf.Reactions.Reaction
-  alias Joyconf.Talks.TalkSession
+  alias Speechwave.Repo
+  alias Speechwave.Reactions.Reaction
+  alias Speechwave.Talks.TalkSession
 
   def create_reaction(%TalkSession{} = session, emoji, slide_number \\ 0) do
     %Reaction{talk_session_id: session.id}
@@ -357,7 +357,7 @@ The tests still need `Talks.start_session/1` — implement that in the next task
 - [ ] **Step 5: Commit schema + context**
 
 ```bash
-git add lib/joyconf/reactions/reaction.ex lib/joyconf/reactions.ex test/joyconf/reactions_test.exs
+git add lib/speechwave/reactions/reaction.ex lib/speechwave/reactions.ex test/speechwave/reactions_test.exs
 git commit -m "feat: add Reaction schema and Reactions context"
 ```
 
@@ -366,10 +366,10 @@ git commit -m "feat: add Reaction schema and Reactions context"
 ## Task 5: `Talks` Context — Session Lifecycle Functions
 
 **Files:**
-- Modify: `lib/joyconf/talks.ex`
-- Test: `test/joyconf/sessions_test.exs` (extend with lifecycle tests)
+- Modify: `lib/speechwave/talks.ex`
+- Test: `test/speechwave/sessions_test.exs` (extend with lifecycle tests)
 
-- [ ] **Step 1: Add lifecycle tests to `test/joyconf/sessions_test.exs`**
+- [ ] **Step 1: Add lifecycle tests to `test/speechwave/sessions_test.exs`**
 
 Append these describe blocks to the existing file (after the changeset tests):
 
@@ -441,22 +441,22 @@ Append these describe blocks to the existing file (after the changeset tests):
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```bash
-mix test test/joyconf/sessions_test.exs
+mix test test/speechwave/sessions_test.exs
 ```
 
 Expected: failures — `start_session/1`, `stop_session/1`, etc. not defined.
 
-- [ ] **Step 3: Add session lifecycle functions to `lib/joyconf/talks.ex`**
+- [ ] **Step 3: Add session lifecycle functions to `lib/speechwave/talks.ex`**
 
-Add the following to `lib/joyconf/talks.ex`. Add `import Ecto.Query` and `alias Joyconf.Talks.TalkSession` at the top of the module alongside the existing aliases:
+Add the following to `lib/speechwave/talks.ex`. Add `import Ecto.Query` and `alias Speechwave.Talks.TalkSession` at the top of the module alongside the existing aliases:
 
 ```elixir
-defmodule Joyconf.Talks do
+defmodule Speechwave.Talks do
   import Ecto.Query
 
-  alias Joyconf.Repo
-  alias Joyconf.Talks.Talk
-  alias Joyconf.Talks.TalkSession
+  alias Speechwave.Repo
+  alias Speechwave.Talks.Talk
+  alias Speechwave.Talks.TalkSession
 
   # --- existing functions (list_talks, get_talk!, etc.) unchanged ---
 
@@ -507,7 +507,7 @@ end
 - [ ] **Step 4: Run lifecycle tests — confirm they pass**
 
 ```bash
-mix test test/joyconf/sessions_test.exs
+mix test test/speechwave/sessions_test.exs
 ```
 
 Expected: all tests pass (changeset tests + lifecycle tests).
@@ -515,7 +515,7 @@ Expected: all tests pass (changeset tests + lifecycle tests).
 - [ ] **Step 5: Run reactions tests — they should also pass now**
 
 ```bash
-mix test test/joyconf/reactions_test.exs
+mix test test/speechwave/reactions_test.exs
 ```
 
 Expected: all tests pass.
@@ -523,7 +523,7 @@ Expected: all tests pass.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add lib/joyconf/talks.ex test/joyconf/sessions_test.exs
+git add lib/speechwave/talks.ex test/speechwave/sessions_test.exs
 git commit -m "feat: add session lifecycle functions to Talks context"
 ```
 
@@ -532,10 +532,10 @@ git commit -m "feat: add session lifecycle functions to Talks context"
 ## Task 6: `Talks` Context — Session Admin Functions
 
 **Files:**
-- Modify: `lib/joyconf/talks.ex`
-- Test: `test/joyconf/sessions_test.exs` (extend with admin tests)
+- Modify: `lib/speechwave/talks.ex`
+- Test: `test/speechwave/sessions_test.exs` (extend with admin tests)
 
-- [ ] **Step 1: Add admin function tests to `test/joyconf/sessions_test.exs`**
+- [ ] **Step 1: Add admin function tests to `test/speechwave/sessions_test.exs`**
 
 Append to the file:
 
@@ -546,8 +546,8 @@ Append to the file:
       {:ok, _} = Talks.stop_session(s1)
       {:ok, s2} = Talks.start_session(talk)
 
-      Joyconf.Reactions.create_reaction(s1, "❤️")
-      Joyconf.Reactions.create_reaction(s1, "😂")
+      Speechwave.Reactions.create_reaction(s1, "❤️")
+      Speechwave.Reactions.create_reaction(s1, "😂")
 
       entries = Talks.list_sessions(talk.id)
 
@@ -581,9 +581,9 @@ Append to the file:
 
     test "cascade-deletes its reactions", %{talk: talk} do
       {:ok, session} = Talks.start_session(talk)
-      {:ok, reaction} = Joyconf.Reactions.create_reaction(session, "❤️")
+      {:ok, reaction} = Speechwave.Reactions.create_reaction(session, "❤️")
       Talks.delete_session(session)
-      assert Joyconf.Repo.get(Joyconf.Reactions.Reaction, reaction.id) == nil
+      assert Speechwave.Repo.get(Speechwave.Reactions.Reaction, reaction.id) == nil
     end
   end
 ```
@@ -591,12 +591,12 @@ Append to the file:
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```bash
-mix test test/joyconf/sessions_test.exs
+mix test test/speechwave/sessions_test.exs
 ```
 
 Expected: failures — `list_sessions/1`, `rename_session/2`, `delete_session/1` not defined.
 
-- [ ] **Step 3: Add admin functions to `lib/joyconf/talks.ex`**
+- [ ] **Step 3: Add admin functions to `lib/speechwave/talks.ex`**
 
 ```elixir
   def list_sessions(talk_id) do
@@ -624,7 +624,7 @@ Expected: failures — `list_sessions/1`, `rename_session/2`, `delete_session/1`
 - [ ] **Step 4: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf/sessions_test.exs
+mix test test/speechwave/sessions_test.exs
 ```
 
 Expected: all tests pass.
@@ -640,7 +640,7 @@ Expected: all existing tests still pass.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add lib/joyconf/talks.ex test/joyconf/sessions_test.exs
+git add lib/speechwave/talks.ex test/speechwave/sessions_test.exs
 git commit -m "feat: add session admin functions to Talks context"
 ```
 
@@ -649,12 +649,12 @@ git commit -m "feat: add session admin functions to Talks context"
 ## Task 7: `ReactionChannel` — Bidirectional Session Start/Stop
 
 **Files:**
-- Modify: `lib/joyconf_web/channels/reaction_channel.ex`
-- Modify: `test/joyconf_web/channels/reaction_channel_test.exs`
+- Modify: `lib/speechwave_web/channels/reaction_channel.ex`
+- Modify: `test/speechwave_web/channels/reaction_channel_test.exs`
 
 - [ ] **Step 1: Add session channel tests**
 
-Append to `test/joyconf_web/channels/reaction_channel_test.exs`:
+Append to `test/speechwave_web/channels/reaction_channel_test.exs`:
 
 ```elixir
   describe "session management via channel" do
@@ -667,7 +667,7 @@ Append to `test/joyconf_web/channels/reaction_channel_test.exs`:
          %{joined: joined, talk: talk} do
       ref = push(joined, "start_session", %{})
       assert_reply ref, :ok, %{session_id: session_id, label: "Session 1"}
-      assert Joyconf.Talks.get_session(session_id) != nil
+      assert Speechwave.Talks.get_session(session_id) != nil
     end
 
     test "start_session is idempotent when a session is already active",
@@ -688,7 +688,7 @@ Append to `test/joyconf_web/channels/reaction_channel_test.exs`:
       ref2 = push(joined, "stop_session", %{"session_id" => session_id})
       assert_reply ref2, :ok
 
-      session = Joyconf.Talks.get_session(session_id)
+      session = Speechwave.Talks.get_session(session_id)
       assert session.ended_at != nil
     end
 
@@ -699,8 +699,8 @@ Append to `test/joyconf_web/channels/reaction_channel_test.exs`:
 
     test "stop_session returns error for a session belonging to a different talk",
          %{joined: joined} do
-      {:ok, other_talk} = Joyconf.Talks.create_talk(%{title: "Other", slug: "other"})
-      {:ok, other_session} = Joyconf.Talks.start_session(other_talk)
+      {:ok, other_talk} = Speechwave.Talks.create_talk(%{title: "Other", slug: "other"})
+      {:ok, other_session} = Speechwave.Talks.start_session(other_talk)
 
       ref = push(joined, "stop_session", %{"session_id" => other_session.id})
       assert_reply ref, :error, %{reason: "unauthorized"}
@@ -713,11 +713,11 @@ Append to `test/joyconf_web/channels/reaction_channel_test.exs`:
 
       ref2 = push(joined, "stop_session", %{"session_id" => session_id})
       assert_reply ref2, :ok
-      first_end = Joyconf.Talks.get_session(session_id).ended_at
+      first_end = Speechwave.Talks.get_session(session_id).ended_at
 
       ref3 = push(joined, "stop_session", %{"session_id" => session_id})
       assert_reply ref3, :ok
-      second_end = Joyconf.Talks.get_session(session_id).ended_at
+      second_end = Speechwave.Talks.get_session(session_id).ended_at
 
       assert first_end == second_end
     end
@@ -727,18 +727,18 @@ Append to `test/joyconf_web/channels/reaction_channel_test.exs`:
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```bash
-mix test test/joyconf_web/channels/reaction_channel_test.exs
+mix test test/speechwave_web/channels/reaction_channel_test.exs
 ```
 
 Expected: failures — no `handle_in` clauses defined.
 
-- [ ] **Step 3: Update `lib/joyconf_web/channels/reaction_channel.ex`**
+- [ ] **Step 3: Update `lib/speechwave_web/channels/reaction_channel.ex`**
 
 ```elixir
-defmodule JoyconfWeb.ReactionChannel do
+defmodule SpeechwaveWeb.ReactionChannel do
   use Phoenix.Channel
 
-  alias Joyconf.Talks
+  alias Speechwave.Talks
 
   def join("reactions:" <> slug, _payload, socket) do
     case Talks.get_talk_by_slug(slug) do
@@ -784,7 +784,7 @@ end
 - [ ] **Step 4: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf_web/channels/reaction_channel_test.exs
+mix test test/speechwave_web/channels/reaction_channel_test.exs
 ```
 
 Expected: all tests pass.
@@ -792,8 +792,8 @@ Expected: all tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/joyconf_web/channels/reaction_channel.ex \
-        test/joyconf_web/channels/reaction_channel_test.exs
+git add lib/speechwave_web/channels/reaction_channel.ex \
+        test/speechwave_web/channels/reaction_channel_test.exs
 git commit -m "feat: add session start/stop to ReactionChannel"
 ```
 
@@ -802,28 +802,28 @@ git commit -m "feat: add session start/stop to ReactionChannel"
 ## Task 8: `TalkLive` — Persist Reactions to Active Session
 
 **Files:**
-- Modify: `lib/joyconf_web/live/talk_live.ex`
-- Modify: `test/joyconf_web/live/talk_live_test.exs`
+- Modify: `lib/speechwave_web/live/talk_live.ex`
+- Modify: `test/speechwave_web/live/talk_live_test.exs`
 
 - [ ] **Step 1: Add reaction persistence tests**
 
-Append to `test/joyconf_web/live/talk_live_test.exs`:
+Append to `test/speechwave_web/live/talk_live_test.exs`:
 
 ```elixir
   describe "reaction persistence" do
     test "persists reaction to active session when one exists", %{conn: conn, talk: talk} do
-      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, session} = Speechwave.Talks.start_session(talk)
       {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
 
       render_click(view, "react", %{"emoji" => "❤️"})
 
-      assert Joyconf.Reactions.count_reactions(session.id) == 1
+      assert Speechwave.Reactions.count_reactions(session.id) == 1
     end
 
     test "does not persist reaction when no active session", %{conn: conn, talk: talk} do
       # No session started — reaction should broadcast fine but not persist
       {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
-      Phoenix.PubSub.subscribe(Joyconf.PubSub, "reactions:#{talk.slug}")
+      Phoenix.PubSub.subscribe(Speechwave.PubSub, "reactions:#{talk.slug}")
 
       render_click(view, "react", %{"emoji" => "❤️"})
 
@@ -836,20 +836,20 @@ Append to `test/joyconf_web/live/talk_live_test.exs`:
 - [ ] **Step 2: Run tests — confirm the persistence test fails**
 
 ```bash
-mix test test/joyconf_web/live/talk_live_test.exs
+mix test test/speechwave_web/live/talk_live_test.exs
 ```
 
 Expected: the new `persists reaction` test fails (count is 0).
 
-- [ ] **Step 3: Update `lib/joyconf_web/live/talk_live.ex`**
+- [ ] **Step 3: Update `lib/speechwave_web/live/talk_live.ex`**
 
-Add `Joyconf.Reactions` to the alias line and update `handle_event/3`:
+Add `Speechwave.Reactions` to the alias line and update `handle_event/3`:
 
 ```elixir
-defmodule JoyconfWeb.TalkLive do
-  use JoyconfWeb, :live_view
+defmodule SpeechwaveWeb.TalkLive do
+  use SpeechwaveWeb, :live_view
 
-  alias Joyconf.{Talks, RateLimiter, Reactions}
+  alias Speechwave.{Talks, RateLimiter, Reactions}
 
   @emojis ["❤️", "😂", "👏", "🤯", "🙋🏻", "🎉", "💩", "😮", "🎯"]
 
@@ -860,7 +860,7 @@ defmodule JoyconfWeb.TalkLive do
 
       talk ->
         if connected?(socket) do
-          Phoenix.PubSub.subscribe(Joyconf.PubSub, "reactions:#{slug}")
+          Phoenix.PubSub.subscribe(Speechwave.PubSub, "reactions:#{slug}")
         end
 
         {:ok, assign(socket, talk: talk, emojis: @emojis, session_id: socket.id)}
@@ -874,7 +874,7 @@ defmodule JoyconfWeb.TalkLive do
         session -> Reactions.create_reaction(session, emoji)
       end
 
-      JoyconfWeb.Endpoint.broadcast!(
+      SpeechwaveWeb.Endpoint.broadcast!(
         "reactions:#{socket.assigns.talk.slug}",
         "new_reaction",
         %{emoji: emoji}
@@ -896,7 +896,7 @@ end
 - [ ] **Step 4: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf_web/live/talk_live_test.exs
+mix test test/speechwave_web/live/talk_live_test.exs
 ```
 
 Expected: all tests pass.
@@ -904,7 +904,7 @@ Expected: all tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/joyconf_web/live/talk_live.ex test/joyconf_web/live/talk_live_test.exs
+git add lib/speechwave_web/live/talk_live.ex test/speechwave_web/live/talk_live_test.exs
 git commit -m "feat: persist reactions to active session in TalkLive"
 ```
 
@@ -913,18 +913,18 @@ git commit -m "feat: persist reactions to active session in TalkLive"
 ## Task 9: `AdminLive` — Sessions Panel
 
 **Files:**
-- Modify: `lib/joyconf_web/live/admin_live.ex`
-- Modify: `lib/joyconf_web/live/admin_live.html.heex`
-- Modify: `test/joyconf_web/live/admin_live_test.exs`
+- Modify: `lib/speechwave_web/live/admin_live.ex`
+- Modify: `lib/speechwave_web/live/admin_live.html.heex`
+- Modify: `test/speechwave_web/live/admin_live_test.exs`
 
 - [ ] **Step 1: Add session panel tests**
 
-Append to `test/joyconf_web/live/admin_live_test.exs`:
+Append to `test/speechwave_web/live/admin_live_test.exs`:
 
 ```elixir
   describe "sessions panel" do
     setup %{conn: conn} do
-      {:ok, talk} = Joyconf.Talks.create_talk(%{title: "Prime Talk", slug: "prime"})
+      {:ok, talk} = Speechwave.Talks.create_talk(%{title: "Prime Talk", slug: "prime"})
       {:ok, conn: conn, talk: talk}
     end
 
@@ -936,8 +936,8 @@ Append to `test/joyconf_web/live/admin_live_test.exs`:
     end
 
     test "lists sessions with reaction counts when sessions exist", %{conn: conn, talk: talk} do
-      {:ok, session} = Joyconf.Talks.start_session(talk)
-      Joyconf.Reactions.create_reaction(session, "❤️")
+      {:ok, session} = Speechwave.Talks.start_session(talk)
+      Speechwave.Reactions.create_reaction(session, "❤️")
 
       {:ok, view, _html} = live(conn, "/admin")
       view |> element("#talk-list button", "Prime Talk") |> render_click()
@@ -948,14 +948,14 @@ Append to `test/joyconf_web/live/admin_live_test.exs`:
     end
 
     test "shows Active badge for sessions without ended_at", %{conn: conn, talk: talk} do
-      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, session} = Speechwave.Talks.start_session(talk)
       {:ok, view, _html} = live(conn, "/admin")
       view |> element("#talk-list button", "Prime Talk") |> render_click()
       assert has_element?(view, "#session-#{session.id} .session-active-badge")
     end
 
     test "can rename a session", %{conn: conn, talk: talk} do
-      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, session} = Speechwave.Talks.start_session(talk)
       {:ok, view, _html} = live(conn, "/admin")
       view |> element("#talk-list button", "Prime Talk") |> render_click()
 
@@ -970,18 +970,18 @@ Append to `test/joyconf_web/live/admin_live_test.exs`:
     end
 
     test "can delete a session", %{conn: conn, talk: talk} do
-      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, session} = Speechwave.Talks.start_session(talk)
       {:ok, view, _html} = live(conn, "/admin")
       view |> element("#talk-list button", "Prime Talk") |> render_click()
 
       view |> element("#delete-session-#{session.id}") |> render_click()
 
       refute has_element?(view, "#session-#{session.id}")
-      assert Joyconf.Talks.get_session(session.id) == nil
+      assert Speechwave.Talks.get_session(session.id) == nil
     end
 
     test "rename form shows validation error for blank label", %{conn: conn, talk: talk} do
-      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, session} = Speechwave.Talks.start_session(talk)
       {:ok, view, _html} = live(conn, "/admin")
       view |> element("#talk-list button", "Prime Talk") |> render_click()
 
@@ -998,7 +998,7 @@ Append to `test/joyconf_web/live/admin_live_test.exs`:
     end
 
     test "cancel_rename hides the rename form", %{conn: conn, talk: talk} do
-      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, session} = Speechwave.Talks.start_session(talk)
       {:ok, view, _html} = live(conn, "/admin")
       view |> element("#talk-list button", "Prime Talk") |> render_click()
 
@@ -1021,19 +1021,19 @@ Append to `test/joyconf_web/live/admin_live_test.exs`:
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```bash
-mix test test/joyconf_web/live/admin_live_test.exs
+mix test test/speechwave_web/live/admin_live_test.exs
 ```
 
 Expected: session panel tests fail — elements not found.
 
-- [ ] **Step 3: Update `lib/joyconf_web/live/admin_live.ex`**
+- [ ] **Step 3: Update `lib/speechwave_web/live/admin_live.ex`**
 
 ```elixir
-defmodule JoyconfWeb.AdminLive do
-  use JoyconfWeb, :live_view
+defmodule SpeechwaveWeb.AdminLive do
+  use SpeechwaveWeb, :live_view
 
-  alias Joyconf.Talks
-  alias Joyconf.Talks.Talk
+  alias Speechwave.Talks
+  alias Speechwave.Talks.Talk
 
   def mount(_params, _session, socket) do
     {:ok,
@@ -1080,8 +1080,8 @@ defmodule JoyconfWeb.AdminLive do
 
   def handle_event("show_qr", %{"id" => id}, socket) do
     talk = Talks.get_talk!(String.to_integer(id))
-    url = JoyconfWeb.Endpoint.url() <> "/t/#{talk.slug}"
-    qr = Joyconf.QRCode.to_data_uri(url)
+    url = SpeechwaveWeb.Endpoint.url() <> "/t/#{talk.slug}"
+    qr = Speechwave.QRCode.to_data_uri(url)
     sessions = Talks.list_sessions(talk.id)
 
     {:noreply,
@@ -1097,8 +1097,8 @@ defmodule JoyconfWeb.AdminLive do
   def handle_event("save", %{"talk" => attrs}, socket) do
     case Talks.create_talk(attrs) do
       {:ok, talk} ->
-        url = JoyconfWeb.Endpoint.url() <> "/t/#{talk.slug}"
-        qr = Joyconf.QRCode.to_data_uri(url)
+        url = SpeechwaveWeb.Endpoint.url() <> "/t/#{talk.slug}"
+        qr = Speechwave.QRCode.to_data_uri(url)
 
         {:noreply,
          assign(socket,
@@ -1156,7 +1156,7 @@ defmodule JoyconfWeb.AdminLive do
 end
 ```
 
-- [ ] **Step 4: Update `lib/joyconf_web/live/admin_live.html.heex`**
+- [ ] **Step 4: Update `lib/speechwave_web/live/admin_live.html.heex`**
 
 Replace the full file contents:
 
@@ -1313,7 +1313,7 @@ Replace the full file contents:
 - [ ] **Step 5: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf_web/live/admin_live_test.exs
+mix test test/speechwave_web/live/admin_live_test.exs
 ```
 
 Expected: all tests pass.
@@ -1329,9 +1329,9 @@ Expected: all tests pass.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add lib/joyconf_web/live/admin_live.ex \
-        lib/joyconf_web/live/admin_live.html.heex \
-        test/joyconf_web/live/admin_live_test.exs
+git add lib/speechwave_web/live/admin_live.ex \
+        lib/speechwave_web/live/admin_live.html.heex \
+        test/speechwave_web/live/admin_live_test.exs
 git commit -m "feat: add sessions panel to AdminLive"
 ```
 

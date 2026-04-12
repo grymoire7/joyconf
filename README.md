@@ -14,7 +14,7 @@ presentation via a Chrome extension.
 6. After the talk, the admin analytics view shows per-slide reaction breakdowns; sessions from the same talk can be compared side-by-side
 
 For a full explainer on the technical implementation see [this explainer](docs/explainer.md).
-For the story of writing the project (the whys and the bugs), see [this blog post](https://tracyatteberry.com/posts/joyconf/).
+For the story of writing the project (the whys and the bugs), see [this blog post](https://tracyatteberry.com/posts/speechwave/).
 
 ---
 
@@ -106,10 +106,10 @@ The trigger thresholds (`FIREWORKS_MIN_COUNT`, `FIREWORKS_MIN_PERCENT`, `FIREWOR
 
 ### Pointing at a different server
 
-The extension is hard-coded to `wss://joyconf.fly.dev` in `extension/content/content.js`:
+The extension is hard-coded to `wss://speechwave.fly.dev` in `extension/content/content.js`:
 
 ```javascript
-const HOST = "wss://joyconf.fly.dev";
+const HOST = "wss://speechwave.fly.dev";
 ```
 
 Change this to `ws://localhost:4000` for local testing, then:
@@ -129,7 +129,7 @@ If each reaction shows up more than once in the extension overlay, the content s
 
 ## Changing the emoji set
 
-Edit the `@emojis` module attribute in `lib/joyconf_web/live/talk_live.ex`:
+Edit the `@emojis` module attribute in `lib/speechwave_web/live/talk_live.ex`:
 
 ```elixir
 @emojis ["❤️", "😂", "🔥", "👏", "🤯"]
@@ -145,7 +145,7 @@ Add, remove, or reorder emojis here. No other changes needed — the template lo
 
 ```bash
 fly auth login
-fly launch --name joyconf --region iad --no-deploy
+fly launch --name speechwave --region iad --no-deploy
 fly secrets set SECRET_KEY_BASE=$(mix phx.gen.secret)
 fly secrets set ADMIN_PASSWORD=choose-a-strong-password
 fly deploy
@@ -181,18 +181,18 @@ fly secrets list
 
 | Path                                              | What it does                                                   |
 | ------------------------------------------------- | -------------------------------------------------------------- |
-| `lib/joyconf/talks.ex`                            | Context: talks + session lifecycle (start, stop, rename, etc.) |
-| `lib/joyconf/talks/talk.ex`                       | Ecto schema + changeset validation                             |
-| `lib/joyconf/talks/talk_session.ex`               | TalkSession schema (label, started_at, ended_at)               |
-| `lib/joyconf/reactions.ex`                        | Context: create reactions, per-slide totals query              |
-| `lib/joyconf/reactions/reaction.ex`               | Reaction schema (emoji, slide_number, talk_session_id)         |
-| `lib/joyconf/rate_limiter.ex`                     | ETS-backed GenServer: 1 reaction per session per 5s            |
-| `lib/joyconf/qr_code.ex`                          | Wraps `eqrcode` → base64 PNG data URI                          |
-| `lib/joyconf_web/live/admin_live.ex`              | Admin panel: talks, QR codes, sessions panel                   |
-| `lib/joyconf_web/live/session_analytics_live.ex`  | Per-session analytics: slide breakdown + comparison mode       |
-| `lib/joyconf_web/live/talk_live.ex`               | Attendee page: emoji buttons, stamps reactions with slide      |
-| `lib/joyconf_web/channels/reaction_channel.ex`    | Channel: reactions, session start/stop, slide_changed          |
-| `lib/joyconf_web/plugs/admin_auth.ex`             | HTTP Basic Auth plug for `/admin` routes                       |
+| `lib/speechwave/talks.ex`                            | Context: talks + session lifecycle (start, stop, rename, etc.) |
+| `lib/speechwave/talks/talk.ex`                       | Ecto schema + changeset validation                             |
+| `lib/speechwave/talks/talk_session.ex`               | TalkSession schema (label, started_at, ended_at)               |
+| `lib/speechwave/reactions.ex`                        | Context: create reactions, per-slide totals query              |
+| `lib/speechwave/reactions/reaction.ex`               | Reaction schema (emoji, slide_number, talk_session_id)         |
+| `lib/speechwave/rate_limiter.ex`                     | ETS-backed GenServer: 1 reaction per session per 5s            |
+| `lib/speechwave/qr_code.ex`                          | Wraps `eqrcode` → base64 PNG data URI                          |
+| `lib/speechwave_web/live/admin_live.ex`              | Admin panel: talks, QR codes, sessions panel                   |
+| `lib/speechwave_web/live/session_analytics_live.ex`  | Per-session analytics: slide breakdown + comparison mode       |
+| `lib/speechwave_web/live/talk_live.ex`               | Attendee page: emoji buttons, stamps reactions with slide      |
+| `lib/speechwave_web/channels/reaction_channel.ex`    | Channel: reactions, session start/stop, slide_changed          |
+| `lib/speechwave_web/plugs/admin_auth.ex`             | HTTP Basic Auth plug for `/admin` routes                       |
 | `assets/js/hooks/emoji_buttons.js`                | Client-side 5s cooldown UI                                     |
 | `assets/js/hooks/emoji_stream.js`                 | Floating emoji animation on `new_reaction` event               |
 | `extension/`                                      | Chrome Manifest V3 extension                                   |

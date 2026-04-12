@@ -7,19 +7,19 @@
 # General application configuration
 import Config
 
-config :joyconf,
-  ecto_repos: [Joyconf.Repo],
+config :speechwave,
+  ecto_repos: [Speechwave.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configure the endpoint
-config :joyconf, JoyconfWeb.Endpoint,
+config :speechwave, SpeechwaveWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: JoyconfWeb.ErrorHTML, json: JoyconfWeb.ErrorJSON],
+    formats: [html: SpeechwaveWeb.ErrorHTML, json: SpeechwaveWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Joyconf.PubSub,
+  pubsub_server: Speechwave.PubSub,
   live_view: [signing_salt: "dv/y4eob"]
 
 # Configure the mailer
@@ -29,12 +29,12 @@ config :joyconf, JoyconfWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :joyconf, Joyconf.Mailer, adapter: Swoosh.Adapters.Local
+config :speechwave, Speechwave.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",
-  joyconf: [
+  speechwave: [
     args:
       ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
     cd: Path.expand("../assets", __DIR__),
@@ -44,7 +44,7 @@ config :esbuild,
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "4.1.12",
-  joyconf: [
+  speechwave: [
     args: ~w(
       --input=assets/css/app.css
       --output=priv/static/assets/css/app.css

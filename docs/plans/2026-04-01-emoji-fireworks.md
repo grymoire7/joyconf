@@ -4,7 +4,7 @@
 
 **Goal:** Trigger a radial burst fireworks animation in the extension overlay when a single emoji type dominates the in-flight reactions, with a presenter-controlled on/off toggle and a DEV_MODE test button.
 
-**Architecture:** The trigger condition is a pure function extracted to `extension/lib/fireworks.js` (testable with Jest, exposed as `window.JoyconfFireworks` at runtime). In-flight counts are tracked per emoji type in `content.js`; the total is derived on demand. The fireworks spawner uses the Web Animations API to avoid per-element CSS custom property issues. The popup toggle writes to `chrome.storage.sync`; `content.js` reads it on init and responds to live `SET_FIREWORKS` messages.
+**Architecture:** The trigger condition is a pure function extracted to `extension/lib/fireworks.js` (testable with Jest, exposed as `window.SpeechwaveFireworks` at runtime). In-flight counts are tracked per emoji type in `content.js`; the total is derived on demand. The fireworks spawner uses the Web Animations API to avoid per-element CSS custom property issues. The popup toggle writes to `chrome.storage.sync`; `content.js` reads it on init and responds to live `SET_FIREWORKS` messages.
 
 **Tech Stack:** Vanilla JS (Chrome Extension MV3), Web Animations API, `chrome.storage.sync`, Jest (jsdom), existing Phoenix channel infrastructure.
 
@@ -14,7 +14,7 @@
 
 | Action | File | Responsibility |
 |--------|------|----------------|
-| Create | `extension/lib/fireworks.js` | Pure trigger logic — testable, exposed as `window.JoyconfFireworks` |
+| Create | `extension/lib/fireworks.js` | Pure trigger logic — testable, exposed as `window.SpeechwaveFireworks` |
 | Create | `extension/tests/fireworks.test.js` | Jest unit tests for trigger logic |
 | Modify | `extension/manifest.json` | Add `lib/fireworks.js` to content script load order |
 | Modify | `extension/content/content.js` | In-flight tracking, fireworks spawner, storage init, new message handlers |
@@ -78,7 +78,7 @@ describe("checkFireworksTrigger", () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /Users/tracy/projects/joyconf/extension && npx jest tests/fireworks.test.js
+cd /Users/tracy/projects/speechwave/extension && npx jest tests/fireworks.test.js
 ```
 
 Expected: all tests fail with `Cannot find module '../lib/fireworks'`.
@@ -98,14 +98,14 @@ function checkFireworksTrigger(inFlight, emoji, { minCount, minPercent }) {
 if (typeof module !== "undefined") {
   module.exports = { checkFireworksTrigger };
 } else {
-  window.JoyconfFireworks = { checkFireworksTrigger };
+  window.SpeechwaveFireworks = { checkFireworksTrigger };
 }
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /Users/tracy/projects/joyconf/extension && npx jest tests/fireworks.test.js
+cd /Users/tracy/projects/speechwave/extension && npx jest tests/fireworks.test.js
 ```
 
 Expected: 7 tests pass.
@@ -121,7 +121,7 @@ In `extension/manifest.json`, add `"lib/fireworks.js"` before `"content/content.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/tracy/projects/joyconf && git add extension/lib/fireworks.js extension/tests/fireworks.test.js extension/manifest.json
+cd /Users/tracy/projects/speechwave && git add extension/lib/fireworks.js extension/tests/fireworks.test.js extension/manifest.json
 git commit -m "feat: add fireworks trigger logic module with tests"
 ```
 
@@ -162,7 +162,7 @@ function spawnEmoji(emoji) {
     "bottom: 0",
     `left: ${Math.floor(Math.random() * 70)}%`,
     "font-size: 28px",
-    "animation: joyconfFloat 2.5s ease-out forwards",
+    "animation: speechwaveFloat 2.5s ease-out forwards",
     "pointer-events: none",
   ].join(";");
   overlay.appendChild(el);
@@ -181,7 +181,7 @@ Note: `maybeSpawnFireworks` is defined in Task 3. The extension won't be loadabl
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tracy/projects/joyconf && git add extension/content/content.js
+cd /Users/tracy/projects/speechwave && git add extension/content/content.js
 git commit -m "feat: track in-flight emoji counts in spawnEmoji"
 ```
 
@@ -199,7 +199,7 @@ function maybeSpawnFireworks(emoji) {
   if (!fireworksEnabled) return;
   if (fireworksActive) return;
   if (Date.now() - lastFireworksTime < FIREWORKS_COOLDOWN_MS) return;
-  if (window.JoyconfFireworks.checkFireworksTrigger(inFlight, emoji, {
+  if (window.SpeechwaveFireworks.checkFireworksTrigger(inFlight, emoji, {
     minCount: FIREWORKS_MIN_COUNT,
     minPercent: FIREWORKS_MIN_PERCENT,
   })) {
@@ -265,7 +265,7 @@ If the overlay is too small to see the burst clearly, temporarily change `FIREWO
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/tracy/projects/joyconf && git add extension/content/content.js
+cd /Users/tracy/projects/speechwave && git add extension/content/content.js
 git commit -m "feat: add fireworks spawner with radial burst animation"
 ```
 
@@ -347,7 +347,7 @@ Reload the extension. Open a Slides presentation. Open the popup:
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/tracy/projects/joyconf && git add extension/popup/popup.html extension/popup/popup.js extension/content/content.js
+cd /Users/tracy/projects/speechwave && git add extension/popup/popup.html extension/popup/popup.js extension/content/content.js
 git commit -m "feat: add fireworks toggle to popup with chrome.storage.sync persistence"
 ```
 
@@ -405,7 +405,7 @@ Reload the extension. Open a Google Slides presentation (fullscreen and windowed
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/tracy/projects/joyconf && git add extension/popup/popup.js extension/content/content.js
+cd /Users/tracy/projects/speechwave && git add extension/popup/popup.js extension/content/content.js
 git commit -m "feat: add DEV_MODE test fireworks button to popup"
 ```
 
