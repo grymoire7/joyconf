@@ -19,7 +19,7 @@ supports unlimited public repositories — no paid plan is required.
 
 | Repo                         | Visibility | Contents                                   |
 | ---------------------------- | ---------- | ------------------------------------------ |
-| `speechwave-live/speechwave` | Public     | Phoenix app (renamed from `joyconf`)       |
+| `speechwave-live/speechwave` | Public     | Phoenix app (renamed from `speechwave`)       |
 | `speechwave-live/extension`  | Public     | Chrome extension (extracted from monorepo) |
 
 The Chrome extension is extracted into its own repository because it has an
@@ -127,7 +127,7 @@ renamed as part of the subsequent renaming/rebranding phase.
 The following are explicitly deferred and will be addressed in subsequent design
 phases:
 
-- Renaming (`joyconf` → `speechwave`) — source, config, and Fly.io changes
+- Renaming (`speechwave` → `speechwave`) — source, config, and Fly.io changes
 - User authentication and registration (`mix phx.gen.auth`)
 - User roles and permissions (speaker, event organizer)
 - Event and Organization models

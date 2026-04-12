@@ -15,29 +15,29 @@
 ## File Map
 
 **Create:**
-- `lib/joyconf_web/live/session_analytics_live.ex` — analytics LiveView
-- `lib/joyconf_web/live/session_analytics_live.html.heex` — analytics template
-- `test/joyconf_web/live/session_analytics_live_test.exs` — analytics view tests
+- `lib/speechwave_web/live/session_analytics_live.ex` — analytics LiveView
+- `lib/speechwave_web/live/session_analytics_live.html.heex` — analytics template
+- `test/speechwave_web/live/session_analytics_live_test.exs` — analytics view tests
 
 **Modify:**
-- `lib/joyconf/reactions.ex` — add `slide_reaction_totals/1`
-- `lib/joyconf_web/router.ex` — add analytics routes under `/admin`
-- `lib/joyconf_web/live/admin_live.html.heex` — add "View Analytics" link per session
-- `test/joyconf/reactions_test.exs` — add `slide_reaction_totals/1` tests
+- `lib/speechwave/reactions.ex` — add `slide_reaction_totals/1`
+- `lib/speechwave_web/router.ex` — add analytics routes under `/admin`
+- `lib/speechwave_web/live/admin_live.html.heex` — add "View Analytics" link per session
+- `test/speechwave/reactions_test.exs` — add `slide_reaction_totals/1` tests
 
 ---
 
 ## Task 1: `slide_reaction_totals/1` Query
 
 **Files:**
-- Modify: `lib/joyconf/reactions.ex`
-- Modify: `test/joyconf/reactions_test.exs`
+- Modify: `lib/speechwave/reactions.ex`
+- Modify: `test/speechwave/reactions_test.exs`
 
 This function returns a list of `%{slide_number, emoji, count}` maps for a session, ordered by slide number. The caller groups these by `slide_number` for display.
 
 - [ ] **Step 1: Add query test**
 
-Append to `test/joyconf/reactions_test.exs`:
+Append to `test/speechwave/reactions_test.exs`:
 
 ```elixir
   describe "slide_reaction_totals/1" do
@@ -69,12 +69,12 @@ Append to `test/joyconf/reactions_test.exs`:
 - [ ] **Step 2: Run test — confirm it fails**
 
 ```bash
-mix test test/joyconf/reactions_test.exs
+mix test test/speechwave/reactions_test.exs
 ```
 
 Expected: failure — `slide_reaction_totals/1` not defined.
 
-- [ ] **Step 3: Add `slide_reaction_totals/1` to `lib/joyconf/reactions.ex`**
+- [ ] **Step 3: Add `slide_reaction_totals/1` to `lib/speechwave/reactions.ex`**
 
 ```elixir
   def slide_reaction_totals(session_id) do
@@ -91,7 +91,7 @@ Expected: failure — `slide_reaction_totals/1` not defined.
 - [ ] **Step 4: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf/reactions_test.exs
+mix test test/speechwave/reactions_test.exs
 ```
 
 Expected: all tests pass.
@@ -99,7 +99,7 @@ Expected: all tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/joyconf/reactions.ex test/joyconf/reactions_test.exs
+git add lib/speechwave/reactions.ex test/speechwave/reactions_test.exs
 git commit -m "feat: add slide_reaction_totals query to Reactions context"
 ```
 
@@ -108,14 +108,14 @@ git commit -m "feat: add slide_reaction_totals query to Reactions context"
 ## Task 2: Analytics Route
 
 **Files:**
-- Modify: `lib/joyconf_web/router.ex`
+- Modify: `lib/speechwave_web/router.ex`
 
 - [ ] **Step 1: Add analytics routes to the admin scope**
 
-In `lib/joyconf_web/router.ex`, in the `/admin` scope (around line 29), add:
+In `lib/speechwave_web/router.ex`, in the `/admin` scope (around line 29), add:
 
 ```elixir
-  scope "/admin", JoyconfWeb do
+  scope "/admin", SpeechwaveWeb do
     pipe_through [:browser, :admin]
     live "/", AdminLive, :index
     live "/talks/new", AdminLive, :new
@@ -135,7 +135,7 @@ Expected: all existing tests pass (the new routes are unreachable until the Live
 - [ ] **Step 3: Commit**
 
 ```bash
-git add lib/joyconf_web/router.ex
+git add lib/speechwave_web/router.ex
 git commit -m "feat: add session analytics routes"
 ```
 
@@ -144,9 +144,9 @@ git commit -m "feat: add session analytics routes"
 ## Task 3: `SessionAnalyticsLive` — Single Session View
 
 **Files:**
-- Create: `lib/joyconf_web/live/session_analytics_live.ex`
-- Create: `lib/joyconf_web/live/session_analytics_live.html.heex`
-- Create: `test/joyconf_web/live/session_analytics_live_test.exs`
+- Create: `lib/speechwave_web/live/session_analytics_live.ex`
+- Create: `lib/speechwave_web/live/session_analytics_live.html.heex`
+- Create: `test/speechwave_web/live/session_analytics_live_test.exs`
 
 The view shows:
 - Session label, talk title, start/end time
@@ -159,23 +159,23 @@ Helper function `group_by_slide/1` converts the flat `slide_reaction_totals` lis
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `test/joyconf_web/live/session_analytics_live_test.exs`:
+Create `test/speechwave_web/live/session_analytics_live_test.exs`:
 
 ```elixir
-defmodule JoyconfWeb.SessionAnalyticsLiveTest do
-  use JoyconfWeb.ConnCase
+defmodule SpeechwaveWeb.SessionAnalyticsLiveTest do
+  use SpeechwaveWeb.ConnCase
 
   import Phoenix.LiveViewTest
 
   setup %{conn: conn} do
-    Application.put_env(:joyconf, :admin_password, "testpassword")
+    Application.put_env(:speechwave, :admin_password, "testpassword")
     authed = put_req_header(conn, "authorization", "Basic " <> Base.encode64("admin:testpassword"))
     {:ok, conn: authed}
   end
 
   setup do
-    {:ok, talk} = Joyconf.Talks.create_talk(%{title: "Test Talk", slug: "test-talk"})
-    {:ok, session} = Joyconf.Talks.start_session(talk)
+    {:ok, talk} = Speechwave.Talks.create_talk(%{title: "Test Talk", slug: "test-talk"})
+    {:ok, session} = Speechwave.Talks.start_session(talk)
     {:ok, talk: talk, session: session}
   end
 
@@ -186,15 +186,15 @@ defmodule JoyconfWeb.SessionAnalyticsLiveTest do
   end
 
   test "shows total reaction count", %{conn: conn, session: session} do
-    Joyconf.Reactions.create_reaction(session, "❤️", 1)
-    Joyconf.Reactions.create_reaction(session, "😂", 1)
+    Speechwave.Reactions.create_reaction(session, "❤️", 1)
+    Speechwave.Reactions.create_reaction(session, "😂", 1)
     {:ok, view, _html} = live(conn, "/admin/sessions/#{session.id}")
     assert has_element?(view, "#total-reactions", "2")
   end
 
   test "renders a row for each slide that has reactions", %{conn: conn, session: session} do
-    Joyconf.Reactions.create_reaction(session, "❤️", 1)
-    Joyconf.Reactions.create_reaction(session, "❤️", 3)
+    Speechwave.Reactions.create_reaction(session, "❤️", 1)
+    Speechwave.Reactions.create_reaction(session, "❤️", 3)
     {:ok, view, _html} = live(conn, "/admin/sessions/#{session.id}")
     assert has_element?(view, "#slide-row-1")
     assert has_element?(view, "#slide-row-3")
@@ -202,14 +202,14 @@ defmodule JoyconfWeb.SessionAnalyticsLiveTest do
   end
 
   test "labels slide 0 as General", %{conn: conn, session: session} do
-    Joyconf.Reactions.create_reaction(session, "❤️", 0)
+    Speechwave.Reactions.create_reaction(session, "❤️", 0)
     {:ok, view, _html} = live(conn, "/admin/sessions/#{session.id}")
     assert has_element?(view, "#slide-row-0", "General")
   end
 
   test "shows compare link when talk has multiple sessions", %{conn: conn, talk: talk, session: session} do
-    {:ok, s1} = Joyconf.Talks.stop_session(session)
-    {:ok, s2} = Joyconf.Talks.start_session(talk)
+    {:ok, s1} = Speechwave.Talks.stop_session(session)
+    {:ok, s2} = Speechwave.Talks.start_session(talk)
 
     {:ok, view, _html} = live(conn, "/admin/sessions/#{s1.id}")
     assert has_element?(view, "#compare-link")
@@ -225,8 +225,8 @@ defmodule JoyconfWeb.SessionAnalyticsLiveTest do
 
   test "renders compare section when compare_session param is present",
        %{conn: conn, talk: talk, session: session} do
-    {:ok, _} = Joyconf.Talks.stop_session(session)
-    {:ok, s2} = Joyconf.Talks.start_session(talk)
+    {:ok, _} = Speechwave.Talks.stop_session(session)
+    {:ok, s2} = Speechwave.Talks.start_session(talk)
 
     {:ok, view, _html} = live(conn, "/admin/sessions/#{session.id}/compare/#{s2.id}")
     assert has_element?(view, "#compare-section")
@@ -239,18 +239,18 @@ end
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```bash
-mix test test/joyconf_web/live/session_analytics_live_test.exs
+mix test test/speechwave_web/live/session_analytics_live_test.exs
 ```
 
 Expected: compile error — `SessionAnalyticsLive` not defined.
 
-- [ ] **Step 3: Create `lib/joyconf_web/live/session_analytics_live.ex`**
+- [ ] **Step 3: Create `lib/speechwave_web/live/session_analytics_live.ex`**
 
 ```elixir
-defmodule JoyconfWeb.SessionAnalyticsLive do
-  use JoyconfWeb, :live_view
+defmodule SpeechwaveWeb.SessionAnalyticsLive do
+  use SpeechwaveWeb, :live_view
 
-  alias Joyconf.{Talks, Reactions}
+  alias Speechwave.{Talks, Reactions}
 
   def mount(%{"id" => id} = params, _session, socket) do
     session_id = case Integer.parse(id) do
@@ -302,7 +302,7 @@ defmodule JoyconfWeb.SessionAnalyticsLive do
 end
 ```
 
-- [ ] **Step 4: Create `lib/joyconf_web/live/session_analytics_live.html.heex`**
+- [ ] **Step 4: Create `lib/speechwave_web/live/session_analytics_live.html.heex`**
 
 ```heex
 <Layouts.app flash={@flash}>
@@ -423,7 +423,7 @@ end
 - [ ] **Step 5: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf_web/live/session_analytics_live_test.exs
+mix test test/speechwave_web/live/session_analytics_live_test.exs
 ```
 
 Expected: all tests pass.
@@ -439,9 +439,9 @@ Expected: all tests pass.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add lib/joyconf_web/live/session_analytics_live.ex \
-        lib/joyconf_web/live/session_analytics_live.html.heex \
-        test/joyconf_web/live/session_analytics_live_test.exs
+git add lib/speechwave_web/live/session_analytics_live.ex \
+        lib/speechwave_web/live/session_analytics_live.html.heex \
+        test/speechwave_web/live/session_analytics_live_test.exs
 git commit -m "feat: add SessionAnalyticsLive with per-slide breakdown and comparison"
 ```
 
@@ -450,17 +450,17 @@ git commit -m "feat: add SessionAnalyticsLive with per-slide breakdown and compa
 ## Task 4: Link to Analytics from the Admin Sessions Panel
 
 **Files:**
-- Modify: `lib/joyconf_web/live/admin_live.html.heex`
-- Modify: `test/joyconf_web/live/admin_live_test.exs`
+- Modify: `lib/speechwave_web/live/admin_live.html.heex`
+- Modify: `test/speechwave_web/live/admin_live_test.exs`
 
 - [ ] **Step 1: Add analytics link test**
 
-Append to `test/joyconf_web/live/admin_live_test.exs`:
+Append to `test/speechwave_web/live/admin_live_test.exs`:
 
 ```elixir
   test "sessions panel shows link to analytics for each session", %{conn: conn} do
-    {:ok, talk} = Joyconf.Talks.create_talk(%{title: "Analytics Talk", slug: "analytics-talk"})
-    {:ok, session} = Joyconf.Talks.start_session(talk)
+    {:ok, talk} = Speechwave.Talks.create_talk(%{title: "Analytics Talk", slug: "analytics-talk"})
+    {:ok, session} = Speechwave.Talks.start_session(talk)
 
     {:ok, view, _html} = live(conn, "/admin")
     view |> element("#talk-list button", "Analytics Talk") |> render_click()
@@ -472,12 +472,12 @@ Append to `test/joyconf_web/live/admin_live_test.exs`:
 - [ ] **Step 2: Run test — confirm it fails**
 
 ```bash
-mix test test/joyconf_web/live/admin_live_test.exs
+mix test test/speechwave_web/live/admin_live_test.exs
 ```
 
 Expected: failure — `#analytics-link-{id}` element not found.
 
-- [ ] **Step 3: Add analytics link to `lib/joyconf_web/live/admin_live.html.heex`**
+- [ ] **Step 3: Add analytics link to `lib/speechwave_web/live/admin_live.html.heex`**
 
 In the session list row, inside the non-renaming branch, add the analytics link after the Delete button:
 
@@ -494,7 +494,7 @@ In the session list row, inside the non-renaming branch, add the analytics link 
 - [ ] **Step 4: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf_web/live/admin_live_test.exs
+mix test test/speechwave_web/live/admin_live_test.exs
 ```
 
 Expected: all tests pass.
@@ -510,8 +510,8 @@ Expected: all checks pass.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add lib/joyconf_web/live/admin_live.html.heex \
-        test/joyconf_web/live/admin_live_test.exs
+git add lib/speechwave_web/live/admin_live.html.heex \
+        test/speechwave_web/live/admin_live_test.exs
 git commit -m "feat: add analytics links to admin sessions panel"
 ```
 

@@ -1,4 +1,4 @@
-defmodule JoyconfWeb.ChannelCase do
+defmodule SpeechwaveWeb.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a channel connection.
@@ -17,16 +17,16 @@ defmodule JoyconfWeb.ChannelCase do
   using do
     quote do
       # The default endpoint for testing
-      @endpoint JoyconfWeb.Endpoint
+      @endpoint SpeechwaveWeb.Endpoint
 
       import Phoenix.ChannelTest
 
-      import JoyconfWeb.ChannelCase
+      import SpeechwaveWeb.ChannelCase
     end
   end
 
   setup tags do
-    Joyconf.DataCase.setup_sandbox(tags)
+    Speechwave.DataCase.setup_sandbox(tags)
     :ok
   end
 end

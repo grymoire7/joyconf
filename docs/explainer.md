@@ -35,7 +35,7 @@ Two different WebSocket connections are used:
 
 ```
 lib/
-  joyconf/
+  speechwave/
     application.ex              # OTP supervision tree
     talks.ex                    # Talk + session context (CRUD, lifecycle)
     talks/talk.ex               # Talk Ecto schema
@@ -44,7 +44,7 @@ lib/
     reactions/reaction.ex       # Reaction Ecto schema
     rate_limiter.ex             # GenServer + ETS rate limiting
     qr_code.ex                  # QR code generation for admin
-  joyconf_web/
+  speechwave_web/
     live/
       talk_live.ex              # Attendee reaction page (LiveView)
       admin_live.ex             # Admin: talks, sessions panel
@@ -252,9 +252,9 @@ LiveView. It only needs to *receive* messages, which Channels handle perfectly.
 
 ```elixir
 # user_socket.ex
-defmodule JoyconfWeb.UserSocket do
+defmodule SpeechwaveWeb.UserSocket do
   use Phoenix.Socket
-  channel "reactions:*", JoyconfWeb.ReactionChannel
+  channel "reactions:*", SpeechwaveWeb.ReactionChannel
 
   def connect(_params, socket, _info), do: {:ok, socket}
   def id(_socket), do: nil
@@ -270,7 +270,7 @@ to connect.
 
 ```elixir
 # endpoint.ex
-socket "/socket", JoyconfWeb.UserSocket,
+socket "/socket", SpeechwaveWeb.UserSocket,
   websocket: [check_origin: false]
 ```
 
@@ -299,7 +299,7 @@ The `RateLimiter` is a `GenServer` that owns an ETS table. ETS (Erlang Term
 Storage) is like a very fast, in-memory hash map built into the BEAM runtime.
 
 ```elixir
-defmodule Joyconf.RateLimiter do
+defmodule Speechwave.RateLimiter do
   use GenServer
 
   @cooldown_ms 3_000
@@ -344,7 +344,7 @@ popup sends a message to the content script via `chrome.runtime.sendMessage`.
 
 **Content script (`content.js`)** — Injected into Google Slides pages. It:
 
-1. Connects a Phoenix `Socket` to `wss://joyconf.fly.dev/socket`
+1. Connects a Phoenix `Socket` to `wss://speechwave.fly.dev/socket`
 2. Joins the `reactions:${slug}` channel
 3. Listens for `"new_reaction"` messages and calls `spawnEmoji()`
 
@@ -368,7 +368,7 @@ The absolute count guard (`MIN_COUNT = 5`) prevents bursts from firing with tiny
 
 **In-flight tracking** — `spawnEmoji()` increments a per-emoji counter (`inFlight["❤️"]++`) when an element is created, and decrements it in the `animationend` listener when the element is removed. The 2.5s animation duration acts as a natural sliding window: `total_in_flight` reflects reactions from the last ~2.5 seconds, making it a real-time proxy for current crowd engagement.
 
-**Trigger logic** is extracted to `extension/lib/fireworks.js` as a pure function (`checkFireworksTrigger(inFlight, emoji, opts)`) that is easy to unit test with Jest without a browser environment. The file uses the same dual-export pattern as the adapter modules — `module.exports` for Jest, `window.JoyconfFireworks` for the browser.
+**Trigger logic** is extracted to `extension/lib/fireworks.js` as a pure function (`checkFireworksTrigger(inFlight, emoji, opts)`) that is easy to unit test with Jest without a browser environment. The file uses the same dual-export pattern as the adapter modules — `module.exports` for Jest, `window.SpeechwaveFireworks` for the browser.
 
 **Burst animation** — `spawnFireworks()` creates `FIREWORKS_BURST_COUNT` (16) `<span>` elements at the overlay center, each animated outward at a unique angle using the Web Animations API:
 
@@ -394,7 +394,7 @@ this by re-parenting the overlay `<div>` into the fullscreen element when a
 
 ```javascript
 document.addEventListener("fullscreenchange", () => {
-  const overlay = document.getElementById("joyconf-overlay");
+  const overlay = document.getElementById("speechwave-overlay");
   if (document.fullscreenElement) {
     document.fullscreenElement.appendChild(overlay); // move into fullscreen
   } else {
@@ -448,7 +448,7 @@ From there, an organiser can:
    encoded as a base64 data URI, ready to embed in an `<img>` tag or download
 
 The QR code encodes the full attendee URL
-(`https://joyconf.fly.dev/t/my-talk`), so speakers can display it on their
+(`https://speechwave.fly.dev/t/my-talk`), so speakers can display it on their
 first slide.
 
 ---
@@ -460,12 +460,12 @@ JoyConf's:
 
 ```mermaid
 graph TD
-    APP["Joyconf.Application\n(supervisor)"] --> TEL["Telemetry supervisor"]
-    APP --> REPO["Joyconf.Repo\n(Ecto / Postgres)"]
+    APP["Speechwave.Application\n(supervisor)"] --> TEL["Telemetry supervisor"]
+    APP --> REPO["Speechwave.Repo\n(Ecto / Postgres)"]
     APP --> DNS["DNSCluster\n(multi-node discovery)"]
-    APP --> PS["Phoenix.PubSub\n(name: Joyconf.PubSub)"]
-    APP --> RL["Joyconf.RateLimiter\n(GenServer + ETS)"]
-    APP --> EP["JoyconfWeb.Endpoint\n(HTTP + WebSockets)"]
+    APP --> PS["Phoenix.PubSub\n(name: Speechwave.PubSub)"]
+    APP --> RL["Speechwave.RateLimiter\n(GenServer + ETS)"]
+    APP --> EP["SpeechwaveWeb.Endpoint\n(HTTP + WebSockets)"]
 ```
 
 If `RateLimiter` crashes, the supervisor restarts it automatically. When it
@@ -478,7 +478,7 @@ cooldown state is lost and everyone gets a fresh window to react.
 
 A *session* is a recording window. The speaker starts one (via the extension popup or `start_session` channel message) before presenting, and stops it afterward. Reactions recorded while a session is active are persisted with a slide number for later analytics.
 
-Session lifecycle is managed in `Joyconf.Talks`:
+Session lifecycle is managed in `Speechwave.Talks`:
 
 - `start_session/1` — idempotent: returns the existing active session if one is open, otherwise creates a new one labeled "Session N" where N is one more than the total number of sessions for that talk.
 - `stop_session/1` — idempotent: if `ended_at` is already set, returns the session unchanged.

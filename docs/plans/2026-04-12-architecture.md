@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Establish the production architecture for Speechwave: GitHub org + two-repo structure, BSL 1.1 licensing on the Phoenix app, MIT on the extension, and a `Joyconf.Plans` module that defines and enforces free/pro/org tier limits.
+**Goal:** Establish the production architecture for Speechwave: GitHub org + two-repo structure, BSL 1.1 licensing on the Phoenix app, MIT on the extension, and a `Speechwave.Plans` module that defines and enforces free/pro/org tier limits.
 
-**Architecture:** Single public monolith under a `speechwave-live` GitHub org. Tier limits enforced in application logic via `Joyconf.Plans` — a pattern-matched constants module — not environment variables. The Chrome extension is extracted to its own repo with its own release lifecycle.
+**Architecture:** Single public monolith under a `speechwave-live` GitHub org. Tier limits enforced in application logic via `Speechwave.Plans` — a pattern-matched constants module — not environment variables. The Chrome extension is extracted to its own repo with its own release lifecycle.
 
 **Tech Stack:** Elixir/Phoenix, ExUnit, Git, GitHub
 
@@ -16,8 +16,8 @@
 | --- | --- | --- |
 | `LICENSE` | Create | BSL 1.1 license for the Phoenix app |
 | `LICENSE_FAQ.md` | Create | Plain-language explanation of BSL terms |
-| `lib/joyconf/plans.ex` | Create | Tier limit constants and `check/3` enforcement function |
-| `test/joyconf/plans_test.exs` | Create | Unit tests for `Joyconf.Plans` |
+| `lib/speechwave/plans.ex` | Create | Tier limit constants and `check/3` enforcement function |
+| `test/speechwave/plans_test.exs` | Create | Unit tests for `Speechwave.Plans` |
 
 Extension repo (separate repo, manual setup):
 
@@ -35,18 +35,18 @@ Manual steps — no code.
 
   Go to https://github.com/organizations/plan and create a new organization named `speechwave-live`. Select the free plan.
 
-- [x] **Step 2: Transfer the joyconf repo**
+- [x] **Step 2: Transfer the speechwave repo**
 
-  On GitHub: go to the `joyconf` repo → Settings → Danger Zone → Transfer repository. Transfer to `speechwave-live`. The repo will be accessible at `github.com/speechwave-live/joyconf` (it will be renamed to `speechwave` in the rename phase).
+  On GitHub: go to the `speechwave` repo → Settings → Danger Zone → Transfer repository. Transfer to `speechwave-live`. The repo will be accessible at `github.com/speechwave-live/speechwave` (it will be renamed to `speechwave` in the rename phase).
 
 - [x] **Step 3: Update the local remote**
 
   ```bash
-  git remote set-url origin git@github.com:speechwave-live/joyconf.git
+  git remote set-url origin git@github.com:speechwave-live/speechwave.git
   git remote -v
   ```
 
-  Expected output includes `speechwave-live/joyconf`.
+  Expected output includes `speechwave-live/speechwave`.
 
 ---
 
@@ -68,7 +68,7 @@ Manual steps — no code.
   cd /tmp/speechwave-extension
   git init
   git add .
-  git commit -m "chore: initial commit — extracted from joyconf monorepo"
+  git commit -m "chore: initial commit — extracted from speechwave monorepo"
   git remote add origin git@github.com:speechwave-live/extension.git
   git branch -M main
   git push -u origin main
@@ -94,10 +94,10 @@ Manual steps — no code.
 
 - [x] **Step 6: Remove the extension directory from the main repo**
 
-  Back in the joyconf project directory:
+  Back in the speechwave project directory:
 
   ```bash
-  cd /Users/tracy/projects/joyconf
+  cd /Users/tracy/projects/speechwave
   git rm -r extension/
   git commit -m "chore: remove extension — moved to speechwave-live/extension"
   git push
@@ -166,17 +166,17 @@ Manual steps — no code.
 
 ---
 
-## Task 4: Create the `Joyconf.Plans` Module
+## Task 4: Create the `Speechwave.Plans` Module
 
 - [x] **Step 1: Write the failing test**
 
-  Create `test/joyconf/plans_test.exs`:
+  Create `test/speechwave/plans_test.exs`:
 
   ```elixir
-  defmodule Joyconf.PlansTest do
+  defmodule Speechwave.PlansTest do
     use ExUnit.Case, async: true
 
-    alias Joyconf.Plans
+    alias Speechwave.Plans
 
     describe "limit/2 — free plan" do
       test "max_participants is 50" do
@@ -244,15 +244,15 @@ Manual steps — no code.
 - [x] **Step 2: Run the test to verify it fails**
 
   ```bash
-  mix test test/joyconf/plans_test.exs
+  mix test test/speechwave/plans_test.exs
   ```
 
-  Expected: compilation error — `Joyconf.Plans` does not exist.
+  Expected: compilation error — `Speechwave.Plans` does not exist.
 
-- [x] **Step 3: Create `lib/joyconf/plans.ex`**
+- [x] **Step 3: Create `lib/speechwave/plans.ex`**
 
   ```elixir
-  defmodule Joyconf.Plans do
+  defmodule Speechwave.Plans do
     @moduledoc """
     Defines tier limits for each plan and provides enforcement checks.
 
@@ -287,7 +287,7 @@ Manual steps — no code.
 - [x] **Step 4: Run the tests to verify they pass**
 
   ```bash
-  mix test test/joyconf/plans_test.exs
+  mix test test/speechwave/plans_test.exs
   ```
 
   Expected: all tests pass.
@@ -303,7 +303,7 @@ Manual steps — no code.
 - [x] **Step 6: Commit**
 
   ```bash
-  git add lib/joyconf/plans.ex test/joyconf/plans_test.exs
+  git add lib/speechwave/plans.ex test/speechwave/plans_test.exs
   git commit -m "feat: add Plans module with free/pro/org tier limits"
   git push
   ```

@@ -1,11 +1,11 @@
 import Config
 
 # Configure your database
-config :joyconf, Joyconf.Repo,
+config :speechwave, Speechwave.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "joyconf_dev",
+  database: "speechwave_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -16,7 +16,7 @@ config :joyconf, Joyconf.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
-config :joyconf, JoyconfWeb.Endpoint,
+config :speechwave, SpeechwaveWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}],
@@ -25,8 +25,8 @@ config :joyconf, JoyconfWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "DVW8ySRPcR73OBMYmC9EZVOEUGWd/BhB5DKJxuzxMWEAGcmNJsBzKNkE9tnzZapw",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:joyconf, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:joyconf, ~w(--watch)]}
+    esbuild: {Esbuild, :install_and_run, [:speechwave, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:speechwave, ~w(--watch)]}
   ]
 
 # ## SSL Support
@@ -53,7 +53,7 @@ config :joyconf, JoyconfWeb.Endpoint,
 # different ports.
 
 # Reload browser tabs when matching files change.
-config :joyconf, JoyconfWeb.Endpoint,
+config :speechwave, SpeechwaveWeb.Endpoint,
   live_reload: [
     web_console_logger: true,
     patterns: [
@@ -62,13 +62,13 @@ config :joyconf, JoyconfWeb.Endpoint,
       # Gettext translations
       ~r"priv/gettext/.*\.po$"E,
       # Router, Controllers, LiveViews and LiveComponents
-      ~r"lib/joyconf_web/router\.ex$"E,
-      ~r"lib/joyconf_web/(controllers|live|components)/.*\.(ex|heex)$"E
+      ~r"lib/speechwave_web/router\.ex$"E,
+      ~r"lib/speechwave_web/(controllers|live|components)/.*\.(ex|heex)$"E
     ]
   ]
 
 # Enable dev routes for dashboard and mailbox
-config :joyconf, dev_routes: true
+config :speechwave, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
@@ -91,4 +91,4 @@ config :phoenix_live_view,
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
 
-config :joyconf, :admin_password, "devpassword"
+config :speechwave, :admin_password, "devpassword"

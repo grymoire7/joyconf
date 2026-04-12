@@ -24,10 +24,10 @@
 
 **Modify:**
 - `extension/content/content.js` — integrate adapter, observe slide changes, push `slide_changed`
-- `lib/joyconf_web/channels/reaction_channel.ex` — handle `slide_changed`, broadcast to PubSub
-- `lib/joyconf_web/live/talk_live.ex` — subscribe to `"slides:{slug}"`, track `current_slide`, stamp reactions
-- `test/joyconf_web/channels/reaction_channel_test.exs` — `slide_changed` channel test
-- `test/joyconf_web/live/talk_live_test.exs` — reaction stamped with slide number
+- `lib/speechwave_web/channels/reaction_channel.ex` — handle `slide_changed`, broadcast to PubSub
+- `lib/speechwave_web/live/talk_live.ex` — subscribe to `"slides:{slug}"`, track `current_slide`, stamp reactions
+- `test/speechwave_web/channels/reaction_channel_test.exs` — `slide_changed` channel test
+- `test/speechwave_web/live/talk_live_test.exs` — reaction stamped with slide number
 
 ---
 
@@ -41,7 +41,7 @@
 
 ```json
 {
-  "name": "joyconf-extension",
+  "name": "speechwave-extension",
   "private": true,
   "scripts": {
     "test": "jest"
@@ -360,7 +360,7 @@ Replace the last line `module.exports = { getSlide };` with:
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getSlide };
 } else {
-  window.JoyconfGoogleSlidesAdapter = { getSlide };
+  window.SpeechwaveGoogleSlidesAdapter = { getSlide };
 }
 ```
 
@@ -370,15 +370,15 @@ Replace the contents of `extension/adapters/index.js`:
 
 ```js
 // In the browser, adapter files are injected before this file (see manifest.json),
-// so window.JoyconfGoogleSlidesAdapter is available. In Jest (jsdom), window exists
-// but window.JoyconfGoogleSlidesAdapter is never set — the ternary falls through to
+// so window.SpeechwaveGoogleSlidesAdapter is available. In Jest (jsdom), window exists
+// but window.SpeechwaveGoogleSlidesAdapter is never set — the ternary falls through to
 // require(), which is the intended test path. Do not reorder manifest.json injection
 // without updating this logic.
 const ADAPTERS = [
   {
     match: /docs\.google\.com\/presentation/,
-    getSlide: (typeof window !== "undefined" && window.JoyconfGoogleSlidesAdapter)
-      ? window.JoyconfGoogleSlidesAdapter.getSlide
+    getSlide: (typeof window !== "undefined" && window.SpeechwaveGoogleSlidesAdapter)
+      ? window.SpeechwaveGoogleSlidesAdapter.getSlide
       : (typeof require !== "undefined" ? require("./google_slides").getSlide : () => 0),
   },
 ];
@@ -391,7 +391,7 @@ function getAdapter(url) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getAdapter };
 } else {
-  window.JoyconfAdapterRegistry = { getAdapter };
+  window.SpeechwaveAdapterRegistry = { getAdapter };
 }
 ```
 
@@ -418,7 +418,7 @@ Add this new function after `isConnected()`:
 
 ```js
 function startSlideObserver() {
-  const registry = window.JoyconfAdapterRegistry;
+  const registry = window.SpeechwaveAdapterRegistry;
   if (!registry) return;
 
   const adapter = registry.getAdapter(window.location.href);
@@ -502,19 +502,19 @@ git commit -m "feat: integrate slide adapter and MutationObserver into content s
 ## Task 6: `ReactionChannel` — Handle `slide_changed`
 
 **Files:**
-- Modify: `lib/joyconf_web/channels/reaction_channel.ex`
-- Modify: `test/joyconf_web/channels/reaction_channel_test.exs`
+- Modify: `lib/speechwave_web/channels/reaction_channel.ex`
+- Modify: `test/speechwave_web/channels/reaction_channel_test.exs`
 
 The channel receives `slide_changed` from the extension and broadcasts to the `"slides:{slug}"` PubSub topic so `TalkLive` processes can update their `current_slide` assign.
 
 - [ ] **Step 1: Add `slide_changed` channel test**
 
-Append to `test/joyconf_web/channels/reaction_channel_test.exs`:
+Append to `test/speechwave_web/channels/reaction_channel_test.exs`:
 
 ```elixir
   describe "slide_changed" do
     setup %{socket: socket, talk: talk} do
-      Phoenix.PubSub.subscribe(Joyconf.PubSub, "slides:#{talk.slug}")
+      Phoenix.PubSub.subscribe(Speechwave.PubSub, "slides:#{talk.slug}")
       {:ok, _, joined} = subscribe_and_join(socket, "reactions:#{talk.slug}", %{})
       %{joined: joined, talk: talk}
     end
@@ -540,16 +540,16 @@ Append to `test/joyconf_web/channels/reaction_channel_test.exs`:
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```bash
-mix test test/joyconf_web/channels/reaction_channel_test.exs
+mix test test/speechwave_web/channels/reaction_channel_test.exs
 ```
 
 Expected: failures — `slide_changed` handle_in not defined.
 
-- [ ] **Step 3: Add `handle_in("slide_changed", ...)` to `lib/joyconf_web/channels/reaction_channel.ex`**
+- [ ] **Step 3: Add `handle_in("slide_changed", ...)` to `lib/speechwave_web/channels/reaction_channel.ex`**
 
 ```elixir
   def handle_in("slide_changed", %{"slide" => slide}, socket) when is_integer(slide) and slide > 0 do
-    JoyconfWeb.Endpoint.broadcast!(
+    SpeechwaveWeb.Endpoint.broadcast!(
       "slides:#{socket.assigns.talk.slug}",
       "slide_changed",
       %{slide: slide}
@@ -566,7 +566,7 @@ Expected: failures — `slide_changed` handle_in not defined.
 - [ ] **Step 4: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf_web/channels/reaction_channel_test.exs
+mix test test/speechwave_web/channels/reaction_channel_test.exs
 ```
 
 Expected: all tests pass.
@@ -574,8 +574,8 @@ Expected: all tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/joyconf_web/channels/reaction_channel.ex \
-        test/joyconf_web/channels/reaction_channel_test.exs
+git add lib/speechwave_web/channels/reaction_channel.ex \
+        test/speechwave_web/channels/reaction_channel_test.exs
 git commit -m "feat: add slide_changed broadcast to ReactionChannel"
 ```
 
@@ -584,21 +584,21 @@ git commit -m "feat: add slide_changed broadcast to ReactionChannel"
 ## Task 7: `TalkLive` — Subscribe to Slide Changes, Stamp Reactions
 
 **Files:**
-- Modify: `lib/joyconf_web/live/talk_live.ex`
-- Modify: `test/joyconf_web/live/talk_live_test.exs`
+- Modify: `lib/speechwave_web/live/talk_live.ex`
+- Modify: `test/speechwave_web/live/talk_live_test.exs`
 
 - [ ] **Step 1: Add slide stamping tests**
 
-Append to `test/joyconf_web/live/talk_live_test.exs`:
+Append to `test/speechwave_web/live/talk_live_test.exs`:
 
 ```elixir
   describe "slide-stamped reaction persistence" do
     test "stamps reaction with current_slide when slide has been set", %{conn: conn, talk: talk} do
-      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, session} = Speechwave.Talks.start_session(talk)
       {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
 
       # Simulate the extension broadcasting a slide change
-      JoyconfWeb.Endpoint.broadcast!(
+      SpeechwaveWeb.Endpoint.broadcast!(
         "slides:#{talk.slug}",
         "slide_changed",
         %{slide: 7}
@@ -609,21 +609,21 @@ Append to `test/joyconf_web/live/talk_live_test.exs`:
 
       render_click(view, "react", %{"emoji" => "❤️"})
 
-      reaction = Joyconf.Repo.one(
-        from r in Joyconf.Reactions.Reaction,
+      reaction = Speechwave.Repo.one(
+        from r in Speechwave.Reactions.Reaction,
           where: r.talk_session_id == ^session.id
       )
       assert reaction.slide_number == 7
     end
 
     test "stamps reaction with slide 0 when no slide has been set", %{conn: conn, talk: talk} do
-      {:ok, session} = Joyconf.Talks.start_session(talk)
+      {:ok, session} = Speechwave.Talks.start_session(talk)
       {:ok, view, _html} = live(conn, "/t/#{talk.slug}")
 
       render_click(view, "react", %{"emoji" => "❤️"})
 
-      reaction = Joyconf.Repo.one(
-        from r in Joyconf.Reactions.Reaction,
+      reaction = Speechwave.Repo.one(
+        from r in Speechwave.Reactions.Reaction,
           where: r.talk_session_id == ^session.id
       )
       assert reaction.slide_number == 0
@@ -634,18 +634,18 @@ Append to `test/joyconf_web/live/talk_live_test.exs`:
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```bash
-mix test test/joyconf_web/live/talk_live_test.exs
+mix test test/speechwave_web/live/talk_live_test.exs
 ```
 
 Expected: failures — `current_slide` not tracked, reactions still stamped with default 0 regardless of slide broadcasts.
 
-- [ ] **Step 3: Update `lib/joyconf_web/live/talk_live.ex`**
+- [ ] **Step 3: Update `lib/speechwave_web/live/talk_live.ex`**
 
 ```elixir
-defmodule JoyconfWeb.TalkLive do
-  use JoyconfWeb, :live_view
+defmodule SpeechwaveWeb.TalkLive do
+  use SpeechwaveWeb, :live_view
 
-  alias Joyconf.{Talks, RateLimiter, Reactions}
+  alias Speechwave.{Talks, RateLimiter, Reactions}
 
   @emojis ["❤️", "😂", "👏", "🤯", "🙋🏻", "🎉", "💩", "😮", "🎯"]
 
@@ -656,8 +656,8 @@ defmodule JoyconfWeb.TalkLive do
 
       talk ->
         if connected?(socket) do
-          Phoenix.PubSub.subscribe(Joyconf.PubSub, "reactions:#{slug}")
-          Phoenix.PubSub.subscribe(Joyconf.PubSub, "slides:#{slug}")
+          Phoenix.PubSub.subscribe(Speechwave.PubSub, "reactions:#{slug}")
+          Phoenix.PubSub.subscribe(Speechwave.PubSub, "slides:#{slug}")
         end
 
         {:ok, assign(socket, talk: talk, emojis: @emojis, session_id: socket.id, current_slide: 0)}
@@ -671,7 +671,7 @@ defmodule JoyconfWeb.TalkLive do
         session -> Reactions.create_reaction(session, emoji, socket.assigns.current_slide)
       end
 
-      JoyconfWeb.Endpoint.broadcast!(
+      SpeechwaveWeb.Endpoint.broadcast!(
         "reactions:#{socket.assigns.talk.slug}",
         "new_reaction",
         %{emoji: emoji}
@@ -700,7 +700,7 @@ end
 - [ ] **Step 4: Run tests — confirm they pass**
 
 ```bash
-mix test test/joyconf_web/live/talk_live_test.exs
+mix test test/speechwave_web/live/talk_live_test.exs
 ```
 
 Expected: all tests pass.
@@ -724,7 +724,7 @@ Expected: all checks pass.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add lib/joyconf_web/live/talk_live.ex test/joyconf_web/live/talk_live_test.exs
+git add lib/speechwave_web/live/talk_live.ex test/speechwave_web/live/talk_live_test.exs
 git commit -m "feat: subscribe to slide changes and stamp reactions with current slide"
 ```
 
