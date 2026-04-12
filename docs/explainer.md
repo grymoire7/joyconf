@@ -57,7 +57,7 @@ lib/
     endpoint.ex                 # Mounts both socket types
     router.ex                   # Route definitions
 
-extension/
+chrome-extension/  (github.com/speechwave-live/chrome-extension)
   adapters/
     google_slides.js    # Reads current slide number from Google Slides DOM
     index.js            # Adapter registry (returns adapter for current URL)
@@ -368,7 +368,7 @@ The absolute count guard (`MIN_COUNT = 5`) prevents bursts from firing with tiny
 
 **In-flight tracking** — `spawnEmoji()` increments a per-emoji counter (`inFlight["❤️"]++`) when an element is created, and decrements it in the `animationend` listener when the element is removed. The 2.5s animation duration acts as a natural sliding window: `total_in_flight` reflects reactions from the last ~2.5 seconds, making it a real-time proxy for current crowd engagement.
 
-**Trigger logic** is extracted to `extension/lib/fireworks.js` as a pure function (`checkFireworksTrigger(inFlight, emoji, opts)`) that is easy to unit test with Jest without a browser environment. The file uses the same dual-export pattern as the adapter modules — `module.exports` for Jest, `window.SpeechwaveFireworks` for the browser.
+**Trigger logic** is extracted to `lib/fireworks.js` in the [chrome-extension repo](https://github.com/speechwave-live/chrome-extension) as a pure function (`checkFireworksTrigger(inFlight, emoji, opts)`) that is easy to unit test with Jest without a browser environment. The file uses the same dual-export pattern as the adapter modules — `module.exports` for Jest, `window.SpeechwaveFireworks` for the browser.
 
 **Burst animation** — `spawnFireworks()` creates `FIREWORKS_BURST_COUNT` (16) `<span>` elements at the overlay center, each animated outward at a unique angle using the Web Animations API:
 
@@ -496,7 +496,7 @@ When the speaker's Chrome extension is connected, it detects the current slide n
 
 ### Adapter registry
 
-Different presentation tools expose the current slide number differently. The extension uses an **adapter registry** (`extension/adapters/index.js`) that picks the right adapter based on the current page URL:
+Different presentation tools expose the current slide number differently. The extension uses an **adapter registry** (`adapters/index.js` in the [chrome-extension repo](https://github.com/speechwave-live/chrome-extension)) that picks the right adapter based on the current page URL:
 
 ```javascript
 // index.js
@@ -519,7 +519,7 @@ function getSlide() {
 }
 ```
 
-This is brittle by nature (Google could change the DOM), but it's the only option without a first-party API. The fixture-based Jest tests in `extension/tests/` snapshot the relevant DOM so regressions are caught before they ship.
+This is brittle by nature (Google could change the DOM), but it's the only option without a first-party API. The fixture-based Jest tests in `tests/` (chrome-extension repo) snapshot the relevant DOM so regressions are caught before they ship.
 
 ### MutationObserver
 

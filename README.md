@@ -53,13 +53,7 @@ mix test test/path/to/file.exs  # run a single test file
 mix test --failed               # re-run only previously failing tests
 ```
 
-The Chrome extension has its own Jest test suite:
-
-```bash
-cd extension
-npm install
-npm test        # run all Jest tests
-```
+The Chrome extension lives in a separate repo ([speechwave-live/chrome-extension](https://github.com/speechwave-live/chrome-extension)) and has its own Jest test suite — see that repo's README for instructions.
 
 ### End-to-end test flow
 
@@ -77,53 +71,9 @@ npm test        # run all Jest tests
 
 ## Chrome extension
 
-### Install (developer mode)
+The Chrome extension lives in its own repo: [speechwave-live/chrome-extension](https://github.com/speechwave-live/chrome-extension).
 
-1. Open `chrome://extensions` in Chrome
-2. Enable **Developer mode** (top-right toggle)
-3. Click **Load unpacked** → select the `extension/` directory in this repo
-4. The Speechwave icon appears in the toolbar
-
-### Connect to a talk
-
-1. Navigate to a Google Slides presentation (`https://docs.google.com/presentation/...`)
-2. Click the Speechwave extension icon
-3. Enter the talk slug (e.g. `elixir-for-rubyists`)
-4. Click **Connect** — the dot turns green when connected
-5. Start the slideshow (**Slideshow** button or F5) — the popup will show the current slide number once the slideshow is running
-
-The extension auto-reconnects on page reload if a slug was previously saved.
-
-### Fireworks animation
-
-When a large proportion of in-flight reactions are the same emoji (default: at least 5 reactions and ≥ 40% of all emojis currently animating), a radial burst fireworks animation plays in the overlay. A global cooldown (8 seconds) prevents back-to-back bursts.
-
-The presenter can toggle fireworks on or off at any time from the **Fireworks animations** checkbox in the popup. The preference is saved to `chrome.storage.sync` (persists across devices and page reloads).
-
-The trigger thresholds (`FIREWORKS_MIN_COUNT`, `FIREWORKS_MIN_PERCENT`, `FIREWORKS_COOLDOWN_MS`) are named constants at the top of `extension/content/content.js` and can be tuned without touching any other code.
-
-> **Note:** Slide number tracking requires the slideshow to be running. The popup shows "Slide —" in the editor view because the slide indicator element only appears in the presentation iframe that Google Slides loads when the slideshow starts.
-
-### Pointing at a different server
-
-The extension is hard-coded to `wss://speechwave.fly.dev` in `extension/content/content.js`:
-
-```javascript
-const HOST = "wss://speechwave.fly.dev";
-```
-
-Change this to `ws://localhost:4000` for local testing, then:
-
-1. Reload the extension in `chrome://extensions` (click the refresh icon)
-2. **Reload the Google Slides tab** — Chrome does not re-inject content scripts into already-open tabs when an extension is updated
-
-To debug connection issues, open Chrome DevTools on the Google Slides tab (F12) and check the **Console** for `[Speechwave]` log messages.
-
-### Troubleshooting
-
-**Emojis appear multiple times in the overlay**
-
-If each reaction shows up more than once in the extension overlay, the content script likely has a stale channel connection from a previous session (e.g., after the extension was reloaded or the server was restarted). **Reload the Google Slides tab** to reset the connection — this clears the old channel state and establishes a fresh one.
+See that repo's README for install instructions, local dev setup, and troubleshooting.
 
 ---
 
@@ -195,7 +145,5 @@ fly secrets list
 | `lib/speechwave_web/plugs/admin_auth.ex`             | HTTP Basic Auth plug for `/admin` routes                       |
 | `assets/js/hooks/emoji_buttons.js`                | Client-side 5s cooldown UI                                     |
 | `assets/js/hooks/emoji_stream.js`                 | Floating emoji animation on `new_reaction` event               |
-| `extension/`                                      | Chrome Manifest V3 extension                                   |
-| `extension/lib/fireworks.js`                      | Pure trigger logic: `checkFireworksTrigger(inFlight, emoji, opts)` |
-| `extension/adapters/`                             | Adapter registry + Google Slides slide-number reader           |
+| [speechwave-live/chrome-extension](https://github.com/speechwave-live/chrome-extension) | Chrome Manifest V3 extension (separate repo) |
 
