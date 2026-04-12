@@ -107,7 +107,7 @@ Manual steps — no code.
 
 ## Task 3: Add BSL 1.1 License to the Phoenix App
 
-- [ ] **Step 1: Create the LICENSE file**
+- [x] **Step 1: Create the LICENSE file**
 
   Create `LICENSE` in the project root. Use the BSL 1.1 template from https://mariadb.com/bsl11/ with these fields:
 
@@ -117,7 +117,7 @@ Manual steps — no code.
   - Change Date: Four years from the release date of each version
   - Change License: Apache License 2.0
 
-- [ ] **Step 2: Create LICENSE_FAQ.md**
+- [x] **Step 2: Create LICENSE_FAQ.md**
 
   Create `LICENSE_FAQ.md` in the project root:
 
@@ -156,7 +156,7 @@ Manual steps — no code.
   (github.com/speechwave-live/extension) and is licensed under MIT.
   ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
   ```bash
   git add LICENSE LICENSE_FAQ.md
@@ -168,7 +168,7 @@ Manual steps — no code.
 
 ## Task 4: Create the `Joyconf.Plans` Module
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
   Create `test/joyconf/plans_test.exs`:
 
@@ -241,7 +241,7 @@ Manual steps — no code.
   end
   ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
   ```bash
   mix test test/joyconf/plans_test.exs
@@ -249,7 +249,7 @@ Manual steps — no code.
 
   Expected: compilation error — `Joyconf.Plans` does not exist.
 
-- [ ] **Step 3: Create `lib/joyconf/plans.ex`**
+- [x] **Step 3: Create `lib/joyconf/plans.ex`**
 
   ```elixir
   defmodule Joyconf.Plans do
@@ -284,7 +284,7 @@ Manual steps — no code.
   end
   ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
   ```bash
   mix test test/joyconf/plans_test.exs
@@ -292,7 +292,7 @@ Manual steps — no code.
 
   Expected: all tests pass.
 
-- [ ] **Step 5: Run the full test suite**
+- [x] **Step 5: Run the full test suite**
 
   ```bash
   mix test
@@ -300,7 +300,7 @@ Manual steps — no code.
 
   Expected: all tests pass, no regressions.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
   ```bash
   git add lib/joyconf/plans.ex test/joyconf/plans_test.exs
@@ -312,7 +312,7 @@ Manual steps — no code.
 
 ## Task 5: Precommit Check
 
-- [ ] **Step 1: Run precommit alias**
+- [x] **Step 1: Run precommit alias**
 
   ```bash
   mix precommit
