@@ -15,7 +15,7 @@ defmodule SpeechwaveWeb.AdminAuth do
     else
       _ ->
         conn
-        |> put_resp_header("www-authenticate", ~s(Basic realm="JoyConf Admin"))
+        |> put_resp_header("www-authenticate", ~s(Basic realm="Speechwave Admin"))
         |> send_resp(401, "Unauthorized")
         |> halt()
     end

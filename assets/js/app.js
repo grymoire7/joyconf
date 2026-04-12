@@ -22,7 +22,7 @@ import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
-import {hooks as colocatedHooks} from "phoenix-colocated/joyconf"
+import {hooks as colocatedHooks} from "phoenix-colocated/speechwave"
 import topbar from "../vendor/topbar"
 import EmojiButtons from "./hooks/emoji_buttons"
 import EmojiStream from "./hooks/emoji_stream"

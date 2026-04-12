@@ -1,1 +1,1 @@
-call "%~dp0\joyconf" eval Joyconf.Release.migrate
+call "%~dp0\speechwave" eval Speechwave.Release.migrate

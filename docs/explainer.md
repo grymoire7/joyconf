@@ -1,6 +1,6 @@
-# JoyConf — How it works
+# Speechwave — How it works
 
-JoyConf lets conference attendees send live emoji reactions that float up on
+Speechwave lets conference attendees send live emoji reactions that float up on
 the speaker's screen in real time. This document walks through how the whole
 system fits together, with a focus on the communications plumbing.
 
@@ -456,7 +456,7 @@ first slide.
 ## Supervision tree
 
 Every long-lived process in Elixir/OTP lives under a supervisor. Here's
-JoyConf's:
+Speechwave's:
 
 ```mermaid
 graph TD
@@ -593,7 +593,7 @@ The admin sessions panel links to the analytics view for each session via `navig
 
 
 
-| Concept                 | What it does in JoyConf                                                         |
+| Concept                 | What it does in Speechwave                                                         |
 | ----------------------- | ------------------------------------------------------------------------------- |
 | **LiveView**            | Powers the attendee tap page; manages WebSocket lifecycle automatically         |
 | **Phoenix Channel**     | Lower-level WebSocket used by the Chrome extension to receive events            |

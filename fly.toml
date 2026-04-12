@@ -1,11 +1,11 @@
-# fly.toml app configuration file generated for joyconf
+# fly.toml app configuration file generated for speechwave
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'joyconf'
+app = 'speechwave'
 primary_region = 'iad'
-console_command = '/app/bin/joyconf remote'
+console_command = '/app/bin/speechwave remote'
 
 [build]
 
@@ -13,7 +13,7 @@ console_command = '/app/bin/joyconf remote'
   release_command = '/app/bin/migrate'
 
 [env]
-  PHX_HOST = 'joyconf.fly.dev'
+  PHX_HOST = 'speechwave.fly.dev'
   PORT = '8080'
 
 [http_service]

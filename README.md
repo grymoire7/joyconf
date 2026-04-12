@@ -1,4 +1,4 @@
-# JoyConf
+# Speechwave
 
 Live emoji reactions for conference talks. Attendees send reactions from their
 phones; emojis float on their screens and overlay the speaker's Google Slides
@@ -82,12 +82,12 @@ npm test        # run all Jest tests
 1. Open `chrome://extensions` in Chrome
 2. Enable **Developer mode** (top-right toggle)
 3. Click **Load unpacked** → select the `extension/` directory in this repo
-4. The JoyConf icon appears in the toolbar
+4. The Speechwave icon appears in the toolbar
 
 ### Connect to a talk
 
 1. Navigate to a Google Slides presentation (`https://docs.google.com/presentation/...`)
-2. Click the JoyConf extension icon
+2. Click the Speechwave extension icon
 3. Enter the talk slug (e.g. `elixir-for-rubyists`)
 4. Click **Connect** — the dot turns green when connected
 5. Start the slideshow (**Slideshow** button or F5) — the popup will show the current slide number once the slideshow is running
@@ -117,7 +117,7 @@ Change this to `ws://localhost:4000` for local testing, then:
 1. Reload the extension in `chrome://extensions` (click the refresh icon)
 2. **Reload the Google Slides tab** — Chrome does not re-inject content scripts into already-open tabs when an extension is updated
 
-To debug connection issues, open Chrome DevTools on the Google Slides tab (F12) and check the **Console** for `[JoyConf]` log messages.
+To debug connection issues, open Chrome DevTools on the Google Slides tab (F12) and check the **Console** for `[Speechwave]` log messages.
 
 ### Troubleshooting
 
