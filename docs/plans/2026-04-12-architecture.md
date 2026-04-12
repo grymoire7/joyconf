@@ -31,15 +31,15 @@ Extension repo (separate repo, manual setup):
 
 Manual steps — no code.
 
-- [ ] **Step 1: Create the org**
+- [x] **Step 1: Create the org**
 
   Go to https://github.com/organizations/plan and create a new organization named `speechwave-live`. Select the free plan.
 
-- [ ] **Step 2: Transfer the joyconf repo**
+- [x] **Step 2: Transfer the joyconf repo**
 
   On GitHub: go to the `joyconf` repo → Settings → Danger Zone → Transfer repository. Transfer to `speechwave-live`. The repo will be accessible at `github.com/speechwave-live/joyconf` (it will be renamed to `speechwave` in the rename phase).
 
-- [ ] **Step 3: Update the local remote**
+- [x] **Step 3: Update the local remote**
 
   ```bash
   git remote set-url origin git@github.com:speechwave-live/joyconf.git
@@ -52,17 +52,17 @@ Manual steps — no code.
 
 ## Task 2: Extract the Chrome Extension to its Own Repo
 
-- [ ] **Step 1: Create the new extension repo on GitHub**
+- [x] **Step 1: Create the new extension repo on GitHub**
 
-  On GitHub under `speechwave-live`, create a new empty public repo named `extension`. Do not initialize with a README.
+  On GitHub under `speechwave-live`, create a new empty public repo named `chrome-extension`. Do not initialize with a README.
 
-- [ ] **Step 2: Copy extension files to a temp directory**
+- [x] **Step 2: Copy extension files to a temp directory**
 
   ```bash
-  cp -r extension /tmp/speechwave-extension
+  cp -r extension /tmp/chrome-extension
   ```
 
-- [ ] **Step 3: Initialize and push the extension repo**
+- [x] **Step 3: Initialize and push the extension repo**
 
   ```bash
   cd /tmp/speechwave-extension
@@ -74,7 +74,7 @@ Manual steps — no code.
   git push -u origin main
   ```
 
-- [ ] **Step 4: Add MIT license to the extension repo**
+- [x] **Step 4: Add MIT license to the extension repo**
 
   Create `/tmp/speechwave-extension/LICENSE` with the standard MIT text (available at https://opensource.org/license/mit), substituting "Tracy Atteberry" as the copyright holder and "2026" as the year. Commit and push:
 
@@ -84,7 +84,7 @@ Manual steps — no code.
   git push
   ```
 
-- [ ] **Step 5: Clone the extension repo to a permanent location**
+- [x] **Step 5: Clone the extension repo to a permanent location**
 
   The `/tmp` directory is ephemeral. Clone the pushed repo to wherever you keep projects:
 
@@ -92,7 +92,7 @@ Manual steps — no code.
   git clone git@github.com:speechwave-live/extension.git ~/projects/speechwave-extension
   ```
 
-- [ ] **Step 6: Remove the extension directory from the main repo**
+- [x] **Step 6: Remove the extension directory from the main repo**
 
   Back in the joyconf project directory:
 
