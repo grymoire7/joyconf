@@ -20,7 +20,7 @@ defmodule Joyconf.Plans do
   def limit(feature, :org), do: limit(feature, :pro)
 
   @spec check(feature(), plan(), non_neg_integer()) :: :ok | {:error, :limit_reached}
-  def check(feature, plan, current_count) when is_integer(current_count) do
+  def check(feature, plan, current_count) when is_integer(current_count) and current_count >= 0 do
     case limit(feature, plan) do
       :unlimited -> :ok
       max when current_count < max -> :ok
