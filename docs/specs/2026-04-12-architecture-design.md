@@ -17,10 +17,10 @@ codebase.
 A `speechwave-live` GitHub Organization is created. The free GitHub org tier
 supports unlimited public repositories — no paid plan is required.
 
-| Repo | Visibility | Contents |
-| --- | --- | --- |
-| `speechwave-live/speechwave` | Public | Phoenix app (renamed from `joyconf`) |
-| `speechwave-live/extension` | Public | Chrome extension (extracted from monorepo) |
+| Repo                         | Visibility | Contents                                   |
+| ---------------------------- | ---------- | ------------------------------------------ |
+| `speechwave-live/speechwave` | Public     | Phoenix app (renamed from `joyconf`)       |
+| `speechwave-live/extension`  | Public     | Chrome extension (extracted from monorepo) |
 
 The Chrome extension is extracted into its own repository because it has an
 independent release lifecycle — Chrome Web Store publishes are decoupled from
@@ -36,13 +36,13 @@ not scale once the extension is a published, versioned product.
 Licensed under the **Business Source License 1.1 (BSL 1.1)** with the following
 terms:
 
-| Field | Value |
-| --- | --- |
-| Licensor | Tracy Atteberry |
-| Licensed Work | Speechwave |
+| Field                | Value                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------- |
+| Licensor             | Tracy Atteberry                                                                                   |
+| Licensed Work        | Speechwave                                                                                        |
 | Additional Use Grant | Personal, non-commercial, and development use, including self-hosting for non-commercial purposes |
-| Change Date | Four years from each version's release date |
-| Change License | Apache License 2.0 |
+| Change Date          | Four years from each version's release date                                                       |
+| Change License       | Apache License 2.0                                                                                |
 
 In plain terms:
 
