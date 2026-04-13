@@ -17,52 +17,20 @@ defmodule SpeechwaveWeb.Router do
     plug :accepts, ["json"]
   end
 
-  pipeline :admin do
-    plug SpeechwaveWeb.AdminAuth
-  end
+  # ---------------------------------------------------------------------------
+  # Public routes — no auth required
+  # ---------------------------------------------------------------------------
 
   scope "/", SpeechwaveWeb do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/t/:slug", TalkLive
   end
 
-  scope "/admin", SpeechwaveWeb do
-    pipe_through [:browser, :admin]
-    live "/", AdminLive, :index
-    live "/talks/new", AdminLive, :new
-    live "/sessions/:id", SessionAnalyticsLive, :show
-    live "/sessions/:id/compare/:other_id", SessionAnalyticsLive, :compare
-  end
-
-  scope "/t", SpeechwaveWeb do
-    pipe_through :browser
-    live "/:slug", TalkLive
-  end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", SpeechwaveWeb do
-  #   pipe_through :api
-  # end
-
-  # Enable LiveDashboard and Swoosh mailbox preview in development
-  if Application.compile_env(:speechwave, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
-    import Phoenix.LiveDashboard.Router
-
-    scope "/dev" do
-      pipe_through :browser
-
-      live_dashboard "/dashboard", metrics: SpeechwaveWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
-    end
-  end
-
-  ## Authentication routes
+  # ---------------------------------------------------------------------------
+  # Authenticated routes — require login
+  # ---------------------------------------------------------------------------
 
   scope "/", SpeechwaveWeb do
     pipe_through [:browser, :require_authenticated_user]
@@ -70,12 +38,18 @@ defmodule SpeechwaveWeb.Router do
     live_session :require_authenticated_user,
       on_mount: [{SpeechwaveWeb.UserAuth, :require_authenticated}] do
       live "/dashboard", DashboardLive
+      live "/sessions/:id", SessionAnalyticsLive, :show
+      live "/sessions/:id/compare/:other_id", SessionAnalyticsLive, :compare
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
     end
 
     post "/users/update-password", UserSessionController, :update_password
   end
+
+  # ---------------------------------------------------------------------------
+  # Auth routes (login, register, confirm — no auth required)
+  # ---------------------------------------------------------------------------
 
   scope "/", SpeechwaveWeb do
     pipe_through [:browser]
@@ -89,5 +63,16 @@ defmodule SpeechwaveWeb.Router do
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
+  end
+
+  if Application.compile_env(:speechwave, :dev_routes) do
+    import Phoenix.LiveDashboard.Router
+
+    scope "/dev" do
+      pipe_through :browser
+
+      live_dashboard "/dashboard", metrics: SpeechwaveWeb.Telemetry
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
   end
 end

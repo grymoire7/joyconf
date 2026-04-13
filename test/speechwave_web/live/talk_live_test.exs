@@ -3,11 +3,12 @@ defmodule SpeechwaveWeb.TalkLiveTest do
 
   import Phoenix.LiveViewTest
   import Ecto.Query
+  import Speechwave.AccountsFixtures
+  import Speechwave.TalksFixtures
 
   setup do
-    {:ok, talk} =
-      Speechwave.Talks.create_talk(%{title: "Elixir for Rubyists", slug: "elixir-for-rubyists"})
-
+    user = user_fixture()
+    talk = talk_fixture(user, %{title: "Elixir for Rubyists", slug: "elixir-for-rubyists"})
     {:ok, talk: talk}
   end
 

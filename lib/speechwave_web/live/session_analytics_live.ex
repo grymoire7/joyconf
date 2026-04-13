@@ -12,10 +12,10 @@ defmodule SpeechwaveWeb.SessionAnalyticsLive do
 
     case session_id && Talks.get_session(session_id) do
       nil ->
-        {:ok, redirect(socket, to: "/admin")}
+        {:ok, redirect(socket, to: "/dashboard")}
 
       session ->
-        talk = Talks.get_talk!(session.talk_id)
+        talk = Talks.get_talk!(socket.assigns.current_scope, session.talk_id)
         totals = Reactions.slide_reaction_totals(session.id)
         by_slide = group_by_slide(totals)
 

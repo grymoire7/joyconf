@@ -1,10 +1,14 @@
 defmodule Speechwave.ReactionsTest do
   use Speechwave.DataCase
 
+  import Speechwave.AccountsFixtures
+  import Speechwave.TalksFixtures
+
   alias Speechwave.{Talks, Reactions}
 
   setup do
-    {:ok, talk} = Talks.create_talk(%{title: "Test Talk", slug: "test-talk"})
+    user = user_fixture()
+    talk = talk_fixture(user)
     {:ok, session} = Talks.start_session(talk)
     %{session: session}
   end
