@@ -1,31 +1,45 @@
 defmodule Speechwave.Talks do
   import Ecto.Query
 
+  alias Speechwave.Accounts.Scope
   alias Speechwave.Repo
   alias Speechwave.Talks.Talk
   alias Speechwave.Talks.TalkSession
 
-  def list_talks, do: Repo.all(Talk)
+  # ---------------------------------------------------------------------------
+  # Talks — scope-aware (requires authenticated user)
+  # ---------------------------------------------------------------------------
 
-  def get_talk!(id), do: Repo.get!(Talk, id)
+  def list_talks(%Scope{user: user}) do
+    Repo.all(from t in Talk, where: t.user_id == ^user.id, order_by: [desc: t.inserted_at])
+  end
 
-  def get_talk_by_slug(slug), do: Repo.get_by(Talk, slug: slug)
+  def get_talk!(%Scope{user: user}, id) do
+    Repo.get_by!(Talk, id: id, user_id: user.id)
+  end
 
-  def delete_talk(%Talk{} = talk), do: Repo.delete(talk)
-
-  def create_talk(attrs) do
-    %Talk{}
+  def create_talk(%Scope{user: user}, attrs) do
+    %Talk{user_id: user.id}
     |> Talk.changeset(attrs)
     |> Repo.insert()
   end
 
-  def generate_slug(title) do
-    title
-    |> String.downcase()
-    |> String.replace(~r/[^a-z0-9\s]/, "")
-    |> String.trim()
-    |> String.replace(~r/\s+/, "-")
+  def delete_talk(%Talk{} = talk), do: Repo.delete(talk)
+
+  # ---------------------------------------------------------------------------
+  # Talks — public (no auth required, used by channel and audience views)
+  # ---------------------------------------------------------------------------
+
+  def get_talk_by_slug(slug), do: Repo.get_by(Talk, slug: slug)
+
+  @doc "Returns talk with user preloaded. Used by ReactionChannel to check plan limits."
+  def get_talk_with_owner(slug) do
+    Repo.one(from t in Talk, where: t.slug == ^slug, preload: [:user])
   end
+
+  # ---------------------------------------------------------------------------
+  # Sessions
+  # ---------------------------------------------------------------------------
 
   def start_session(%Talk{} = talk) do
     case get_active_session(talk.id) do
@@ -82,8 +96,41 @@ defmodule Speechwave.Talks do
     |> Repo.update()
   end
 
-  def delete_session(%TalkSession{} = session) do
-    Repo.delete(session)
+  def delete_session(%TalkSession{} = session), do: Repo.delete(session)
+
+  @doc """
+  Counts completed sessions longer than 10 minutes (600 seconds) in the current
+  calendar month for the scoped user across all their talks.
+  Used to enforce the free tier `full_sessions_per_month` limit.
+  """
+  def count_full_sessions_this_month(%Scope{user: user}) do
+    beginning_of_month =
+      Date.utc_today()
+      |> Date.beginning_of_month()
+      |> DateTime.new!(~T[00:00:00])
+
+    Repo.aggregate(
+      from(s in TalkSession,
+        join: t in Talk,
+        on: t.id == s.talk_id and t.user_id == ^user.id,
+        where: s.started_at >= ^beginning_of_month,
+        where: not is_nil(s.ended_at),
+        where: fragment("EXTRACT(EPOCH FROM (? - ?)) > 600", s.ended_at, s.started_at)
+      ),
+      :count
+    )
+  end
+
+  # ---------------------------------------------------------------------------
+  # Private
+  # ---------------------------------------------------------------------------
+
+  def generate_slug(title) do
+    title
+    |> String.downcase()
+    |> String.replace(~r/[^a-z0-9\s]/, "")
+    |> String.trim()
+    |> String.replace(~r/\s+/, "-")
   end
 
   defp count_sessions(talk_id) do

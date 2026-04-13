@@ -7,6 +7,7 @@ defmodule Speechwave.Talks.Talk do
     field :slug, :string
 
     has_many :talk_sessions, Speechwave.Talks.TalkSession
+    belongs_to :user, Speechwave.Accounts.User
 
     timestamps(type: :utc_datetime)
   end
