@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :speechwave, :scopes,
+  user: [
+    default: true,
+    module: Speechwave.Accounts.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: Speechwave.AccountsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 config :speechwave,
   ecto_repos: [Speechwave.Repo],
   generators: [timestamp_type: :utc_datetime]
