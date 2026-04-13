@@ -394,4 +394,19 @@ defmodule Speechwave.AccountsTest do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""
     end
   end
+
+  describe "set_user_plan/2" do
+    test "updates the user's plan" do
+      user = user_fixture()
+      assert user.plan == :free
+      assert {:ok, updated} = Accounts.set_user_plan(user, :pro)
+      assert updated.plan == :pro
+    end
+
+    test "rejects invalid plan" do
+      user = user_fixture()
+      assert {:error, changeset} = Accounts.set_user_plan(user, :invalid)
+      assert "is invalid" in errors_on(changeset).plan
+    end
+  end
 end

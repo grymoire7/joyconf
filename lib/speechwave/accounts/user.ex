@@ -8,6 +8,8 @@ defmodule Speechwave.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :plan, Ecto.Enum, values: [:free, :pro, :org], default: :free
+    field :is_admin, :boolean, default: false
 
     timestamps(type: :utc_datetime)
   end
@@ -128,5 +130,13 @@ defmodule Speechwave.Accounts.User do
   def valid_password?(_, _) do
     Bcrypt.no_user_verify()
     false
+  end
+
+  @doc "Used exclusively for plan changes — keeps plan updates separate from user registration."
+  def plan_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:plan])
+    |> validate_required([:plan])
+    |> validate_inclusion(:plan, [:free, :pro, :org])
   end
 end

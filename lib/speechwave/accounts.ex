@@ -281,6 +281,13 @@ defmodule Speechwave.Accounts do
     :ok
   end
 
+  @doc "Updates a user's plan. Called by Stripe webhooks or manually via seeds."
+  def set_user_plan(%User{} = user, plan) do
+    user
+    |> User.plan_changeset(%{plan: plan})
+    |> Repo.update()
+  end
+
   ## Token helper
 
   defp update_user_and_delete_all_tokens(changeset) do
