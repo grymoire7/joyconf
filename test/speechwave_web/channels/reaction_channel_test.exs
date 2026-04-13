@@ -1,10 +1,14 @@
 defmodule SpeechwaveWeb.ReactionChannelTest do
   use SpeechwaveWeb.ChannelCase
 
+  import Speechwave.AccountsFixtures
+  import Speechwave.TalksFixtures
+
   setup do
-    {:ok, talk} = Speechwave.Talks.create_talk(%{title: "Test Talk", slug: "test-talk"})
+    user = user_fixture()
+    talk = talk_fixture(user, %{title: "Test Talk", slug: "test-talk"})
     {:ok, socket} = connect(SpeechwaveWeb.UserSocket, %{})
-    {:ok, socket: socket, talk: talk}
+    {:ok, socket: socket, talk: talk, user: user}
   end
 
   test "joins channel for existing talk", %{socket: socket, talk: talk} do
@@ -63,8 +67,8 @@ defmodule SpeechwaveWeb.ReactionChannelTest do
     end
 
     test "stop_session returns error for a session belonging to a different talk",
-         %{joined: joined} do
-      {:ok, other_talk} = Speechwave.Talks.create_talk(%{title: "Other", slug: "other"})
+         %{joined: joined, user: user} do
+      other_talk = talk_fixture(user, %{title: "Other", slug: "other-#{System.unique_integer()}"})
       {:ok, other_session} = Speechwave.Talks.start_session(other_talk)
 
       ref = push(joined, "stop_session", %{"session_id" => other_session.id})
@@ -86,6 +90,7 @@ defmodule SpeechwaveWeb.ReactionChannelTest do
 
       assert first_end == second_end
     end
+
   end
 
   describe "slide_changed" do
