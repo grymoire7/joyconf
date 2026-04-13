@@ -91,6 +91,25 @@ defmodule SpeechwaveWeb.ReactionChannelTest do
       assert first_end == second_end
     end
 
+    test "rejects start_session when monthly full-session limit is reached",
+         %{joined: joined, talk: talk} do
+      # Seed 10 completed full sessions (> 10 min) to hit the free tier limit
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+      full_end = DateTime.add(now, 15 * 60, :second)
+
+      for i <- 1..10 do
+        Speechwave.Repo.insert!(%Speechwave.Talks.TalkSession{
+          talk_id: talk.id,
+          label: "Seed #{i}",
+          started_at: now,
+          ended_at: full_end
+        })
+      end
+
+      ref = push(joined, "start_session", %{})
+      assert_reply ref, :error, %{reason: "session_limit_reached"}
+    end
+
   end
 
   describe "slide_changed" do

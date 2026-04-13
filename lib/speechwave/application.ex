@@ -16,7 +16,8 @@ defmodule Speechwave.Application do
       # {Speechwave.Worker, arg},
       Speechwave.RateLimiter,
       # Start to serve requests, typically the last entry
-      SpeechwaveWeb.Endpoint
+      SpeechwaveWeb.Endpoint,
+      SpeechwaveWeb.Presence
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
