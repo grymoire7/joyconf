@@ -109,7 +109,6 @@ defmodule SpeechwaveWeb.ReactionChannelTest do
       ref = push(joined, "start_session", %{})
       assert_reply ref, :error, %{reason: "session_limit_reached"}
     end
-
   end
 
   describe "slide_changed" do

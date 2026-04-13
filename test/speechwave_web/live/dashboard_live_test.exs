@@ -77,7 +77,10 @@ defmodule SpeechwaveWeb.DashboardLiveTest do
     assert has_element?(view, "#delete-talk-#{talk.id}")
   end
 
-  test "clicking trashcan deletes the talk and removes it from the list", %{conn: conn, user: user} do
+  test "clicking trashcan deletes the talk and removes it from the list", %{
+    conn: conn,
+    user: user
+  } do
     talk = talk_fixture(user, %{title: "Prime Talk", slug: "prime"})
     {:ok, view, _html} = live(conn, "/dashboard")
 
