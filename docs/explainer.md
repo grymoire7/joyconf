@@ -90,7 +90,9 @@ schema "talks" do
 end
 ```
 
-Slugs are auto-generated from the title (lowercase, spaces → hyphens, special chars stripped) and are unique. The slug is the key that ties all three actors together: it's in the URL, the PubSub topic, and the Channel topic.
+Slugs are auto-generated from the title (lowercase, spaces → hyphens, special
+chars stripped) and are unique. The slug is the key that ties all three actors
+together: it's in the URL, the PubSub topic, and the Channel topic.
 
 **`talk_sessions`** — a recording window within a talk (e.g. "Session 1", "Denver Practice"):
 
@@ -104,7 +106,9 @@ schema "talk_sessions" do
 end
 ```
 
-Sessions are started and stopped by the speaker via the Chrome extension. `label` auto-increments ("Session 1", "Session 2", …) but can be renamed from the admin panel.
+Sessions are started and stopped by the speaker via the Chrome extension.
+`label` auto-increments ("Session 1", "Session 2", …) but can be renamed from
+the admin panel.
 
 **`reactions`** — one row per emoji tap:
 
@@ -116,7 +120,9 @@ schema "reactions" do
 end
 ```
 
-`slide_number` is `0` when no adapter could read the current slide (e.g. before a session starts, or on a non-Google-Slides presentation). All slide-`0` reactions group under a "General" label in the analytics view.
+`slide_number` is `0` when no adapter could read the current slide (e.g. before
+a session starts, or on a non-Google-Slides presentation). All slide-`0`
+reactions group under a "General" label in the analytics view.
 
 ---
 
