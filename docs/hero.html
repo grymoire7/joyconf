@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Speechwave — Hero Image Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #060810;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: #9ca3af;
+      min-height: 100vh;
+    }
+
+    .label {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #4b5563;
+      margin-bottom: 16px;
+    }
+
+    /* The hero canvas — 1200×630 */
+    .hero {
+      width: 1200px;
+      height: 630px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.6);
+      background: #0d1117;
+    }
+
+    /* Radial glow from center */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 55% at 50% 52%, #19203a 0%, transparent 70%),
+        radial-gradient(ellipse 100% 80% at 50% 100%, #130d1f 0%, transparent 60%);
+    }
+
+    /* Subtle dot grid */
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    /* Color bloom — left */
+    .bloom-left {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(96,165,250,0.08) 0%, transparent 70%);
+      top: 50%;
+      left: 10%;
+      transform: translate(-30%, -50%);
+    }
+
+    /* Color bloom — right */
+    .bloom-right {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,121,249,0.07) 0%, transparent 70%);
+      top: 50%;
+      right: 10%;
+      transform: translate(30%, -50%);
+    }
+
+    /* Center content */
+    .hero-content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 10;
+    }
+
+    /* The wordmark */
+    .wordmark {
+      font-size: 96px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      background: linear-gradient(90deg,
+        #60a5fa  0%,
+        #818cf8 40%,
+        #c084fc 70%,
+        #e879f9 100%
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 40px rgba(129,140,248,0.25));
+    }
+
+    .wave-line { display: block; }
+
+    .tagline {
+      font-size: 22px;
+      color: #94a3b8;
+      letter-spacing: 0.01em;
+      font-weight: 400;
+      margin-top: -4px;
+    }
+
+    .emoji {
+      position: absolute;
+      user-select: none;
+      pointer-events: none;
+      z-index: 5;
+      line-height: 1;
+    }
+
+    .hint {
+      margin-top: 24px;
+      font-size: 12px;
+      color: #374151;
+      text-align: center;
+      line-height: 1.7;
+    }
+    .hint code {
+      background: #111827;
+      border: 1px solid #1f2937;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #60a5fa;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="label">Hero — 1200 × 630 · screenshot at 1× zoom</div>
+
+  <div class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="bloom-left"></div>
+    <div class="bloom-right"></div>
+
+    <!-- Floating emojis — left side, rising bottom→top = more opaque → more transparent -->
+    <span class="emoji" style="left:58px;  bottom:60px;  font-size:44px; opacity:0.65;">👏</span>
+    <span class="emoji" style="left:130px; bottom:160px; font-size:32px; opacity:0.50;">❤️</span>
+    <span class="emoji" style="left:70px;  bottom:260px; font-size:28px; opacity:0.35;">🔥</span>
+    <span class="emoji" style="left:200px; bottom:340px; font-size:24px; opacity:0.25;">😂</span>
+    <span class="emoji" style="left:110px; bottom:460px; font-size:20px; opacity:0.15;">🤯</span>
+
+    <span class="emoji" style="left:280px; bottom:80px;  font-size:36px; opacity:0.60;">🔥</span>
+    <span class="emoji" style="left:340px; bottom:200px; font-size:26px; opacity:0.40;">🤯</span>
+    <span class="emoji" style="left:260px; bottom:320px; font-size:22px; opacity:0.25;">👏</span>
+    <span class="emoji" style="left:360px; bottom:440px; font-size:18px; opacity:0.15;">❤️</span>
+
+    <!-- Floating emojis — right side -->
+    <span class="emoji" style="right:58px;  bottom:60px;  font-size:42px; opacity:0.65;">🤯</span>
+    <span class="emoji" style="right:140px; bottom:150px; font-size:34px; opacity:0.50;">🔥</span>
+    <span class="emoji" style="right:80px;  bottom:270px; font-size:26px; opacity:0.35;">❤️</span>
+    <span class="emoji" style="right:200px; bottom:360px; font-size:22px; opacity:0.22;">👏</span>
+    <span class="emoji" style="right:120px; bottom:470px; font-size:18px; opacity:0.13;">😂</span>
+
+    <span class="emoji" style="right:290px; bottom:75px;  font-size:38px; opacity:0.58;">😂</span>
+    <span class="emoji" style="right:350px; bottom:195px; font-size:28px; opacity:0.40;">❤️</span>
+    <span class="emoji" style="right:270px; bottom:310px; font-size:22px; opacity:0.22;">🔥</span>
+    <span class="emoji" style="right:370px; bottom:430px; font-size:18px; opacity:0.13;">🤯</span>
+
+    <!-- A few emojis near top (almost faded) -->
+    <span class="emoji" style="left:180px;  top:30px; font-size:18px; opacity:0.08;">❤️</span>
+    <span class="emoji" style="right:220px; top:50px; font-size:16px; opacity:0.08;">🔥</span>
+    <span class="emoji" style="left:50%;    top:20px; font-size:14px; opacity:0.06; transform:translateX(-50%);">😂</span>
+
+    <!-- Center content -->
+    <div class="hero-content">
+      <div class="wordmark">Speechwave</div>
+      <svg class="wave-line" width="380" height="16" viewBox="0 0 380 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 8 C48 0, 96 16, 144 8 S240 0, 286 8 S334 16, 380 8" stroke="url(#wg)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="wg" x1="0" y1="0" x2="380" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#60a5fa"/>
+            <stop offset="45%"  stop-color="#818cf8"/>
+            <stop offset="75%"  stop-color="#c084fc"/>
+            <stop offset="100%" stop-color="#e879f9"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="tagline">Real-time audience reactions for speakers</div>
+    </div>
+  </div>
+
+  <div class="hint">
+    To screenshot at exact 1200×630: set browser zoom to <code>100%</code>, then use
+    <code>⌘⇧4</code> to drag-select just the hero card above.<br>
+    Or open DevTools → Device Toolbar → set 1200×630 → full-page screenshot.
+  </div>
+
+</body>
+</html>
