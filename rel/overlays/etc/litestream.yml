@@ -1,8 +1,10 @@
 dbs:
-  - path: ${DATABASE_PATH}
+  - path: "${DATABASE_PATH}"
     replicas:
       - type: s3
-        bucket: ${LITESTREAM_BUCKET}
+        bucket: "${LITESTREAM_BUCKET}"
         path: speechwave
         region: auto
-        endpoint: ${LITESTREAM_URL}
+        endpoint: "${LITESTREAM_URL}"
+        access-key-id: "${LITESTREAM_ACCESS_KEY_ID}"
+        secret-access-key: "${LITESTREAM_SECRET_ACCESS_KEY}"
