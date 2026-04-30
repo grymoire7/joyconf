@@ -1,20 +1,17 @@
-# fly.toml app configuration file generated for speechwave
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
 app = 'speechwave'
 primary_region = 'iad'
 console_command = '/app/bin/speechwave remote'
 
 [build]
 
-[deploy]
-  release_command = '/app/bin/migrate'
-
 [env]
   PHX_HOST = 'speechwave.fly.dev'
   PORT = '8080'
+  DATABASE_PATH = '/data/speechwave.db'
+
+[[mounts]]
+  source = 'speechwave_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
@@ -30,6 +27,6 @@ console_command = '/app/bin/speechwave remote'
     soft_limit = 1000
 
 [[vm]]
-  memory = '1gb'
+  memory = '256mb'
   cpu_kind = 'shared'
   cpus = 1

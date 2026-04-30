@@ -66,6 +66,15 @@ RUN apt-get update -y && \
   apt-get install -y libstdc++6 openssl libncurses6 locales ca-certificates \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
+# Install Litestream for SQLite WAL replication
+ARG LITESTREAM_VERSION=v0.3.13
+RUN apt-get update -y && \
+    apt-get install -y curl && \
+    curl -sL "https://github.com/benbjohnson/litestream/releases/download/${LITESTREAM_VERSION}/litestream-${LITESTREAM_VERSION}-linux-amd64.tar.gz" \
+    | tar -xz -C /usr/local/bin litestream && \
+    apt-get remove -y curl && \
+    apt-get clean && rm -f /var/lib/apt/lists/*_*
+
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
@@ -87,4 +96,4 @@ USER nobody
 # If using an environment that doesn't automatically reap zombie processes, it is
 # advised to add an init process such as tini via `apt-get install`
 # to ensure that Zombie processes are cleaned up properly.
-CMD ["/app/bin/server"]
+CMD ["/app/bin/start"]

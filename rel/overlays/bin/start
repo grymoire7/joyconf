@@ -1,0 +1,26 @@
+#!/bin/bash
+set -eu
+
+DATABASE_PATH="${DATABASE_PATH:-/data/speechwave.db}"
+export DATABASE_PATH
+
+# Restore from Tigris backup if the database doesn't exist (e.g. after a volume loss)
+if [ -n "${LITESTREAM_URL:-}" ] && [ ! -f "$DATABASE_PATH" ]; then
+  echo "[start] No database found — attempting restore from replica..."
+  litestream restore -if-replica-exists -config /app/etc/litestream.yml "$DATABASE_PATH" \
+    && echo "[start] Restore complete." \
+    || echo "[start] No replica found or restore failed — starting fresh."
+fi
+
+# Run Ecto migrations
+echo "[start] Running migrations..."
+/app/bin/migrate
+
+# Start Phoenix under Litestream replication, or directly if Litestream is not configured
+if [ -n "${LITESTREAM_URL:-}" ]; then
+  echo "[start] Starting server under Litestream replication..."
+  exec litestream replicate -exec "/app/bin/server" -config /app/etc/litestream.yml
+else
+  echo "[start] LITESTREAM_URL not set — starting server without replication."
+  exec /app/bin/server
+fi
