@@ -6,5 +6,3 @@ dbs:
         path: speechwave
         region: auto
         endpoint: ${LITESTREAM_URL}
-        access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
-        secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}
