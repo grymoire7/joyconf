@@ -7,18 +7,16 @@ defmodule Speechwave.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      SpeechwaveWeb.Telemetry,
-      Speechwave.Repo,
-      {DNSCluster, query: Application.get_env(:speechwave, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Speechwave.PubSub},
-      # Start a worker by calling: Speechwave.Worker.start_link(arg)
-      # {Speechwave.Worker, arg},
-      Speechwave.RateLimiter,
-      # Start to serve requests, typically the last entry
-      SpeechwaveWeb.Endpoint,
-      SpeechwaveWeb.Presence
-    ]
+    children =
+      [
+        SpeechwaveWeb.Telemetry,
+        Speechwave.Repo,
+        {DNSCluster, query: Application.get_env(:speechwave, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: Speechwave.PubSub},
+        Speechwave.RateLimiter,
+        SpeechwaveWeb.Endpoint,
+        SpeechwaveWeb.Presence
+      ] ++ backup_children()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -26,8 +24,10 @@ defmodule Speechwave.Application do
     Supervisor.start_link(children, opts)
   end
 
-  # Tell Phoenix to update the endpoint configuration
-  # whenever the application is updated.
+  defp backup_children do
+    if System.get_env("LITESTREAM_BUCKET"), do: [Speechwave.DbBackup], else: []
+  end
+
   @impl true
   def config_change(changed, _new, removed) do
     SpeechwaveWeb.Endpoint.config_change(changed, removed)
