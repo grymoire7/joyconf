@@ -32,3 +32,4 @@ console_command = '/app/bin/speechwave remote'
   memory = '256mb'
   cpu_kind = 'shared'
   cpus = 1
+  swap_size_mb = 512
