@@ -9,7 +9,8 @@ config :bcrypt_elixir, :log_rounds, 1
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :speechwave, Speechwave.Repo,
-  database: Path.expand("../priv/repo/test#{System.get_env("MIX_TEST_PARTITION", "")}.db", __DIR__),
+  database:
+    Path.expand("../priv/repo/test#{System.get_env("MIX_TEST_PARTITION", "")}.db", __DIR__),
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
