@@ -8,6 +8,8 @@ console_command = '/app/bin/speechwave remote'
   PHX_HOST = 'speechwave.fly.dev'
   PORT = '8080'
   DATABASE_PATH = '/data/speechwave.db'
+  POOL_SIZE = '2'
+  ERL_FLAGS = '+MBas aobf +MBafl 1 +MBsk 0'
 
 [[mounts]]
   source = 'speechwave_data'
