@@ -11,7 +11,7 @@ config :bcrypt_elixir, :log_rounds, 1
 config :speechwave, Speechwave.Repo,
   database: Path.expand("../priv/repo/test#{System.get_env("MIX_TEST_PARTITION", "")}.db", __DIR__),
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: System.schedulers_online() * 2
+  pool_size: 1
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.

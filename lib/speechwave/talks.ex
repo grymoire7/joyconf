@@ -115,7 +115,7 @@ defmodule Speechwave.Talks do
         on: t.id == s.talk_id and t.user_id == ^user.id,
         where: s.started_at >= ^beginning_of_month,
         where: not is_nil(s.ended_at),
-        where: fragment("EXTRACT(EPOCH FROM (? - ?)) > 600", s.ended_at, s.started_at)
+        where: fragment("(strftime('%s', ?) - strftime('%s', ?)) > 600", s.ended_at, s.started_at)
       ),
       :count
     )

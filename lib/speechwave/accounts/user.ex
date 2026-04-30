@@ -34,6 +34,7 @@ defmodule Speechwave.Accounts.User do
   defp validate_email(changeset, opts) do
     changeset =
       changeset
+      |> update_change(:email, &String.downcase/1)
       |> validate_required([:email])
       |> validate_format(:email, ~r/^[^@,;\s]+@[^@,;\s]+$/,
         message: "must have the @ sign and no spaces"
