@@ -49,3 +49,8 @@ erl_crash.dump
 /priv/static/assets/
 
 extension/node_modules/
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
