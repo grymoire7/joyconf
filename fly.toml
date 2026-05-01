@@ -21,6 +21,7 @@ console_command = '/app/bin/speechwave remote'
   auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
+  max_machines_running = 1
   processes = ['app']
 
   [http_service.concurrency]
