@@ -197,7 +197,7 @@ defmodule SpeechwaveWeb.UserLive.Settings do
     true = Accounts.sudo_mode?(user)
     {:ok, updated_user} = Accounts.regenerate_api_key(user)
 
-    SpeechwaveWeb.Endpoint.broadcast("user:#{user.id}:disconnect", "disconnect", %{})
+    SpeechwaveWeb.Endpoint.broadcast!("user:#{user.id}:disconnect", "disconnect", %{})
 
     {:noreply, assign(socket, :api_key, updated_user.api_key)}
   end
