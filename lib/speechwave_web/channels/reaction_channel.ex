@@ -1,27 +1,33 @@
 defmodule SpeechwaveWeb.ReactionChannel do
   use Phoenix.Channel
 
+  alias Speechwave.Accounts
   alias Speechwave.Plans
   alias Speechwave.Talks
   alias SpeechwaveWeb.Presence
 
-  def join("reactions:" <> slug, _payload, socket) do
-    case Talks.get_talk_with_owner(slug) do
-      nil ->
-        {:error, %{reason: "not_found"}}
-
-      talk ->
-        participant_count = Presence.list("reactions:#{slug}") |> map_size()
-
-        case Plans.check(:max_participants, talk.user.plan, participant_count) do
-          :ok ->
-            send(self(), :after_join)
-            {:ok, assign(socket, :talk, talk)}
-
-          {:error, :limit_reached} ->
-            {:error, %{reason: "capacity_reached"}}
-        end
+  def join("reactions:" <> slug, %{"api_key" => api_key}, socket) do
+    with {:talk, %Talks.Talk{} = talk} <- {:talk, Talks.get_talk_by_slug(slug)},
+         {:user, %Accounts.User{} = user} <- {:user, Accounts.get_user_by_api_key(api_key)},
+         {:confirmed, true} <- {:confirmed, not is_nil(user.confirmed_at)},
+         {:owner, true} <- {:owner, talk.user_id == user.id},
+         {:capacity, :ok} <-
+           {:capacity,
+            Plans.check(:max_participants, user.plan, Presence.list("reactions:#{slug}") |> map_size())} do
+      Phoenix.PubSub.subscribe(Speechwave.PubSub, "user:#{user.id}:disconnect")
+      send(self(), :after_join)
+      {:ok, assign(socket, talk: talk, user: user)}
+    else
+      {:talk, nil} -> {:error, %{reason: "not_found"}}
+      {:user, nil} -> {:error, %{reason: "unauthorized"}}
+      {:confirmed, false} -> {:error, %{reason: "email_not_confirmed"}}
+      {:owner, false} -> {:error, %{reason: "unauthorized"}}
+      {:capacity, {:error, :limit_reached}} -> {:error, %{reason: "capacity_reached"}}
     end
+  end
+
+  def join("reactions:" <> _slug, _params, _socket) do
+    {:error, %{reason: "unauthorized"}}
   end
 
   def handle_info(:after_join, socket) do
@@ -33,12 +39,17 @@ defmodule SpeechwaveWeb.ReactionChannel do
     {:noreply, socket}
   end
 
+  def handle_info(%Phoenix.Socket.Broadcast{event: "disconnect"}, socket) do
+    {:stop, :normal, socket}
+  end
+
   def handle_in("start_session", _payload, socket) do
     talk = socket.assigns.talk
-    scope = %Speechwave.Accounts.Scope{user: talk.user}
+    user = socket.assigns.user
+    scope = %Speechwave.Accounts.Scope{user: user}
     full_count = Talks.count_full_sessions_this_month(scope)
 
-    case Plans.check(:full_sessions_per_month, talk.user.plan, full_count) do
+    case Plans.check(:full_sessions_per_month, user.plan, full_count) do
       :ok ->
         case Talks.start_session(talk) do
           {:ok, session} ->
