@@ -181,7 +181,10 @@ defmodule SpeechwaveWeb.UserLive.SettingsTest do
       assert updated_user.api_key != old_key
     end
 
-    test "regenerate broadcasts disconnect to active channel connections", %{conn: conn, user: user} do
+    test "regenerate broadcasts disconnect to active channel connections", %{
+      conn: conn,
+      user: user
+    } do
       Phoenix.PubSub.subscribe(Speechwave.PubSub, "user:#{user.id}:disconnect")
       {:ok, view, _html} = live(conn, ~p"/users/settings")
       view |> element("#regenerate-api-key-btn") |> render_click()

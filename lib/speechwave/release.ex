@@ -23,7 +23,9 @@ defmodule Speechwave.Release do
 
         case Speechwave.Accounts.get_user_by_email(admin_email) do
           nil ->
-            {:ok, user} = Speechwave.Accounts.register_user(%{email: admin_email, password: admin_password})
+            {:ok, user} =
+              Speechwave.Accounts.register_user(%{email: admin_email, password: admin_password})
+
             Speechwave.Repo.update!(Ecto.Changeset.change(user, is_admin: true))
             IO.puts("Admin user created: #{admin_email}")
 

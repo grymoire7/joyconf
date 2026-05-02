@@ -2,7 +2,10 @@
   <div class="min-h-screen bg-gray-50 p-8">
     <div class="max-w-4xl mx-auto">
       <%= if not @confirmed? do %>
-        <div id="email-confirmation-banner" class="mb-4 px-4 py-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-800 flex items-center justify-between">
+        <div
+          id="email-confirmation-banner"
+          class="mb-4 px-4 py-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-800 flex items-center justify-between"
+        >
           <span>
             Please confirm your email address to activate the browser extension.
           </span>

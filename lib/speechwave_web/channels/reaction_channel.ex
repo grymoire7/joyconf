@@ -13,7 +13,11 @@ defmodule SpeechwaveWeb.ReactionChannel do
          {:owner, true} <- {:owner, talk.user_id == user.id},
          {:capacity, :ok} <-
            {:capacity,
-            Plans.check(:max_participants, user.plan, Presence.list("reactions:#{slug}") |> map_size())} do
+            Plans.check(
+              :max_participants,
+              user.plan,
+              Presence.list("reactions:#{slug}") |> map_size()
+            )} do
       Phoenix.PubSub.subscribe(Speechwave.PubSub, "user:#{user.id}:disconnect")
       send(self(), :after_join)
       {:ok, assign(socket, talk: talk, user: user)}

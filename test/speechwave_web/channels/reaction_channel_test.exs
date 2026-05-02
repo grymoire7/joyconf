@@ -15,7 +15,11 @@ defmodule SpeechwaveWeb.ReactionChannelTest do
     subscribe_and_join(socket, "reactions:#{slug}", %{"api_key" => api_key})
   end
 
-  test "joins when api_key is valid and user owns the talk", %{socket: socket, talk: talk, user: user} do
+  test "joins when api_key is valid and user owns the talk", %{
+    socket: socket,
+    talk: talk,
+    user: user
+  } do
     assert {:ok, _, _} = channel_join(socket, talk.slug, user.api_key)
   end
 
@@ -30,15 +34,26 @@ defmodule SpeechwaveWeb.ReactionChannelTest do
   test "rejects join when user email is not confirmed", %{socket: socket} do
     unconfirmed = unconfirmed_user_fixture()
     talk = talk_fixture(unconfirmed, %{slug: "unconfirmed-talk"})
-    assert {:error, %{reason: "email_not_confirmed"}} = channel_join(socket, talk.slug, unconfirmed.api_key)
+
+    assert {:error, %{reason: "email_not_confirmed"}} =
+             channel_join(socket, talk.slug, unconfirmed.api_key)
   end
 
-  test "rejects join when api_key belongs to a user who does not own the talk", %{socket: socket, talk: talk} do
+  test "rejects join when api_key belongs to a user who does not own the talk", %{
+    socket: socket,
+    talk: talk
+  } do
     other_user = confirmed_user_fixture()
-    assert {:error, %{reason: "unauthorized"}} = channel_join(socket, talk.slug, other_user.api_key)
+
+    assert {:error, %{reason: "unauthorized"}} =
+             channel_join(socket, talk.slug, other_user.api_key)
   end
 
-  test "pushes new_reaction to client when Endpoint broadcasts", %{socket: socket, talk: talk, user: user} do
+  test "pushes new_reaction to client when Endpoint broadcasts", %{
+    socket: socket,
+    talk: talk,
+    user: user
+  } do
     {:ok, _, _} = channel_join(socket, talk.slug, user.api_key)
     SpeechwaveWeb.Endpoint.broadcast!("reactions:#{talk.slug}", "new_reaction", %{emoji: "❤️"})
     assert_push "new_reaction", %{emoji: "❤️"}
@@ -50,7 +65,9 @@ defmodule SpeechwaveWeb.ReactionChannelTest do
       %{joined: joined, talk: talk, user: user}
     end
 
-    test "start_session creates a session and replies with session_id and label", %{joined: joined} do
+    test "start_session creates a session and replies with session_id and label", %{
+      joined: joined
+    } do
       ref = push(joined, "start_session", %{})
       assert_reply ref, :ok, %{session_id: session_id, label: "Session 1"}
       assert Speechwave.Talks.get_session(session_id) != nil
