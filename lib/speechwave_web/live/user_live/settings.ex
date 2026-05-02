@@ -81,7 +81,7 @@ defmodule SpeechwaveWeb.UserLive.Settings do
             readonly
             value={@api_key}
             class="flex-1 font-mono text-sm px-3 py-2 rounded-lg border border-base-300 bg-base-200 text-base-content"
-            onclick="this.select()"
+            phx-hook=".SelectOnClick"
           />
           <button
             id="regenerate-api-key-btn"
@@ -94,6 +94,11 @@ defmodule SpeechwaveWeb.UserLive.Settings do
         </div>
       </div>
     </Layouts.app>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".SelectOnClick">
+      export default {
+        mounted() { this.el.addEventListener("click", () => this.el.select()) }
+      }
+    </script>
     """
   end
 
@@ -189,13 +194,10 @@ defmodule SpeechwaveWeb.UserLive.Settings do
 
   def handle_event("regenerate_api_key", _params, socket) do
     user = socket.assigns.current_scope.user
+    true = Accounts.sudo_mode?(user)
     {:ok, updated_user} = Accounts.regenerate_api_key(user)
 
-    Phoenix.PubSub.broadcast(Speechwave.PubSub, "user:#{user.id}:disconnect", %Phoenix.Socket.Broadcast{
-      topic: "user:#{user.id}:disconnect",
-      event: "disconnect",
-      payload: %{}
-    })
+    SpeechwaveWeb.Endpoint.broadcast("user:#{user.id}:disconnect", "disconnect", %{})
 
     {:noreply, assign(socket, :api_key, updated_user.api_key)}
   end
