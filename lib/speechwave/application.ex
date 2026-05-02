@@ -21,11 +21,12 @@ defmodule Speechwave.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Speechwave.Supervisor]
+
     Supervisor.start_link(children, opts)
   end
 
   defp backup_children do
-    if System.get_env("LITESTREAM_BUCKET"), do: [Speechwave.DbBackup], else: []
+    if System.get_env("STORAGE_BUCKET"), do: [Speechwave.DbBackup], else: []
   end
 
   @impl true
