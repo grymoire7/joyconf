@@ -16,7 +16,8 @@ defmodule SpeechwaveWeb.DashboardLive do
        selected_qr_data_uri: nil,
        sessions: [],
        renaming_session_id: nil,
-       rename_form: nil
+       rename_form: nil,
+       confirmed?: not is_nil(scope.user.confirmed_at)
      )}
   end
 

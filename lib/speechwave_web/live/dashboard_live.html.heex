@@ -1,6 +1,16 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
   <div class="min-h-screen bg-gray-50 p-8">
     <div class="max-w-4xl mx-auto">
+      <%= if not @confirmed? do %>
+        <div id="email-confirmation-banner" class="mb-4 px-4 py-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-800 flex items-center justify-between">
+          <span>
+            Please confirm your email address to activate the browser extension.
+          </span>
+          <.link href={~p"/users/settings"} class="underline font-medium ml-4 shrink-0">
+            Resend confirmation
+          </.link>
+        </div>
+      <% end %>
       <div class="flex items-center justify-between mb-8">
         <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
         <div class="flex items-center gap-4 text-sm text-gray-500">
