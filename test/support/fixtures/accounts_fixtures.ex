@@ -42,9 +42,7 @@ defmodule Speechwave.AccountsFixtures do
   end
 
   def confirmed_user_fixture(attrs \\ %{}) do
-    user = user_fixture(attrs)
-    now = DateTime.utc_now(:second)
-    Speechwave.Repo.update!(Ecto.Changeset.change(user, confirmed_at: now))
+    user_fixture(attrs)
   end
 
   def user_scope_fixture do
