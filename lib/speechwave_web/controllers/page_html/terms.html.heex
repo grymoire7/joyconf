@@ -1,0 +1,97 @@
+<header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2 font-bold text-xl text-gray-900">
+      <span class="text-2xl">🎤</span>
+      Speechwave
+    </a>
+  </div>
+</header>
+
+<div class="pt-28 pb-24 px-6">
+  <div class="max-w-2xl mx-auto [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-gray-900 [&_h2]:mt-8 [&_h2]:mb-2 [&_p]:text-gray-600 [&_p]:leading-relaxed [&_a]:text-indigo-600 [&_a]:underline">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Terms of Service</h1>
+    <p class="text-gray-400 text-sm mb-8">Last updated: April 2026</p>
+
+    <h2>1. Acceptance of Terms</h2>
+    <p>
+      By accessing or using Speechwave ("the Service"), you agree to be bound
+      by these Terms of Service. If you do not agree to these terms, do not
+      use the Service.
+    </p>
+
+    <h2>2. Description of Service</h2>
+    <p>
+      Speechwave provides a live audience reaction platform for presenters,
+      including a web dashboard, browser extension, and audience-facing
+      reaction pages.
+    </p>
+
+    <h2>3. Account Responsibilities</h2>
+    <p>
+      You are responsible for maintaining the confidentiality of your account
+      credentials, including your API key. You agree to notify us immediately
+      of any unauthorized use of your account.
+    </p>
+
+    <h2>4. Acceptable Use</h2>
+    <p>
+      You may not use the Service to transmit harmful, offensive, or illegal
+      content. You may not attempt to reverse-engineer, abuse, or disrupt the
+      Service or its infrastructure.
+    </p>
+
+    <h2>5. Free Tier Limits</h2>
+    <p>
+      The free plan includes up to 50 participants per talk and 10 full sessions
+      (longer than 10 minutes) per calendar month. We reserve the right to
+      enforce these limits and to modify them with notice.
+    </p>
+
+    <h2>6. Termination</h2>
+    <p>
+      We reserve the right to suspend or terminate accounts that violate these
+      terms. You may delete your account at any time by contacting us.
+    </p>
+
+    <h2>7. Disclaimer of Warranties</h2>
+    <p>
+      The Service is provided "as is" without warranty of any kind. We do not
+      guarantee uninterrupted availability or error-free operation.
+    </p>
+
+    <h2>8. Limitation of Liability</h2>
+    <p>
+      To the fullest extent permitted by law, Speechwave shall not be liable
+      for any indirect, incidental, or consequential damages arising from your
+      use of the Service.
+    </p>
+
+    <h2>9. Governing Law</h2>
+    <p>
+      These terms are governed by the laws of the United States. Any disputes
+      shall be resolved in the applicable courts.
+    </p>
+
+    <h2>10. Changes to These Terms</h2>
+    <p>
+      We may update these terms from time to time. Continued use of the Service
+      after changes constitutes acceptance of the new terms.
+    </p>
+
+    <h2>11. Contact</h2>
+    <p>
+      For questions about these terms, contact us at
+      <a href="mailto:hello@speechwave.live">hello@speechwave.live</a>.
+    </p>
+  </div>
+</div>
+
+<footer class="py-10 px-6 bg-gray-900">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+    <span>© {Date.utc_today().year} Speechwave</span>
+    <div class="flex gap-6">
+      <a href={~p"/terms"} class="hover:text-gray-300 transition-colors">Terms of Service</a>
+      <a href={~p"/privacy"} class="hover:text-gray-300 transition-colors">Privacy Policy</a>
+    </div>
+  </div>
+</footer>
