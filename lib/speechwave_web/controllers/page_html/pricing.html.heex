@@ -2,13 +2,20 @@
 <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
   <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
     <a href="/" class="flex items-center gap-2 font-bold text-xl text-gray-900">
-      <span class="text-2xl">🎤</span>
-      Speechwave
+      <span class="text-2xl">🎤</span> Speechwave
     </a>
     <nav class="flex items-center gap-6">
       <a href={~p"/pricing"} class="text-sm font-medium text-indigo-600">Pricing</a>
-      <a href={~p"/users/log-in"} class="text-sm text-gray-600 hover:text-gray-900 transition-colors">Log in</a>
-      <a href={~p"/users/register"} class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+      <a
+        href={~p"/users/log-in"}
+        class="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        Log in
+      </a>
+      <a
+        href={~p"/users/register"}
+        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+      >
         Sign up free
       </a>
     </nav>
@@ -23,11 +30,12 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-
       <%!-- Free --%>
       <div class="bg-white rounded-2xl border-2 border-indigo-500 shadow-lg p-8 relative">
         <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span class="px-3 py-1 bg-indigo-500 text-white text-xs font-bold rounded-full">Current Plan</span>
+          <span class="px-3 py-1 bg-indigo-500 text-white text-xs font-bold rounded-full">
+            Current Plan
+          </span>
         </div>
         <div class="mb-6">
           <h2 class="text-xl font-bold text-gray-900 mb-1">Free</h2>
