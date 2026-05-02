@@ -27,6 +27,35 @@ defmodule Speechwave.Accounts do
   end
 
   @doc """
+  Gets a user by API key.
+
+  ## Examples
+
+      iex> get_user_by_api_key("valid_key")
+      %User{}
+
+      iex> get_user_by_api_key("invalid_key")
+      nil
+
+  """
+  def get_user_by_api_key(api_key) when is_binary(api_key) do
+    Repo.get_by(User, api_key: api_key)
+  end
+
+  @doc """
+  Regenerates the API key for the given user.
+
+  Returns `{:ok, updated_user}` on success.
+  """
+  def regenerate_api_key(%User{} = user) do
+    new_key = :crypto.strong_rand_bytes(32) |> Base.encode16(case: :lower)
+
+    user
+    |> Ecto.Changeset.change(api_key: new_key)
+    |> Repo.update()
+  end
+
+  @doc """
   Gets a user by email and password.
 
   ## Examples

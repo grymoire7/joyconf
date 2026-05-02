@@ -7,6 +7,7 @@ defmodule Speechwave.Accounts.User do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
+    field :api_key, :string
     field :authenticated_at, :utc_datetime, virtual: true
     field :plan, Ecto.Enum, values: [:free, :pro, :org], default: :free
     field :is_admin, :boolean, default: false
@@ -29,6 +30,7 @@ defmodule Speechwave.Accounts.User do
     user
     |> cast(attrs, [:email])
     |> validate_email(opts)
+    |> maybe_generate_api_key()
   end
 
   defp validate_email(changeset, opts) do
@@ -57,6 +59,22 @@ defmodule Speechwave.Accounts.User do
     else
       changeset
     end
+  end
+
+  defp maybe_generate_api_key(changeset) do
+    if get_field(changeset, :api_key) do
+      changeset
+    else
+      generate_api_key(changeset)
+    end
+  end
+
+  defp generate_api_key(changeset) do
+    put_change(
+      changeset,
+      :api_key,
+      :crypto.strong_rand_bytes(32) |> Base.encode16(case: :lower)
+    )
   end
 
   @doc """

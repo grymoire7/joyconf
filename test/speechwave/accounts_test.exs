@@ -409,4 +409,36 @@ defmodule Speechwave.AccountsTest do
       assert "is invalid" in errors_on(changeset).plan
     end
   end
+
+  describe "api_key" do
+    test "new users are created with a non-nil api_key" do
+      user = user_fixture()
+      assert is_binary(user.api_key)
+      assert String.length(user.api_key) == 64
+    end
+
+    test "get_user_by_api_key/1 returns the user for a valid key" do
+      user = user_fixture()
+      assert Accounts.get_user_by_api_key(user.api_key).id == user.id
+    end
+
+    test "get_user_by_api_key/1 returns nil for an unknown key" do
+      assert Accounts.get_user_by_api_key("doesnotexist") == nil
+    end
+
+    test "regenerate_api_key/1 returns a new api_key different from the old one" do
+      user = user_fixture()
+      old_key = user.api_key
+      {:ok, updated} = Accounts.regenerate_api_key(user)
+      assert updated.api_key != old_key
+      assert String.length(updated.api_key) == 64
+    end
+
+    test "get_user_by_api_key/1 returns nil after key is regenerated" do
+      user = user_fixture()
+      old_key = user.api_key
+      {:ok, _} = Accounts.regenerate_api_key(user)
+      assert Accounts.get_user_by_api_key(old_key) == nil
+    end
+  end
 end
