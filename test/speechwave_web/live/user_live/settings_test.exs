@@ -160,6 +160,35 @@ defmodule SpeechwaveWeb.UserLive.SettingsTest do
     end
   end
 
+  describe "API key section" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      %{conn: log_in_user(conn, user), user: user}
+    end
+
+    test "shows the user's api_key in a read-only field", %{conn: conn, user: user} do
+      {:ok, view, _html} = live(conn, ~p"/users/settings")
+      assert has_element?(view, "#api-key-display")
+      assert render(view) =~ user.api_key
+    end
+
+    test "regenerate button generates a new api_key", %{conn: conn, user: user} do
+      old_key = user.api_key
+      {:ok, view, _html} = live(conn, ~p"/users/settings")
+      view |> element("#regenerate-api-key-btn") |> render_click()
+      refute render(view) =~ old_key
+      updated_user = Speechwave.Accounts.get_user!(user.id)
+      assert updated_user.api_key != old_key
+    end
+
+    test "regenerate broadcasts disconnect to active channel connections", %{conn: conn, user: user} do
+      Phoenix.PubSub.subscribe(Speechwave.PubSub, "user:#{user.id}:disconnect")
+      {:ok, view, _html} = live(conn, ~p"/users/settings")
+      view |> element("#regenerate-api-key-btn") |> render_click()
+      assert_receive %Phoenix.Socket.Broadcast{event: "disconnect"}, 500
+    end
+  end
+
   describe "confirm email" do
     setup %{conn: conn} do
       user = user_fixture()

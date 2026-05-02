@@ -65,6 +65,34 @@ defmodule SpeechwaveWeb.UserLive.Settings do
           Save Password
         </.button>
       </.form>
+
+      <div class="divider" />
+
+      <div class="space-y-2">
+        <h3 class="font-semibold text-base-content">Browser Extension API Key</h3>
+        <p class="text-sm text-base-content/70">
+          Paste this key into the Speechwave browser extension to authenticate.
+          Keep it secret.
+        </p>
+        <div class="flex gap-2 items-center">
+          <input
+            id="api-key-display"
+            type="text"
+            readonly
+            value={@api_key}
+            class="flex-1 font-mono text-sm px-3 py-2 rounded-lg border border-base-300 bg-base-200 text-base-content"
+            onclick="this.select()"
+          />
+          <button
+            id="regenerate-api-key-btn"
+            phx-click="regenerate_api_key"
+            data-confirm="Regenerate your API key? Any active extension connections will be disconnected immediately."
+            class="px-4 py-2 text-sm font-medium rounded-lg border border-base-300 hover:bg-base-200 transition-colors"
+          >
+            Regenerate
+          </button>
+        </div>
+      </div>
     </Layouts.app>
     """
   end
@@ -94,6 +122,7 @@ defmodule SpeechwaveWeb.UserLive.Settings do
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:trigger_submit, false)
+      |> assign(:api_key, user.api_key)
 
     {:ok, socket}
   end
@@ -156,5 +185,18 @@ defmodule SpeechwaveWeb.UserLive.Settings do
       changeset ->
         {:noreply, assign(socket, password_form: to_form(changeset, action: :insert))}
     end
+  end
+
+  def handle_event("regenerate_api_key", _params, socket) do
+    user = socket.assigns.current_scope.user
+    {:ok, updated_user} = Accounts.regenerate_api_key(user)
+
+    Phoenix.PubSub.broadcast(Speechwave.PubSub, "user:#{user.id}:disconnect", %Phoenix.Socket.Broadcast{
+      topic: "user:#{user.id}:disconnect",
+      event: "disconnect",
+      payload: %{}
+    })
+
+    {:noreply, assign(socket, :api_key, updated_user.api_key)}
   end
 end
