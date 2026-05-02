@@ -42,6 +42,8 @@ defmodule Speechwave.Accounts do
     Repo.get_by(User, api_key: api_key)
   end
 
+  def get_user_by_api_key(_), do: nil
+
   @doc """
   Regenerates the API key for the given user.
 
