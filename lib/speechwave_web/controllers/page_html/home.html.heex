@@ -1,96 +1,111 @@
-<%!-- Navigation --%>
-<header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2 font-bold text-xl text-gray-900">
-      <span class="text-2xl">🎤</span> Speechwave
-    </a>
-    <nav class="flex items-center gap-6">
-      <a href={~p"/pricing"} class="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-        Pricing
-      </a>
-      <a
-        href={~p"/users/log-in"}
-        class="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-      >
-        Log in
-      </a>
-      <a
-        href={~p"/users/register"}
-        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-      >
-        Sign up free
-      </a>
-    </nav>
-  </div>
-</header>
+<.public_nav current_scope={@current_scope} />
 
 <%!-- Hero --%>
-<section class="pt-32 pb-24 px-6 bg-gradient-to-br from-white via-indigo-50/30 to-white">
+<section class="pt-40 pb-28 px-6 bg-gradient-to-b from-hero-sky-from to-hero-sky-to">
   <div class="max-w-4xl mx-auto text-center">
-    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium mb-8">
-      <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-      Free to get started — no credit card required
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/40 backdrop-blur-sm border border-white/50 text-ink text-xs font-medium mb-8">
+      <span class="size-1.5 rounded-full bg-mint shrink-0 inline-block"></span>
+      Free to get started · No credit card required
     </div>
-    <h1 class="text-5xl sm:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
-      Live emoji reactions <span class="text-indigo-600">for your next talk</span>
+
+    <h1 class="text-5xl sm:text-6xl lg:text-[72px] font-semibold text-ink tracking-tight leading-[1.05] mb-6">
+      Live reactions for<br class="hidden sm:block" /> your next talk
     </h1>
-    <p class="text-xl text-gray-700 max-w-2xl mx-auto mb-10">
-      Let your audience react in real time while you present.
+
+    <p class="text-lg sm:text-xl text-steel max-w-2xl mx-auto mb-10 leading-relaxed">
+      Let your audience react with emoji in real time while you present.
       Install the browser extension, share a QR code, and watch the
       energy light up your slides.
     </p>
-    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
       <a
         href={~p"/users/register"}
-        class="px-8 py-4 text-base font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all hover:shadow-lg hover:-translate-y-0.5"
+        class="px-5 py-2.5 text-sm font-medium text-ink bg-mint rounded-full hover:bg-mint-deep transition-colors hover:-translate-y-px transform inline-block"
       >
         Get started free
       </a>
       <a
         href={~p"/pricing"}
-        class="px-8 py-4 text-base font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all"
+        class="px-5 py-2.5 text-sm font-medium text-ink border border-[rgba(10,10,10,0.2)] rounded-full hover:bg-white/30 transition-colors inline-block"
       >
         See pricing
       </a>
+    </div>
+
+    <%!-- Product mockup --%>
+    <div class="mt-16 max-w-xs mx-auto bg-canvas rounded-2xl border border-hairline-soft shadow-[rgba(0,0,0,0.12)_0px_24px_48px_-8px] overflow-hidden text-left">
+      <div class="px-4 py-3 border-b border-hairline-soft bg-surface-soft flex items-center gap-3">
+        <div class="flex gap-1.5 shrink-0">
+          <span class="size-2.5 rounded-full bg-[#ff5f57] inline-block"></span>
+          <span class="size-2.5 rounded-full bg-[#ffbd2e] inline-block"></span>
+          <span class="size-2.5 rounded-full bg-[#28c940] inline-block"></span>
+        </div>
+        <span class="text-[11px] text-muted truncate flex-1 text-center">
+          speechwave.live/t/design-conf
+        </span>
+      </div>
+      <div class="px-6 py-7">
+        <div class="text-sm font-semibold text-ink mb-0.5">Design Thinking 2025</div>
+        <div class="text-xs text-muted mb-5">React live while you present</div>
+        <div class="grid grid-cols-3 gap-4 place-items-center">
+          <%= for emoji <- ["❤️", "😂", "👏", "🤯", "🎉", "😮"] do %>
+            <button class="text-2xl hover:scale-125 transition-transform select-none cursor-pointer">
+              {emoji}
+            </button>
+          <% end %>
+        </div>
+        <div class="mt-5 flex items-center justify-between">
+          <span class="text-xs text-muted">Tap to react</span>
+          <span class="inline-flex items-center gap-1.5 text-xs text-stone">
+            <span class="size-1.5 rounded-full bg-mint inline-block"></span> 31 reactions
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <%!-- How it works --%>
-<section class="py-24 px-6 bg-white">
+<section class="py-24 px-6 bg-canvas">
   <div class="max-w-5xl mx-auto">
-    <h2 class="text-3xl font-bold text-gray-900 text-center mb-4">
-      Up and running in minutes
-    </h2>
-    <p class="text-gray-500 text-center mb-16 max-w-xl mx-auto">
-      No complicated setup. Works with Google Slides today.
-    </p>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="relative p-8 rounded-2xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-100">
-        <div class="text-4xl mb-4">🔌</div>
-        <div class="text-xs font-bold text-indigo-500 uppercase tracking-wide mb-2">Step 1</div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Install the extension</h3>
-        <p class="text-gray-500 text-sm">
+    <div class="text-center mb-16">
+      <p class="text-[11px] font-semibold text-steel uppercase tracking-[0.5px] mb-3">
+        How it works
+      </p>
+      <h2 class="text-3xl sm:text-[36px] font-semibold text-ink tracking-tight">
+        Up and running in minutes
+      </h2>
+      <p class="text-steel mt-3 max-w-sm mx-auto text-sm leading-relaxed">
+        No complicated setup. Works with Google Slides today.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="p-8 rounded-xl border border-hairline bg-canvas">
+        <div class="size-8 rounded-full border border-hairline flex items-center justify-center text-xs font-semibold text-steel mb-6">
+          1
+        </div>
+        <h3 class="text-base font-semibold text-ink mb-2">Install the extension</h3>
+        <p class="text-sm text-steel leading-relaxed">
           Add the Speechwave Chrome extension and paste your API key from your account settings.
         </p>
       </div>
-
-      <div class="relative p-8 rounded-2xl bg-gradient-to-br from-violet-50 to-white border border-violet-100">
-        <div class="text-4xl mb-4">📲</div>
-        <div class="text-xs font-bold text-violet-500 uppercase tracking-wide mb-2">Step 2</div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Share the QR code</h3>
-        <p class="text-gray-500 text-sm">
-          Add the Speechwave URL to your first slide. The audience scans it to open the reaction page in their browser.
+      <div class="p-8 rounded-xl border border-hairline bg-canvas">
+        <div class="size-8 rounded-full border border-hairline flex items-center justify-center text-xs font-semibold text-steel mb-6">
+          2
+        </div>
+        <h3 class="text-base font-semibold text-ink mb-2">Share the QR code</h3>
+        <p class="text-sm text-steel leading-relaxed">
+          Add the Speechwave URL to your first slide. Your audience scans it to join the reaction page instantly.
         </p>
       </div>
-
-      <div class="relative p-8 rounded-2xl bg-gradient-to-br from-pink-50 to-white border border-pink-100">
-        <div class="text-4xl mb-4">🎉</div>
-        <div class="text-xs font-bold text-pink-500 uppercase tracking-wide mb-2">Step 3</div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Watch the reactions</h3>
-        <p class="text-gray-500 text-sm">
-          Emoji reactions float up on your screen in real time as your audience taps them.
+      <div class="p-8 rounded-xl border border-hairline bg-canvas">
+        <div class="size-8 rounded-full border border-hairline flex items-center justify-center text-xs font-semibold text-steel mb-6">
+          3
+        </div>
+        <h3 class="text-base font-semibold text-ink mb-2">Watch the reactions</h3>
+        <p class="text-sm text-steel leading-relaxed">
+          Emoji reactions float up on your screen in real time as your audience taps. Feel the energy in the room.
         </p>
       </div>
     </div>
@@ -98,43 +113,56 @@
 </section>
 
 <%!-- Features --%>
-<section class="py-24 px-6 bg-gray-50">
+<section class="py-24 px-6 bg-surface">
   <div class="max-w-5xl mx-auto">
-    <h2 class="text-3xl font-bold text-gray-900 text-center mb-16">
-      Everything you need on the free plan
-    </h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div class="text-2xl mb-3">😂</div>
-        <h3 class="font-semibold text-gray-900 mb-1">Live emoji reactions</h3>
-        <p class="text-sm text-gray-500">Up to 50 audience members react in real time.</p>
-      </div>
-      <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div class="text-2xl mb-3">📊</div>
-        <h3 class="font-semibold text-gray-900 mb-1">Session analytics</h3>
-        <p class="text-sm text-gray-500">
-          See reaction counts, timelines, and trends per session.
+    <div class="text-center mb-16">
+      <p class="text-[11px] font-semibold text-steel uppercase tracking-[0.5px] mb-3">
+        Everything included
+      </p>
+      <h2 class="text-3xl sm:text-[36px] font-semibold text-ink tracking-tight">
+        Everything you need on the free plan
+      </h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="p-6 bg-canvas rounded-xl border border-hairline">
+        <.icon name="hero-face-smile" class="size-5 text-steel mb-4" />
+        <h3 class="text-sm font-semibold text-ink mb-1.5">Live emoji reactions</h3>
+        <p class="text-sm text-steel leading-relaxed">
+          Up to 50 audience members react in real time.
         </p>
       </div>
-      <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div class="text-2xl mb-3">📱</div>
-        <h3 class="font-semibold text-gray-900 mb-1">QR code sharing</h3>
-        <p class="text-sm text-gray-500">Auto-generated QR code for instant audience access.</p>
+      <div class="p-6 bg-canvas rounded-xl border border-hairline">
+        <.icon name="hero-chart-bar" class="size-5 text-steel mb-4" />
+        <h3 class="text-sm font-semibold text-ink mb-1.5">Session analytics</h3>
+        <p class="text-sm text-steel leading-relaxed">
+          Reaction counts, timelines, and trends per session.
+        </p>
       </div>
-      <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div class="text-2xl mb-3">🎇</div>
-        <h3 class="font-semibold text-gray-900 mb-1">Fireworks mode</h3>
-        <p class="text-sm text-gray-500">When reactions surge, watch the fireworks fly.</p>
+      <div class="p-6 bg-canvas rounded-xl border border-hairline">
+        <.icon name="hero-qr-code" class="size-5 text-steel mb-4" />
+        <h3 class="text-sm font-semibold text-ink mb-1.5">QR code sharing</h3>
+        <p class="text-sm text-steel leading-relaxed">
+          Auto-generated QR code for instant audience access.
+        </p>
       </div>
-      <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div class="text-2xl mb-3">🔒</div>
-        <h3 class="font-semibold text-gray-900 mb-1">Secure by default</h3>
-        <p class="text-sm text-gray-500">Only you can start sessions for your talks.</p>
+      <div class="p-6 bg-canvas rounded-xl border border-hairline">
+        <.icon name="hero-sparkles" class="size-5 text-steel mb-4" />
+        <h3 class="text-sm font-semibold text-ink mb-1.5">Fireworks mode</h3>
+        <p class="text-sm text-steel leading-relaxed">
+          When reactions surge, watch the fireworks fly on your screen.
+        </p>
       </div>
-      <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div class="text-2xl mb-3">💸</div>
-        <h3 class="font-semibold text-gray-900 mb-1">Free forever</h3>
-        <p class="text-sm text-gray-500">
+      <div class="p-6 bg-canvas rounded-xl border border-hairline">
+        <.icon name="hero-lock-closed" class="size-5 text-steel mb-4" />
+        <h3 class="text-sm font-semibold text-ink mb-1.5">Secure by default</h3>
+        <p class="text-sm text-steel leading-relaxed">
+          Only you can start sessions for your talks.
+        </p>
+      </div>
+      <div class="p-6 bg-canvas rounded-xl border border-hairline">
+        <.icon name="hero-gift" class="size-5 text-steel mb-4" />
+        <h3 class="text-sm font-semibold text-ink mb-1.5">Free forever</h3>
+        <p class="text-sm text-steel leading-relaxed">
           The free plan has no time limit. Upgrade when you're ready.
         </p>
       </div>
@@ -142,31 +170,22 @@
   </div>
 </section>
 
-<%!-- CTA --%>
-<section class="py-24 px-6 bg-indigo-600">
+<%!-- CTA band --%>
+<section class="py-24 px-6 bg-canvas-dark">
   <div class="max-w-2xl mx-auto text-center">
-    <h2 class="text-3xl font-bold text-white mb-4">
-      Ready to energize your next talk?
+    <h2 class="text-3xl sm:text-[36px] font-semibold text-on-dark tracking-tight mb-4">
+      Energize your next talk
     </h2>
-    <p class="text-indigo-200 mb-10">
+    <p class="text-on-dark-muted mb-10 leading-relaxed max-w-md mx-auto">
       Create your free account and have reactions live before your next slide deck is done.
     </p>
     <a
       href={~p"/users/register"}
-      class="inline-block px-8 py-4 text-base font-semibold text-indigo-600 bg-white rounded-xl hover:bg-indigo-50 transition-all hover:shadow-lg hover:-translate-y-0.5"
+      class="inline-block px-5 py-2.5 text-sm font-medium text-ink bg-on-dark rounded-full hover:bg-[#f0f0f0] transition-colors"
     >
       Get started free
     </a>
   </div>
 </section>
 
-<%!-- Footer --%>
-<footer class="py-10 px-6 bg-gray-900">
-  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-    <span>© {Date.utc_today().year} Speechwave</span>
-    <div class="flex gap-6">
-      <a href={~p"/terms"} class="hover:text-gray-300 transition-colors">Terms of Service</a>
-      <a href={~p"/privacy"} class="hover:text-gray-300 transition-colors">Privacy Policy</a>
-    </div>
-  </div>
-</footer>
+<.public_footer />

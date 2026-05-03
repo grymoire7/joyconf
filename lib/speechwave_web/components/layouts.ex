@@ -35,7 +35,30 @@ defmodule SpeechwaveWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <main class="px-4 py-8 sm:px-6 lg:px-8">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-canvas border-b border-hairline">
+      <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
+        <a href={~p"/"} class="flex items-center gap-2 text-ink font-semibold text-sm shrink-0">
+          <span class="text-base leading-none">🎤</span> Speechwave
+        </a>
+        <%= if @current_scope do %>
+          <div class="flex items-center gap-4 text-sm ml-auto">
+            <a href={~p"/dashboard"} class="text-steel hover:text-ink transition-colors">Dashboard</a>
+            <a href={~p"/users/settings"} class="text-steel hover:text-ink transition-colors">
+              Settings
+            </a>
+            <span class="hidden sm:inline text-xs text-muted">{@current_scope.user.email}</span>
+            <.link
+              href={~p"/users/log-out"}
+              method="delete"
+              class="px-3 py-1.5 text-xs font-medium text-ink border border-hairline rounded-full hover:bg-surface transition-colors"
+            >
+              Log out
+            </.link>
+          </div>
+        <% end %>
+      </div>
+    </header>
+    <main class="pt-14 px-4 py-8 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl space-y-4">
         {render_slot(@inner_block)}
       </div>

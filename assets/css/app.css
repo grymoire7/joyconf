@@ -1,6 +1,7 @@
 /* See the Tailwind configuration guide for advanced usage
    https://tailwindcss.com/docs/configuration */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
 @import "tailwindcss" source(none);
 @source "../css";
 @source "../js";
@@ -89,6 +90,29 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
+}
+
+/* Mintlify Design System Tokens */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --color-ink: #0a0a0a;
+  --color-canvas: #ffffff;
+  --color-surface: #f7f7f7;
+  --color-surface-soft: #fafafa;
+  --color-hairline: #e5e5e5;
+  --color-hairline-soft: #ededed;
+  --color-charcoal: #1c1c1e;
+  --color-steel: #5a5a5c;
+  --color-stone: #888888;
+  --color-muted: #a8a8aa;
+  --color-mint: #00d4a4;
+  --color-mint-deep: #00b48a;
+  --color-mint-soft: #7cebcb;
+  --color-canvas-dark: #0a0a0a;
+  --color-on-dark: #ffffff;
+  --color-on-dark-muted: #b3b3b3;
+  --color-hero-sky-from: #87a8c8;
+  --color-hero-sky-to: #f5e9d8;
 }
 
 /* Add variants based on LiveView classes */
