@@ -234,5 +234,23 @@ defmodule SpeechwaveWeb.DashboardLiveTest do
       {:ok, view, _html} = live(conn, "/dashboard")
       assert has_element?(view, "#participant-limit")
     end
+
+    test "shows limit reached warning when monthly limit is hit", %{conn: conn, user: user} do
+      talk = talk_fixture(user)
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      # Insert 10 full sessions (the free tier limit)
+      for i <- 1..10 do
+        session_fixture(talk, %{
+          label: "Session #{i}",
+          started_at: now,
+          ended_at: DateTime.add(now, 15 * 60, :second)
+        })
+      end
+
+      {:ok, view, _html} = live(conn, "/dashboard")
+      assert has_element?(view, "#sessions-used", "10")
+      assert render(view) =~ "Monthly limit reached"
+    end
   end
 end
