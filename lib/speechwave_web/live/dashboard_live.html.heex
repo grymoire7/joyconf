@@ -39,6 +39,68 @@
         with unlimited everything is <em>coming soon</em>.
       </div>
 
+      <%!-- Usage Summary --%>
+      <div id="usage-summary" class="mb-6 p-5 bg-white rounded-xl border border-[#e5e5e5] shadow-sm">
+        <h2 class="text-[11px] font-semibold text-[#5a5a5c] uppercase tracking-[0.5px] mb-4">
+          Plan Usage — Free
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+          <%!-- Full sessions this month --%>
+          <div>
+            <div class="flex justify-between items-baseline mb-1.5">
+              <span class="text-sm text-[#3a3a3c]">Full sessions this month</span>
+              <span class="text-sm font-semibold text-[#0a0a0a]">
+                <span id="sessions-used">{@full_session_count}</span>
+                <span class="text-[#888888]"> / </span>
+                <span id="session-limit">
+                  <%= if @session_limit == :unlimited do %>
+                    ∞
+                  <% else %>
+                    {@session_limit}
+                  <% end %>
+                </span>
+              </span>
+            </div>
+            <%= if @session_limit != :unlimited do %>
+              <div class="w-full bg-[#f7f7f7] rounded-full h-2 overflow-hidden">
+                <div
+                  class={[
+                    "h-2 rounded-full transition-all",
+                    cond do
+                      @full_session_count >= @session_limit -> "bg-[#d45656]"
+                      @full_session_count >= @session_limit * 0.8 -> "bg-[#c37d0d]"
+                      true -> "bg-[#00d4a4]"
+                    end
+                  ]}
+                  style={"width: #{min(round(@full_session_count / @session_limit * 100), 100)}%"}
+                >
+                </div>
+              </div>
+              <%= if @full_session_count >= @session_limit do %>
+                <p class="text-xs text-[#d45656] mt-1">Monthly limit reached. Sessions will be blocked until next month.</p>
+              <% end %>
+            <% end %>
+            <p class="text-xs text-[#888888] mt-1">A "full session" is longer than 10 minutes.</p>
+          </div>
+
+          <%!-- Participant cap --%>
+          <div>
+            <div class="flex justify-between items-baseline mb-1.5">
+              <span class="text-sm text-[#3a3a3c]">Max participants per talk</span>
+              <span id="participant-limit" class="text-sm font-semibold text-[#0a0a0a]">
+                <%= if @participant_limit == :unlimited do %>
+                  Unlimited
+                <% else %>
+                  {@participant_limit}
+                <% end %>
+              </span>
+            </div>
+            <p class="text-xs text-[#888888] mt-1">Enforced per active talk connection.</p>
+          </div>
+        </div>
+      </div>
+
       <%!-- Admin section --%>
       <%= if @current_scope.user.is_admin do %>
         <div
