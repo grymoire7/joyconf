@@ -42,6 +42,7 @@ defmodule Speechwave.MixProject do
     [
       {:bcrypt_elixir, "~> 3.0"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:tidewave, "~> 0.5", only: [:dev]},
       {:phoenix, "~> 1.8.5"},
       {:phoenix_ecto, "~> 4.5"},
@@ -85,6 +86,7 @@ defmodule Speechwave.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.migrate --quiet", "test"],
+      lint: ["credo --strict --all"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["compile", "tailwind speechwave", "esbuild speechwave"],
       "assets.deploy": [
