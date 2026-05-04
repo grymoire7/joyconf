@@ -202,4 +202,37 @@ defmodule SpeechwaveWeb.DashboardLiveTest do
       assert has_element?(view, "#analytics-link-#{session.id}")
     end
   end
+
+  describe "usage summary" do
+    test "shows session usage count and limit", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/dashboard")
+      assert has_element?(view, "#usage-summary")
+      assert has_element?(view, "#sessions-used")
+      assert has_element?(view, "#session-limit")
+    end
+
+    test "shows 0 sessions used when user has no completed sessions", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/dashboard")
+      assert has_element?(view, "#sessions-used", "0")
+    end
+
+    test "reflects full sessions completed this month", %{conn: conn, user: user} do
+      # Create a talk and a completed full session (> 10 min) for this user
+      talk = talk_fixture(user)
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+      session_fixture(talk, %{
+        label: "Full Session",
+        started_at: now,
+        ended_at: DateTime.add(now, 15 * 60, :second)
+      })
+
+      {:ok, view, _html} = live(conn, "/dashboard")
+      assert has_element?(view, "#sessions-used", "1")
+    end
+
+    test "shows participant cap", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/dashboard")
+      assert has_element?(view, "#participant-limit")
+    end
+  end
 end
