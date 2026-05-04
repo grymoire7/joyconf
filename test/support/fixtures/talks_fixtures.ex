@@ -1,4 +1,9 @@
 defmodule Speechwave.TalksFixtures do
+  @moduledoc false
+  # Test factory module. talk_fixture/2 and session_fixture/2 insert records
+  # and return the structs, following the convention from phx.gen.auth's
+  # AccountsFixtures. Import in test files with:
+  #   import Speechwave.TalksFixtures
   alias Speechwave.Accounts.Scope
 
   def talk_fixture(user, attrs \\ %{}) do

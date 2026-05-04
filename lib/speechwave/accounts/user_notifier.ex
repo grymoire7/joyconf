@@ -1,8 +1,13 @@
 defmodule Speechwave.Accounts.UserNotifier do
+  @moduledoc false
+  # Sends transactional emails via the Swoosh mailer. Not called directly from
+  # LiveViews — always invoked through the Accounts context (e.g.,
+  # Accounts.deliver_login_instructions/2) so the rest of the app has a single
+  # stable API and email rendering stays isolated here.
   import Swoosh.Email
 
-  alias Speechwave.Mailer
   alias Speechwave.Accounts.User
+  alias Speechwave.Mailer
 
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body) do

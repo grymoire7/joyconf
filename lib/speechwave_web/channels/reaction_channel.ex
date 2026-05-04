@@ -1,4 +1,9 @@
 defmodule SpeechwaveWeb.ReactionChannel do
+  @moduledoc false
+  # Phoenix Channel that gives the presenter's slide controller a WebSocket
+  # connection authenticated by API key on join. Handles starting/stopping
+  # sessions, broadcasting slide-change events to the audience topic, and
+  # enforcing plan-based capacity and session limits via Presence.
   use Phoenix.Channel
 
   alias Speechwave.Accounts

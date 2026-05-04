@@ -4,7 +4,7 @@ defmodule Speechwave.ReactionsTest do
   import Speechwave.AccountsFixtures
   import Speechwave.TalksFixtures
 
-  alias Speechwave.{Talks, Reactions}
+  alias Speechwave.{Reactions, Talks}
 
   setup do
     user = user_fixture()

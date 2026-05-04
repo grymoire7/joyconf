@@ -1,7 +1,7 @@
 defmodule SpeechwaveWeb.TalkLive do
   use SpeechwaveWeb, :live_view
 
-  alias Speechwave.{Talks, RateLimiter, Reactions}
+  alias Speechwave.{RateLimiter, Reactions, Talks}
 
   @emojis ["❤️", "😂", "👏", "🤯", "🙋🏻", "🎉", "💩", "😮", "🎯"]
 

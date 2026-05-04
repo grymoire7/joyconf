@@ -1,8 +1,18 @@
 defmodule Speechwave.Reactions do
+  @moduledoc """
+  The Reactions context — records and aggregates audience emoji reactions.
+
+  Reactions are attached to a `TalkSession` and optionally to a slide number
+  (defaults to 0 when slide tracking is not in use). The main write path is
+  `create_reaction/3`, called from the audience LiveView on each tap.
+
+  The read functions (`count_reactions/1`, `slide_reaction_totals/1`) power
+  the analytics dashboard in `SessionAnalyticsLive`.
+  """
   import Ecto.Query
 
-  alias Speechwave.Repo
   alias Speechwave.Reactions.Reaction
+  alias Speechwave.Repo
   alias Speechwave.Talks.TalkSession
 
   def create_reaction(%TalkSession{} = session, emoji, slide_number \\ 0) do

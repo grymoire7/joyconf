@@ -1,9 +1,9 @@
 defmodule Speechwave.TalksTest do
   use Speechwave.DataCase
 
+  alias Speechwave.Accounts.Scope
   alias Speechwave.Talks
   alias Speechwave.Talks.Talk
-  alias Speechwave.Accounts.Scope
 
   import Speechwave.AccountsFixtures
 

@@ -1,6 +1,14 @@
 defmodule Speechwave.DbBackup do
+  @moduledoc false
+  # GenServer that runs a SQLite backup on a schedule (5-minute initial delay,
+  # then every hour). Uses SQLite's VACUUM INTO for a live, consistent snapshot,
+  # then uploads the file to S3-compatible object storage via Req.
+  # Registered under its own module name so `run_now/0` can be called from
+  # IEx or a Mix task during development without waiting for the timer.
   use GenServer
   require Logger
+
+  alias Ecto.Adapters.SQL
 
   @initial_delay :timer.minutes(5)
   @interval :timer.hours(1)
@@ -31,7 +39,7 @@ defmodule Speechwave.DbBackup do
 
     try do
       # VACUUM INTO creates a consistent, compacted snapshot while the DB is live
-      Ecto.Adapters.SQL.query!(Speechwave.Repo, "VACUUM INTO '#{backup_path}'", [])
+      SQL.query!(Speechwave.Repo, "VACUUM INTO '#{backup_path}'", [])
       upload(backup_path)
       Logger.info("[DbBackup] Backup uploaded successfully")
     rescue

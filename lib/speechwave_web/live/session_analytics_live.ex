@@ -1,7 +1,7 @@
 defmodule SpeechwaveWeb.SessionAnalyticsLive do
   use SpeechwaveWeb, :live_view
 
-  alias Speechwave.{Talks, Reactions}
+  alias Speechwave.{Reactions, Talks}
 
   def mount(%{"id" => id} = params, _session, socket) do
     session_id =
@@ -23,17 +23,7 @@ defmodule SpeechwaveWeb.SessionAnalyticsLive do
           Talks.list_sessions(talk.id)
           |> Enum.reject(fn %{session: s} -> s.id == session.id end)
 
-        compare_session =
-          case params do
-            %{"other_id" => other_id} ->
-              case Integer.parse(other_id) do
-                {n, ""} -> Talks.get_session(n)
-                _ -> nil
-              end
-
-            _ ->
-              nil
-          end
+        compare_session = resolve_compare_session(params)
 
         compare_totals =
           if compare_session,
@@ -54,6 +44,15 @@ defmodule SpeechwaveWeb.SessionAnalyticsLive do
   end
 
   def handle_params(_params, _uri, socket), do: {:noreply, socket}
+
+  defp resolve_compare_session(%{"other_id" => other_id}) do
+    case Integer.parse(other_id) do
+      {n, ""} -> Talks.get_session(n)
+      _ -> nil
+    end
+  end
+
+  defp resolve_compare_session(_), do: nil
 
   defp group_by_slide(totals) do
     totals

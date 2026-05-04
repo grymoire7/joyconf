@@ -1,4 +1,10 @@
 defmodule Speechwave.RateLimiter do
+  @moduledoc false
+  # GenServer that throttles emoji reactions per session using an ETS table.
+  # ETS (Erlang Term Storage) is an in-memory key/value store built into the
+  # BEAM — fast enough to check on every tap without hitting the database.
+  # The table is created with :public so allow?/1 can be called directly from
+  # any process without going through the GenServer's message queue.
   use GenServer
 
   @cooldown_ms 3_000

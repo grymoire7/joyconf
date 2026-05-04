@@ -1,4 +1,17 @@
 defmodule Speechwave.Talks do
+  @moduledoc """
+  The Talks context — the primary API for managing talks and live sessions.
+
+  A **Talk** is a presentation created by a speaker. Each Talk has a unique
+  slug used in the audience-facing URL. Most operations accept a `Scope`
+  (which wraps the authenticated user) so queries are always filtered to the
+  right owner and never accidentally leak another user's data.
+
+  A **TalkSession** represents one live run of a talk — the window during which
+  the audience can send reactions. A session is started with `start_session/1`
+  and closed with `stop_session/1`. Analytics queries in `Speechwave.Reactions`
+  operate on a session's ID.
+  """
   import Ecto.Query
 
   alias Speechwave.Accounts.Scope

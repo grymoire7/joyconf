@@ -6,7 +6,7 @@ defmodule Speechwave.Accounts do
   import Ecto.Query, warn: false
   alias Speechwave.Repo
 
-  alias Speechwave.Accounts.{User, UserToken, UserNotifier}
+  alias Speechwave.Accounts.{User, UserNotifier, UserToken}
 
   ## Database getters
 
