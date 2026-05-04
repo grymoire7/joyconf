@@ -220,6 +220,7 @@ defmodule SpeechwaveWeb.DashboardLiveTest do
       # Create a talk and a completed full session (> 10 min) for this user
       talk = talk_fixture(user)
       now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       session_fixture(talk, %{
         label: "Full Session",
         started_at: now,

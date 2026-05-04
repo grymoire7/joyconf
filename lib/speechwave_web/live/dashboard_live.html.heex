@@ -40,12 +40,14 @@
       </div>
 
       <%!-- Usage Summary --%>
-      <div id="usage-summary" class="mb-6 p-5 bg-white rounded-xl border border-[#e5e5e5] shadow-sm">
+      <div
+        id="usage-summary"
+        class="mb-6 p-5 bg-white rounded-xl border border-[#e5e5e5] shadow-sm"
+      >
         <h2 class="text-[11px] font-semibold text-[#5a5a5c] uppercase tracking-[0.5px] mb-4">
           Plan Usage — {String.capitalize(to_string(@current_scope.user.plan))}
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
           <%!-- Full sessions this month --%>
           <div>
             <div class="flex justify-between items-baseline mb-1.5">
@@ -78,7 +80,9 @@
                 </div>
               </div>
               <%= if @full_session_count >= @session_limit do %>
-                <p class="text-xs text-[#d45656] mt-1">Monthly limit reached. Sessions will be blocked until next month.</p>
+                <p class="text-xs text-[#d45656] mt-1">
+                  Monthly limit reached. Sessions will be blocked until next month.
+                </p>
               <% end %>
             <% end %>
             <p class="text-xs text-[#888888] mt-1">A "full session" is longer than 10 minutes.</p>
