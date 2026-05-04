@@ -1,11 +1,13 @@
 defmodule SpeechwaveWeb.DashboardLive do
   use SpeechwaveWeb, :live_view
 
+  alias Speechwave.Plans
   alias Speechwave.Talks
   alias Speechwave.Talks.Talk
 
   def mount(_params, _session, socket) do
     scope = socket.assigns.current_scope
+    user = scope.user
 
     {:ok,
      assign(socket,
@@ -17,7 +19,10 @@ defmodule SpeechwaveWeb.DashboardLive do
        sessions: [],
        renaming_session_id: nil,
        rename_form: nil,
-       confirmed?: not is_nil(scope.user.confirmed_at)
+       confirmed?: not is_nil(user.confirmed_at),
+       full_session_count: Talks.count_full_sessions_this_month(scope),
+       session_limit: Plans.limit(:full_sessions_per_month, user.plan),
+       participant_limit: Plans.limit(:max_participants, user.plan)
      )}
   end
 
