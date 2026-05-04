@@ -11,7 +11,8 @@ defmodule Speechwave.MixProject do
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      dialyzer: [plt_add_apps: [:ex_unit]]
     ]
   end
 
@@ -95,7 +96,14 @@ defmodule Speechwave.MixProject do
         "esbuild speechwave --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test", "lint", "static"]
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "test",
+        "lint",
+        "static"
+      ]
     ]
   end
 end
