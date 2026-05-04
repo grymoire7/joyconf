@@ -161,12 +161,12 @@ Page footer: "Terms of Service" and "Privacy Policy" links.
 
 Three-column layout:
 
-| Free | Pro | Enterprise |
-|------|-----|------------|
-| $0/month | Coming soon | Coming soon |
-| 50 participants | Unlimited participants | — |
-| 10 full sessions/month | Unlimited sessions | — |
-| Sign up | Notify me | Contact us |
+| Free                   | Pro                    | Enterprise  |
+| ---------------------- | ---------------------- | ----------- |
+| $0/month               | Coming soon            | Coming soon |
+| 50 participants        | Unlimited participants | —           |
+| 10 full sessions/month | Unlimited sessions     | —           |
+| Sign up                | Notify me              | Contact us  |
 
 "Notify me" and "Contact us" are placeholder links or simple mailto links for now — no backend needed.
 

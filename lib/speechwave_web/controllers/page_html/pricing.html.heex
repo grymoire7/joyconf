@@ -38,7 +38,8 @@
             "Live emoji reactions",
             "Session analytics",
             "QR code sharing",
-            "Fireworks mode"
+            "Fireworks mode",
+            "Google Slides support"
           ] do %>
             <li class="flex items-center gap-2.5 text-sm text-ink">
               <.icon name="hero-check" class="size-4 text-mint shrink-0" />
@@ -72,9 +73,9 @@
         </button>
         <ul class="space-y-3">
           <%= for feature <- [
+            "Everything in Free",
             "Unlimited participants",
-            "Unlimited sessions",
-            "Everything in Free"
+            "Unlimited sessions"
           ] do %>
             <li class="flex items-center gap-2.5 text-sm text-muted">
               <.icon name="hero-check" class="size-4 text-mint-soft shrink-0" />
