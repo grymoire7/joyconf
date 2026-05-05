@@ -6,7 +6,7 @@
 alias Speechwave.{Accounts, Repo}
 
 admin_email = System.get_env("ADMIN_EMAIL") || "admin@speechwave.live"
-admin_password = System.fetch_env!("ADMIN_SEED_PASSWORD")
+admin_password = System.fetch_env!("ADMIN_PASSWORD")
 
 case Accounts.get_user_by_email(admin_email) do
   nil ->
@@ -15,5 +15,7 @@ case Accounts.get_user_by_email(admin_email) do
     IO.puts("Admin user created: #{admin_email}")
 
   existing ->
-    IO.puts("Admin user already exists: #{existing.email}")
+    {:ok, _} = Accounts.update_user_password(existing, %{password: admin_password})
+    Repo.update!(Ecto.Changeset.change(existing, is_admin: true))
+    IO.puts("Admin user updated: #{existing.email}")
 end

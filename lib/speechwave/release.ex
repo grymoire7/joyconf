@@ -19,7 +19,7 @@ defmodule Speechwave.Release do
     {:ok, _, _} =
       Ecto.Migrator.with_repo(Speechwave.Repo, fn _repo ->
         admin_email = System.get_env("ADMIN_EMAIL") || "admin@speechwave.live"
-        admin_password = System.fetch_env!("ADMIN_SEED_PASSWORD")
+        admin_password = System.fetch_env!("ADMIN_PASSWORD")
 
         case Speechwave.Accounts.get_user_by_email(admin_email) do
           nil ->
