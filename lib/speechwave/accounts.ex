@@ -108,7 +108,6 @@ defmodule Speechwave.Accounts do
   def register_user(attrs) do
     %User{}
     |> User.email_changeset(attrs)
-    |> User.password_changeset(attrs)
     |> Repo.insert()
   end
 
