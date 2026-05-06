@@ -6,7 +6,7 @@
 
 **Architecture:** Keep the existing session and magic link token infrastructure intact — it already works. Remove password code, add a direct magic link controller action (bypassing the Confirmation LiveView), add Assent OAuth with a `UserIdentity` table for provider associations, and add a dev login backdoor.
 
-**Tech Stack:** Elixir/Phoenix 1.8, LiveView, Ecto/SQLite, Swoosh email, `assent ~> 0.2` for OAuth.
+**Tech Stack:** Elixir/Phoenix 1.8, LiveView, Ecto/SQLite, Swoosh email, `assent ~> 0.3` for OAuth.
 
 ---
 
@@ -518,7 +518,8 @@ identity record. Returns {:error, :email_not_verified} if the provider
 did not verify the email.
 """
 def find_or_create_user_from_oauth(provider, %{"sub" => uid, "email" => email} = user_info) do
-  if user_info["email_verified"] == false do
+  # Reject if explicitly false OR absent — a missing field is not the same as verified.
+  if user_info["email_verified"] != true do
     {:error, :email_not_verified}
   else
     Repo.transact(fn ->
@@ -834,7 +835,8 @@ Add the following actions to `lib/speechwave_web/controllers/user_session_contro
 def oauth_authorize(conn, %{"provider" => provider}) do
   config = assent_config(provider, conn)
 
-  case config && Assent.authorize_url(config) do
+  # Assent has no top-level authorize_url/1; call through the strategy in the config.
+  case config && config[:strategy].authorize_url(config) do
     {:ok, %{url: url, session_params: session_params}} ->
       conn
       |> put_session(:assent_session_params, session_params)
@@ -853,7 +855,15 @@ def oauth_callback(conn, %{"provider" => provider} = params) do
   session_params = get_session(conn, :assent_session_params)
   config = assent_config(provider, conn)
 
-  case config && Assent.callback(config, params, session_params) do
+  # Assent has no top-level callback/3. session_params must be merged into
+  # config, then the strategy's callback/2 is called directly.
+  result =
+    config &&
+      (config
+       |> Keyword.put(:session_params, session_params)
+       |> config[:strategy].callback(params))
+
+  case result do
     {:ok, %{user: user_info}} ->
       context = get_session(conn, :oauth_context)
       current_user = conn.assigns.current_scope && conn.assigns.current_scope.user
@@ -940,10 +950,12 @@ end
 # redirect gracefully rather than raising ArgumentError from String.to_existing_atom.
 defp assent_config(provider, _conn) when provider not in @known_providers, do: nil
 
-defp assent_config(provider, conn) do
+defp assent_config(provider, _conn) do
   provider_atom = String.to_existing_atom(provider)
   base_config = Application.get_env(:speechwave, :oauth_providers, [])[provider_atom] || []
-  redirect_uri = url(conn, ~p"/auth/#{provider}/callback")
+  # url/1 (from Phoenix.VerifiedRoutes via use SpeechwaveWeb, :controller) builds
+  # the full URL from the configured endpoint — no conn needed.
+  redirect_uri = url(~p"/auth/#{provider}/callback")
   Keyword.put(base_config, :redirect_uri, redirect_uri)
 end
 ```
@@ -1668,9 +1680,10 @@ defmodule Speechwave.AccountsFixtures do
   end
 
   def oauth_user_fixture(attrs \\ %{}) do
-    email = Keyword.get(attrs, :email, unique_user_email())
-    provider = Keyword.get(attrs, :provider, "google")
-    uid = Keyword.get(attrs, :uid, "uid-#{System.unique_integer()}")
+    # attrs is a map (consistent with user_fixture), so Map.get not Keyword.get.
+    email = Map.get(attrs, :email, unique_user_email())
+    provider = Map.get(attrs, :provider, "google")
+    uid = Map.get(attrs, :uid, "uid-#{System.unique_integer()}")
 
     {:ok, user} =
       Accounts.find_or_create_user_from_oauth(provider, %{
