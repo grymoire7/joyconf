@@ -14,7 +14,6 @@ defmodule SpeechwaveWeb.ReactionChannel do
   def join("reactions:" <> slug, %{"api_key" => api_key}, socket) do
     with {:talk, %Talks.Talk{} = talk} <- {:talk, Talks.get_talk_by_slug(slug)},
          {:user, %Accounts.User{} = user} <- {:user, Accounts.get_user_by_api_key(api_key)},
-         {:confirmed, true} <- {:confirmed, not is_nil(user.confirmed_at)},
          {:owner, true} <- {:owner, talk.user_id == user.id},
          {:capacity, :ok} <-
            {:capacity,
@@ -29,7 +28,6 @@ defmodule SpeechwaveWeb.ReactionChannel do
     else
       {:talk, nil} -> {:error, %{reason: "not_found"}}
       {:user, nil} -> {:error, %{reason: "unauthorized"}}
-      {:confirmed, false} -> {:error, %{reason: "email_not_confirmed"}}
       {:owner, false} -> {:error, %{reason: "unauthorized"}}
       {:capacity, {:error, :limit_reached}} -> {:error, %{reason: "capacity_reached"}}
     end

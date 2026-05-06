@@ -19,7 +19,6 @@ defmodule SpeechwaveWeb.DashboardLive do
        sessions: [],
        renaming_session_id: nil,
        rename_form: nil,
-       confirmed?: not is_nil(user.confirmed_at),
        full_session_count: Talks.count_full_sessions_this_month(scope),
        session_limit: Plans.limit(:full_sessions_per_month, user.plan),
        participant_limit: Plans.limit(:max_participants, user.plan)
