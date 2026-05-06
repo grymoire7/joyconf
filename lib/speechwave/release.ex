@@ -15,25 +15,26 @@ defmodule Speechwave.Release do
 
   def seed do
     load_app()
+    admin_email = System.get_env("ADMIN_EMAIL") || "admin@speechwave.live"
 
     {:ok, _, _} =
-      Ecto.Migrator.with_repo(Speechwave.Repo, fn _repo ->
-        admin_email = System.get_env("ADMIN_EMAIL") || "admin@speechwave.live"
+      Ecto.Migrator.with_repo(Speechwave.Repo, fn _repo -> ensure_admin(admin_email) end)
+  end
 
-        case Speechwave.Accounts.get_user_by_email(admin_email) do
-          nil ->
-            {:ok, user} = Speechwave.Accounts.register_user(%{email: admin_email})
-            Speechwave.Repo.update!(Ecto.Changeset.change(user, is_admin: true))
-            IO.puts("Admin user created: #{admin_email}")
+  defp ensure_admin(admin_email) do
+    case Speechwave.Accounts.get_user_by_email(admin_email) do
+      nil ->
+        {:ok, user} = Speechwave.Accounts.register_user(%{email: admin_email})
+        Speechwave.Repo.update!(Ecto.Changeset.change(user, is_admin: true))
+        IO.puts("Admin user created: #{admin_email}")
 
-          existing ->
-            unless existing.is_admin do
-              Speechwave.Repo.update!(Ecto.Changeset.change(existing, is_admin: true))
-            end
-
-            IO.puts("Admin user confirmed: #{existing.email}")
+      existing ->
+        unless existing.is_admin do
+          Speechwave.Repo.update!(Ecto.Changeset.change(existing, is_admin: true))
         end
-      end)
+
+        IO.puts("Admin user confirmed: #{existing.email}")
+    end
   end
 
   def rollback(repo, version) do

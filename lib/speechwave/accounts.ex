@@ -117,23 +117,25 @@ defmodule Speechwave.Accounts do
     if user_info["email_verified"] != true do
       {:error, :email_not_verified}
     else
-      Repo.transaction(fn ->
-        case Repo.get_by(UserIdentity, provider: provider, uid: uid) do
-          %UserIdentity{} = identity ->
-            Repo.preload(identity, :user).user
+      Repo.transaction(fn -> oauth_upsert(provider, uid, email) end)
+    end
+  end
 
-          nil ->
-            with {:ok, user} <- register_or_get_user_by_email(email),
-                 {:ok, _identity} <-
-                   %UserIdentity{}
-                   |> UserIdentity.changeset(%{provider: provider, uid: uid, user_id: user.id})
-                   |> Repo.insert() do
-              user
-            else
-              {:error, reason} -> Repo.rollback(reason)
-            end
+  defp oauth_upsert(provider, uid, email) do
+    case Repo.get_by(UserIdentity, provider: provider, uid: uid) do
+      %UserIdentity{} = identity ->
+        Repo.preload(identity, :user).user
+
+      nil ->
+        with {:ok, user} <- register_or_get_user_by_email(email),
+             {:ok, _identity} <-
+               %UserIdentity{}
+               |> UserIdentity.changeset(%{provider: provider, uid: uid, user_id: user.id})
+               |> Repo.insert() do
+          user
+        else
+          {:error, reason} -> Repo.rollback(reason)
         end
-      end)
     end
   end
 
