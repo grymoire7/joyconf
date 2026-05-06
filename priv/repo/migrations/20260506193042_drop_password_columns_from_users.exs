@@ -1,0 +1,10 @@
+defmodule Speechwave.Repo.Migrations.DropPasswordColumnsFromUsers do
+  use Ecto.Migration
+
+  def change do
+    alter table(:users) do
+      remove :hashed_password
+      remove :confirmed_at
+    end
+  end
+end
