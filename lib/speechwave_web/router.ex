@@ -75,11 +75,14 @@ defmodule SpeechwaveWeb.Router do
   if Application.compile_env(:speechwave, :dev_routes) do
     import Phoenix.LiveDashboard.Router
 
+    scope "/dev" do
+      pipe_through :browser
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+
     scope "/dev", SpeechwaveWeb do
       pipe_through :browser
-
       live_dashboard "/dashboard", metrics: SpeechwaveWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
       get "/login", DevLoginController, :index
       post "/login", DevLoginController, :create
     end
