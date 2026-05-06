@@ -6,7 +6,7 @@ defmodule Speechwave.Accounts do
   import Ecto.Query, warn: false
   alias Speechwave.Repo
 
-  alias Speechwave.Accounts.{User, UserNotifier, UserToken}
+  alias Speechwave.Accounts.{User, UserIdentity, UserNotifier, UserToken}
 
   ## Database getters
 
@@ -102,6 +102,64 @@ defmodule Speechwave.Accounts do
       nil -> register_user(%{email: email})
       user -> {:ok, user}
     end
+  end
+
+  @doc """
+  Finds or creates a user from an OAuth provider callback.
+
+  Looks up an existing identity by {provider, uid}. If found, returns the
+  associated user. If not found, upserts a user by email and creates the
+  identity record. Returns {:error, :email_not_verified} if the provider
+  did not verify the email.
+  """
+  def find_or_create_user_from_oauth(provider, %{"sub" => uid, "email" => email} = user_info) do
+    # Reject if explicitly false OR absent — a missing field is not the same as verified.
+    if user_info["email_verified"] != true do
+      {:error, :email_not_verified}
+    else
+      Repo.transaction(fn ->
+        case Repo.get_by(UserIdentity, provider: provider, uid: uid) do
+          %UserIdentity{} = identity ->
+            Repo.preload(identity, :user).user
+
+          nil ->
+            with {:ok, user} <- register_or_get_user_by_email(email),
+                 {:ok, _identity} <-
+                   %UserIdentity{}
+                   |> UserIdentity.changeset(%{provider: provider, uid: uid, user_id: user.id})
+                   |> Repo.insert() do
+              user
+            else
+              {:error, reason} -> Repo.rollback(reason)
+            end
+        end
+      end)
+    end
+  end
+
+  @doc "Returns all OAuth identities for the given user."
+  def list_user_identities(%User{} = user) do
+    Repo.all(from(ui in UserIdentity, where: ui.user_id == ^user.id))
+  end
+
+  @doc "Returns the identity for a given provider and uid, or nil."
+  def get_identity_by_provider_uid(provider, uid) do
+    Repo.get_by(UserIdentity, provider: provider, uid: uid)
+  end
+
+  @doc "Deletes an OAuth identity."
+  def delete_user_identity(%UserIdentity{} = identity) do
+    Repo.delete(identity)
+  end
+
+  @doc """
+  Links an OAuth identity directly to an existing user.
+  Used by the settings connect flow where the logged-in user is already known.
+  """
+  def link_identity_to_user(%User{} = user, provider, uid) do
+    %UserIdentity{}
+    |> UserIdentity.changeset(%{provider: provider, uid: uid, user_id: user.id})
+    |> Repo.insert()
   end
 
   ## Settings

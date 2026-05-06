@@ -446,4 +446,78 @@ defmodule Speechwave.AccountsTest do
       assert Accounts.get_user_by_api_key(old_key) == nil
     end
   end
+
+  describe "user_identities" do
+    test "find_or_create_user_from_oauth creates user and identity when neither exists" do
+      assert {:ok, user} =
+               Accounts.find_or_create_user_from_oauth("google", %{
+                 "sub" => "google-uid-123",
+                 "email" => "newuser@example.com",
+                 "email_verified" => true
+               })
+
+      assert user.email == "newuser@example.com"
+      assert Speechwave.Repo.get_by(Speechwave.Accounts.UserIdentity, provider: "google", uid: "google-uid-123")
+    end
+
+    test "find_or_create_user_from_oauth links identity to existing user with matching email" do
+      existing = user_fixture()
+
+      assert {:ok, user} =
+               Accounts.find_or_create_user_from_oauth("google", %{
+                 "sub" => "google-uid-456",
+                 "email" => existing.email,
+                 "email_verified" => true
+               })
+
+      assert user.id == existing.id
+    end
+
+    test "find_or_create_user_from_oauth returns existing user+identity on repeat login" do
+      {:ok, user} =
+        Accounts.find_or_create_user_from_oauth("github", %{
+          "sub" => "gh-uid-789",
+          "email" => "repeat@example.com",
+          "email_verified" => true
+        })
+
+      assert {:ok, same_user} =
+               Accounts.find_or_create_user_from_oauth("github", %{
+                 "sub" => "gh-uid-789",
+                 "email" => "repeat@example.com",
+                 "email_verified" => true
+               })
+
+      assert same_user.id == user.id
+      assert Speechwave.Repo.aggregate(Speechwave.Accounts.UserIdentity, :count) == 1
+    end
+
+    test "find_or_create_user_from_oauth returns error when email is not verified" do
+      assert {:error, :email_not_verified} =
+               Accounts.find_or_create_user_from_oauth("google", %{
+                 "sub" => "uid-unverified",
+                 "email" => "unverified@example.com",
+                 "email_verified" => false
+               })
+    end
+
+    test "list_user_identities returns all identities for user" do
+      user = user_fixture()
+      {:ok, _} = Accounts.find_or_create_user_from_oauth("google", %{"sub" => "g1", "email" => user.email, "email_verified" => true})
+      {:ok, _} = Accounts.find_or_create_user_from_oauth("github", %{"sub" => "gh1", "email" => user.email, "email_verified" => true})
+
+      identities = Accounts.list_user_identities(user)
+      assert length(identities) == 2
+      assert Enum.map(identities, & &1.provider) |> Enum.sort() == ["github", "google"]
+    end
+
+    test "delete_user_identity removes the identity" do
+      user = user_fixture()
+      {:ok, _} = Accounts.find_or_create_user_from_oauth("google", %{"sub" => "g2", "email" => user.email, "email_verified" => true})
+      [identity] = Accounts.list_user_identities(user)
+
+      assert {:ok, _} = Accounts.delete_user_identity(identity)
+      assert Accounts.list_user_identities(user) == []
+    end
+  end
 end

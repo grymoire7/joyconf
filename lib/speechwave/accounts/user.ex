@@ -9,6 +9,8 @@ defmodule Speechwave.Accounts.User do
     field :plan, Ecto.Enum, values: [:free, :pro, :org], default: :free
     field :is_admin, :boolean, default: false
 
+    has_many :identities, Speechwave.Accounts.UserIdentity
+
     timestamps(type: :utc_datetime)
   end
 
