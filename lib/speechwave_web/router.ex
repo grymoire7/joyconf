@@ -65,6 +65,14 @@ defmodule SpeechwaveWeb.Router do
     delete "/users/log-out", UserSessionController, :delete
   end
 
+  # OAuth routes — accessible authenticated or not (login + connect flows)
+  scope "/auth", SpeechwaveWeb do
+    pipe_through :browser
+
+    get "/:provider", UserSessionController, :oauth_authorize
+    get "/:provider/callback", UserSessionController, :oauth_callback
+  end
+
   if Application.compile_env(:speechwave, :dev_routes) do
     import Phoenix.LiveDashboard.Router
 

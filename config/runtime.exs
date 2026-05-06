@@ -117,3 +117,37 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 end
+
+# OAuth provider configuration
+# Set these environment variables to enable each provider.
+oauth_providers =
+  [
+    google:
+      if(client_id = System.get_env("GOOGLE_CLIENT_ID"),
+        do: [
+          client_id: client_id,
+          client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
+          strategy: Assent.Strategy.Google
+        ]
+      ),
+    github:
+      if(client_id = System.get_env("GITHUB_CLIENT_ID"),
+        do: [
+          client_id: client_id,
+          client_secret: System.get_env("GITHUB_CLIENT_SECRET"),
+          strategy: Assent.Strategy.Github
+        ]
+      ),
+    microsoft:
+      if(client_id = System.get_env("MICROSOFT_CLIENT_ID"),
+        do: [
+          client_id: client_id,
+          client_secret: System.get_env("MICROSOFT_CLIENT_SECRET"),
+          tenant_id: System.get_env("MICROSOFT_TENANT_ID", "common"),
+          strategy: Assent.Strategy.AzureAD
+        ]
+      )
+  ]
+  |> Enum.reject(fn {_k, v} -> is_nil(v) end)
+
+config :speechwave, :oauth_providers, oauth_providers
