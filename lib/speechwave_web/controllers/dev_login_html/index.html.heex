@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-sm space-y-6">
     <.header>Dev Login</.header>
 
-    <.form for={%{}} action={~p"/dev/login"} method="post" id="dev-freeform-form">
+    <.form for={%{}} action="/dev/login" method="post" id="dev-freeform-form">
       <.input name="email" type="email" label="Any email (creates account if new)" value="" />
       <.button class="w-full">Log in</.button>
     </.form>
@@ -11,9 +11,12 @@
 
     <div id="dev-user-list" class="space-y-2">
       <%= for user <- @users do %>
-        <.form for={%{}} action={~p"/dev/login"} method="post" id={"dev-user-#{user.id}"}>
+        <.form for={%{}} action="/dev/login" method="post" id={"dev-user-#{user.id}"}>
           <input type="hidden" name="user_id" value={user.id} />
-          <button type="submit" class="w-full text-left px-3 py-2 rounded border border-base-300 hover:bg-base-200 text-sm">
+          <button
+            type="submit"
+            class="w-full text-left px-3 py-2 rounded border border-base-300 hover:bg-base-200 text-sm"
+          >
             {user.email}
             <span class="text-base-content/50 ml-2">{user.plan}</span>
             <%= if user.is_admin do %>

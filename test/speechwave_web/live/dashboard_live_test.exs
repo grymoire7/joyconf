@@ -6,7 +6,7 @@ defmodule SpeechwaveWeb.DashboardLiveTest do
   import Speechwave.TalksFixtures
 
   setup %{conn: conn} do
-    user = confirmed_user_fixture()
+    user = user_fixture()
     %{conn: log_in_user(conn, user), user: user}
   end
 
@@ -88,20 +88,6 @@ defmodule SpeechwaveWeb.DashboardLiveTest do
     view |> element("#delete-talk-#{talk.id}") |> render_click()
 
     refute has_element?(view, "#talk-list button", "Prime Talk")
-  end
-
-  describe "email confirmation banner" do
-    test "shows banner for unconfirmed users", %{conn: _conn} do
-      unconfirmed = unconfirmed_user_fixture()
-      conn = log_in_user(build_conn(), unconfirmed)
-      {:ok, view, _html} = live(conn, "/dashboard")
-      assert has_element?(view, "#email-confirmation-banner")
-    end
-
-    test "does not show banner for confirmed users", %{conn: conn} do
-      {:ok, view, _html} = live(conn, "/dashboard")
-      refute has_element?(view, "#email-confirmation-banner")
-    end
   end
 
   describe "sessions panel" do

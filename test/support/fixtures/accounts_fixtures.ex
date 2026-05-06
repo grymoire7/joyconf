@@ -1,7 +1,6 @@
 defmodule Speechwave.AccountsFixtures do
   @moduledoc """
-  This module defines test helpers for creating
-  entities via the `Speechwave.Accounts` context.
+  Test helpers for creating entities via the `Speechwave.Accounts` context.
   """
 
   import Ecto.Query
@@ -10,39 +9,18 @@ defmodule Speechwave.AccountsFixtures do
   alias Speechwave.Accounts.Scope
 
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
-  def valid_user_password, do: "hello world!"
 
   def valid_user_attributes(attrs \\ %{}) do
-    Enum.into(attrs, %{
-      email: unique_user_email()
-    })
+    Enum.into(attrs, %{email: unique_user_email()})
   end
 
-  def unconfirmed_user_fixture(attrs \\ %{}) do
+  def user_fixture(attrs \\ %{}) do
     {:ok, user} =
       attrs
       |> valid_user_attributes()
       |> Accounts.register_user()
 
     user
-  end
-
-  def user_fixture(attrs \\ %{}) do
-    user = unconfirmed_user_fixture(attrs)
-
-    token =
-      extract_user_token(fn url ->
-        Accounts.deliver_login_instructions(user, url)
-      end)
-
-    {:ok, {user, _expired_tokens}} =
-      Accounts.login_user_by_magic_link(token)
-
-    user
-  end
-
-  def confirmed_user_fixture(attrs \\ %{}) do
-    user_fixture(attrs)
   end
 
   def user_scope_fixture do
@@ -54,26 +32,10 @@ defmodule Speechwave.AccountsFixtures do
     Scope.for_user(user)
   end
 
-  def set_password(user) do
-    {:ok, {user, _expired_tokens}} =
-      Accounts.update_user_password(user, %{password: valid_user_password()})
-
-    user
-  end
-
   def extract_user_token(fun) do
     {:ok, captured_email} = fun.(&"[TOKEN]#{&1}[TOKEN]")
     [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
     token
-  end
-
-  def override_token_authenticated_at(token, authenticated_at) when is_binary(token) do
-    Speechwave.Repo.update_all(
-      from(t in Accounts.UserToken,
-        where: t.token == ^token
-      ),
-      set: [authenticated_at: authenticated_at]
-    )
   end
 
   def generate_user_magic_link_token(user) do
@@ -89,5 +51,27 @@ defmodule Speechwave.AccountsFixtures do
       from(ut in Accounts.UserToken, where: ut.token == ^token),
       set: [inserted_at: dt, authenticated_at: dt]
     )
+  end
+
+  def override_token_authenticated_at(token, authenticated_at) when is_binary(token) do
+    Speechwave.Repo.update_all(
+      from(t in Accounts.UserToken, where: t.token == ^token),
+      set: [authenticated_at: authenticated_at]
+    )
+  end
+
+  def oauth_user_fixture(attrs \\ %{}) do
+    email = Map.get(attrs, :email, unique_user_email())
+    provider = Map.get(attrs, :provider, "google")
+    uid = Map.get(attrs, :uid, "uid-#{System.unique_integer()}")
+
+    {:ok, user} =
+      Accounts.find_or_create_user_from_oauth(provider, %{
+        "sub" => uid,
+        "email" => email,
+        "email_verified" => true
+      })
+
+    user
   end
 end

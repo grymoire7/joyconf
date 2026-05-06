@@ -41,7 +41,10 @@ defmodule SpeechwaveWeb.UserLive.Settings do
         <div class="space-y-2">
           <%= for provider <- ["google", "microsoft", "github"] do %>
             <% identity = Enum.find(@identities, &(&1.provider == provider)) %>
-            <div id={"identity-#{provider}"} class="flex items-center justify-between p-3 rounded-lg border border-base-300">
+            <div
+              id={"identity-#{provider}"}
+              class="flex items-center justify-between p-3 rounded-lg border border-base-300"
+            >
               <span class="font-medium capitalize">{provider}</span>
               <%= if identity do %>
                 <button

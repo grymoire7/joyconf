@@ -5,7 +5,7 @@ defmodule SpeechwaveWeb.ReactionChannelTest do
   import Speechwave.TalksFixtures
 
   setup do
-    user = confirmed_user_fixture()
+    user = user_fixture()
     talk = talk_fixture(user, %{title: "Test Talk", slug: "test-talk"})
     {:ok, socket} = connect(SpeechwaveWeb.UserSocket, %{})
     {:ok, socket: socket, talk: talk, user: user}
@@ -31,19 +31,11 @@ defmodule SpeechwaveWeb.ReactionChannelTest do
     assert {:error, %{reason: "unauthorized"}} = channel_join(socket, talk.slug, "badkey")
   end
 
-  test "rejects join when user email is not confirmed", %{socket: socket} do
-    unconfirmed = unconfirmed_user_fixture()
-    talk = talk_fixture(unconfirmed, %{slug: "unconfirmed-talk"})
-
-    assert {:error, %{reason: "email_not_confirmed"}} =
-             channel_join(socket, talk.slug, unconfirmed.api_key)
-  end
-
   test "rejects join when api_key belongs to a user who does not own the talk", %{
     socket: socket,
     talk: talk
   } do
-    other_user = confirmed_user_fixture()
+    other_user = user_fixture()
 
     assert {:error, %{reason: "unauthorized"}} =
              channel_join(socket, talk.slug, other_user.api_key)

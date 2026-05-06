@@ -46,9 +46,9 @@ defmodule SpeechwaveWeb.UserSessionController do
 
     result =
       config &&
-        (config
-         |> Keyword.put(:session_params, session_params)
-         |> config[:strategy].callback(params))
+        config
+        |> Keyword.put(:session_params, session_params)
+        |> config[:strategy].callback(params)
 
     case result do
       {:ok, %{user: user_info}} ->
@@ -79,7 +79,10 @@ defmodule SpeechwaveWeb.UserSessionController do
 
       {:error, :email_not_verified} ->
         conn
-        |> put_flash(:error, "Your #{provider} email address is not verified. Please verify it and try again.")
+        |> put_flash(
+          :error,
+          "Your #{provider} email address is not verified. Please verify it and try again."
+        )
         |> redirect(to: ~p"/users/log-in")
 
       {:error, _} ->
@@ -111,11 +114,17 @@ defmodule SpeechwaveWeb.UserSessionController do
       existing_identity ->
         if existing_identity.user_id == current_user.id do
           conn
-          |> put_flash(:info, "#{String.capitalize(provider)} is already connected to your account.")
+          |> put_flash(
+            :info,
+            "#{String.capitalize(provider)} is already connected to your account."
+          )
           |> redirect(to: ~p"/users/settings")
         else
           conn
-          |> put_flash(:error, "This #{provider} account is linked to a different Speechwave account.")
+          |> put_flash(
+            :error,
+            "This #{provider} account is linked to a different Speechwave account."
+          )
           |> redirect(to: ~p"/users/settings")
         end
     end

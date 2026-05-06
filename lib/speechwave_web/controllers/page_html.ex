@@ -55,7 +55,7 @@ defmodule SpeechwaveWeb.PageHTML do
               Log in
             </a>
             <a
-              href={~p"/users/register"}
+              href={~p"/users/log-in"}
               class="ml-2 px-4 py-2 text-sm font-medium text-canvas bg-ink rounded-full hover:bg-charcoal transition-colors whitespace-nowrap"
             >
               <span class="hidden sm:inline">Get started free</span>

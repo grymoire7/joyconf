@@ -13,7 +13,7 @@ defmodule SpeechwaveWeb.UserLive.SettingsTest do
         |> live(~p"/users/settings")
 
       assert html =~ "Change Email"
-      assert html =~ "Save Password"
+      assert html =~ "Connected accounts"
     end
 
     test "redirects if user is not logged in", %{conn: conn} do
@@ -89,74 +89,38 @@ defmodule SpeechwaveWeb.UserLive.SettingsTest do
     end
   end
 
-  describe "update password form" do
+  describe "connected accounts" do
     setup %{conn: conn} do
       user = user_fixture()
       %{conn: log_in_user(conn, user), user: user}
     end
 
-    test "updates the user password", %{conn: conn, user: user} do
-      new_password = valid_user_password()
-
-      {:ok, lv, _html} = live(conn, ~p"/users/settings")
-
-      form =
-        form(lv, "#password_form", %{
-          "user" => %{
-            "email" => user.email,
-            "password" => new_password,
-            "password_confirmation" => new_password
-          }
-        })
-
-      render_submit(form)
-
-      new_password_conn = follow_trigger_action(form, conn)
-
-      assert redirected_to(new_password_conn) == ~p"/users/settings"
-
-      assert get_session(new_password_conn, :user_token) != get_session(conn, :user_token)
-
-      assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
-               "Password updated successfully"
-
-      assert Accounts.get_user_by_email_and_password(user.email, new_password)
+    test "shows connected accounts section", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/users/settings")
+      assert has_element?(view, "#connected-accounts")
     end
 
-    test "renders errors with invalid data (phx-change)", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/users/settings")
-
-      result =
-        lv
-        |> element("#password_form")
-        |> render_change(%{
-          "user" => %{
-            "password" => "too short",
-            "password_confirmation" => "does not match"
-          }
-        })
-
-      assert result =~ "Save Password"
-      assert result =~ "should be at least 12 character(s)"
-      assert result =~ "does not match password"
+    test "shows connect links for unlinked providers", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/users/settings")
+      assert has_element?(view, "#connect-google")
     end
 
-    test "renders errors with invalid data (phx-submit)", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/users/settings")
-
-      result =
-        lv
-        |> form("#password_form", %{
-          "user" => %{
-            "password" => "too short",
-            "password_confirmation" => "does not match"
-          }
+    test "disconnect removes an identity", %{conn: conn, user: user} do
+      {:ok, _} =
+        Accounts.find_or_create_user_from_oauth("google", %{
+          "sub" => "g-test-uid",
+          "email" => user.email,
+          "email_verified" => true
         })
-        |> render_submit()
 
-      assert result =~ "Save Password"
-      assert result =~ "should be at least 12 character(s)"
-      assert result =~ "does not match password"
+      {:ok, view, _html} = live(conn, ~p"/users/settings")
+      assert has_element?(view, "#disconnect-google")
+
+      view
+      |> element("#disconnect-google")
+      |> render_click()
+
+      refute has_element?(view, "#disconnect-google")
     end
   end
 
