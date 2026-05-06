@@ -7,89 +7,81 @@ defmodule SpeechwaveWeb.UserLive.Login do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-sm space-y-4">
+      <div class="mx-auto max-w-sm space-y-6">
         <div class="text-center">
           <.header>
-            <p>Log in</p>
-            <:subtitle>
-              <%= if @current_scope do %>
-                You need to reauthenticate to perform sensitive actions on your account.
-              <% else %>
-                Don't have an account? <.link
-                  navigate={~p"/users/register"}
-                  class="font-semibold text-brand hover:underline"
-                  phx-no-format
-                >Sign up</.link> for an account now.
-              <% end %>
-            </:subtitle>
+            Sign in to Speechwave
+            <:subtitle>Enter your email to receive a sign-in link</:subtitle>
           </.header>
         </div>
 
         <div :if={local_mail_adapter?()} class="alert alert-info">
           <.icon name="hero-information-circle" class="size-6 shrink-0" />
           <div>
-            <p>You are running the local mail adapter.</p>
+            <p>Running the local mail adapter.</p>
             <p>
-              To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
+              Sign-in links appear at <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
             </p>
           </div>
         </div>
 
-        <.form
-          :let={f}
-          for={@form}
-          id="login_form_magic"
-          action={~p"/users/log-in"}
-          phx-submit="submit_magic"
-        >
-          <.input
-            readonly={!!@current_scope}
-            field={f[:email]}
-            type="email"
-            label="Email"
-            autocomplete="username"
-            spellcheck="false"
-            required
-            phx-mounted={JS.focus()}
-          />
-          <.button class="btn btn-primary w-full">
-            Log in with email <span aria-hidden="true">→</span>
-          </.button>
-        </.form>
+        <%= if @link_sent do %>
+          <div id="magic-link-sent" class="text-center space-y-2">
+            <p class="font-medium">Check your inbox</p>
+            <p class="text-sm text-base-content/70">
+              We sent a sign-in link to <strong>{@submitted_email}</strong>.
+              It expires in 15 minutes.
+            </p>
+            <.link navigate={~p"/users/log-in"} class="text-sm underline">
+              Try a different email
+            </.link>
+          </div>
+        <% else %>
+          <.form
+            for={@form}
+            id="magic-link-form"
+            phx-submit="submit_magic"
+          >
+            <.input
+              field={@form[:email]}
+              type="email"
+              label="Email address"
+              autocomplete="username"
+              spellcheck="false"
+              required
+              phx-mounted={JS.focus()}
+            />
+            <.button class="btn btn-primary w-full" phx-disable-with="Sending…">
+              Send sign-in link <span aria-hidden="true">→</span>
+            </.button>
+          </.form>
 
-        <div class="divider">or</div>
+          <div class="divider text-sm">or continue with</div>
 
-        <.form
-          :let={f}
-          for={@form}
-          id="login_form_password"
-          action={~p"/users/log-in"}
-          phx-submit="submit_password"
-          phx-trigger-action={@trigger_submit}
-        >
-          <.input
-            readonly={!!@current_scope}
-            field={f[:email]}
-            type="email"
-            label="Email"
-            autocomplete="username"
-            spellcheck="false"
-            required
-          />
-          <.input
-            field={@form[:password]}
-            type="password"
-            label="Password"
-            autocomplete="current-password"
-            spellcheck="false"
-          />
-          <.button class="btn btn-primary w-full" name={@form[:remember_me].name} value="true">
-            Log in and stay logged in <span aria-hidden="true">→</span>
-          </.button>
-          <.button class="btn btn-primary btn-soft w-full mt-2">
-            Log in only this time
-          </.button>
-        </.form>
+          <div id="oauth-buttons" class="flex flex-col gap-3">
+            <.link
+              :if={oauth_provider_configured?(:google)}
+              href={~p"/auth/google"}
+              class="btn btn-outline w-full"
+            >
+              <.icon name="hero-globe-alt" class="size-5" /> Google
+            </.link>
+            <.link
+              :if={oauth_provider_configured?(:microsoft)}
+              href={~p"/auth/microsoft"}
+              class="btn btn-outline w-full"
+            >
+              <.icon name="hero-building-office" class="size-5" /> Microsoft
+            </.link>
+            <.link
+              :if={oauth_provider_configured?(:github)}
+              href={~p"/auth/github"}
+              class="btn btn-outline w-full"
+            >
+              <.icon name="hero-code-bracket" class="size-5" /> GitHub
+            </.link>
+          </div>
+        <% end %>
       </div>
     </Layouts.app>
     """
@@ -97,38 +89,29 @@ defmodule SpeechwaveWeb.UserLive.Login do
 
   @impl true
   def mount(_params, _session, socket) do
-    email =
-      Phoenix.Flash.get(socket.assigns.flash, :email) ||
-        get_in(socket.assigns, [:current_scope, Access.key(:user), Access.key(:email)])
-
-    form = to_form(%{"email" => email}, as: "user")
-
-    {:ok, assign(socket, form: form, trigger_submit: false)}
+    form = to_form(%{"email" => ""}, as: "user")
+    {:ok, assign(socket, form: form, link_sent: false, submitted_email: nil)}
   end
 
   @impl true
-  def handle_event("submit_password", _params, socket) do
-    {:noreply, assign(socket, :trigger_submit, true)}
-  end
-
   def handle_event("submit_magic", %{"user" => %{"email" => email}}, socket) do
-    if user = Accounts.get_user_by_email(email) do
-      Accounts.deliver_login_instructions(
-        user,
-        &url(~p"/users/log-in/#{&1}")
-      )
+    case Accounts.register_or_get_user_by_email(email) do
+      {:ok, user} ->
+        Accounts.deliver_login_instructions(user, &url(~p"/users/magic_link/#{&1}"))
+
+      {:error, _} ->
+        nil
     end
 
-    info =
-      "If your email is in our system, you will receive instructions for logging in shortly."
-
-    {:noreply,
-     socket
-     |> put_flash(:info, info)
-     |> push_navigate(to: ~p"/users/log-in")}
+    {:noreply, assign(socket, link_sent: true, submitted_email: email)}
   end
 
   defp local_mail_adapter? do
     Application.get_env(:speechwave, Speechwave.Mailer)[:adapter] == Swoosh.Adapters.Local
+  end
+
+  defp oauth_provider_configured?(provider) do
+    providers = Application.get_env(:speechwave, :oauth_providers, [])
+    Keyword.has_key?(providers, provider) && providers[provider] != nil
   end
 end
