@@ -60,14 +60,17 @@ Before making changes, understand what already works:
 
 - [ ] **Step 1: Update deps in mix.exs**
 
-In `mix.exs`, remove `{:bcrypt_elixir, "~> 3.0"}` and add `{:assent, "~> 0.2"}`:
+In `mix.exs`, remove `{:bcrypt_elixir, "~> 3.0"}` and add `{:assent, "~> 0.3"}` and `{:castore, ">= 0.0.0"}`:
 
 ```elixir
 # Remove this line:
 {:bcrypt_elixir, "~> 3.0"},
-# Add this line:
-{:assent, "~> 0.2"},
+# Add these lines:
+{:assent, "~> 0.3"},
+{:castore, ">= 0.0.0"},
 ```
+
+> **Why castore:** Assent makes HTTPS requests to OAuth providers. Without `:castore` (CA certificate bundle), TLS verification fails and OAuth will not work in production. `:castore` is a zero-config dep — just add it.
 
 - [ ] **Step 2: Fetch deps**
 
@@ -223,18 +226,24 @@ Replace the existing `login_user_by_magic_link/1` with this simplified version t
 Logs the user in by magic link token. The token is single-use and deleted on success.
 """
 def login_user_by_magic_link(token) do
-  {:ok, query} = UserToken.verify_magic_link_token_query(token)
+  case UserToken.verify_magic_link_token_query(token) do
+    {:ok, query} ->
+      case Repo.one(query) do
+        {user, token_record} ->
+          Repo.delete!(token_record)
+          {:ok, {user, []}}
 
-  case Repo.one(query) do
-    {user, token_record} ->
-      Repo.delete!(token_record)
-      {:ok, {user, []}}
+        nil ->
+          {:error, :not_found}
+      end
 
-    nil ->
+    :error ->
       {:error, :not_found}
   end
 end
 ```
+
+> **Why the outer `case`:** `verify_magic_link_token_query/1` returns `:error` (bare atom) when the token string cannot be base64-decoded. Pattern-matching `{:ok, query} =` on that return value would crash with a `MatchError`, producing a 500 instead of the "invalid or has expired" flash. The outer `case` handles both branches cleanly.
 
 - [ ] **Step 3: Add register_or_get_user_by_email/1**
 
@@ -257,7 +266,7 @@ end
 
 The function signature stays the same — callers will pass the new URL. No changes needed here; the URL change happens in the Login LiveView in Task 10.
 
-- [ ] **Step 5: Remove update_user_and_delete_all_tokens/1 if only used by password functions**
+- [ ] **Step 5: Remove unused functions and verify helpers**
 
 Check if `update_user_and_delete_all_tokens/1` is still needed:
 
@@ -266,6 +275,8 @@ grep -n "update_user_and_delete_all_tokens" lib/speechwave/accounts.ex
 ```
 
 It's now only called by `update_user_email/2` (for email change). Keep it.
+
+Also delete `get_user_by_magic_link_token/1` from `lib/speechwave/accounts.ex` — it is only called by `confirmation.ex`, which is deleted in Task 8. Removing it now keeps the context clean and avoids dead code surviving to the precommit check.
 
 - [ ] **Step 6: Compile**
 
@@ -353,7 +364,7 @@ describe "user_identities" do
              })
 
     assert user.email == "newuser@example.com"
-    assert Repo.get_by(Speechwave.Accounts.UserIdentity, provider: "google", uid: "google-uid-123")
+    assert Speechwave.Repo.get_by(Speechwave.Accounts.UserIdentity, provider: "google", uid: "google-uid-123")
   end
 
   test "find_or_create_user_from_oauth links identity to existing user with matching email" do
@@ -385,7 +396,7 @@ describe "user_identities" do
              })
 
     assert same_user.id == user.id
-    assert Repo.aggregate(Speechwave.Accounts.UserIdentity, :count) == 1
+    assert Speechwave.Repo.aggregate(Speechwave.Accounts.UserIdentity, :count) == 1
   end
 
   test "find_or_create_user_from_oauth returns error when email is not verified" do
@@ -421,7 +432,7 @@ end
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-mix test test/speechwave/accounts_test.exs --failed 2>&1 | tail -20
+mix test test/speechwave/accounts_test.exs 2>&1 | tail -20
 ```
 
 Expected: compile error — `Accounts.find_or_create_user_from_oauth` does not exist.
@@ -541,6 +552,19 @@ end
 @doc "Deletes an OAuth identity."
 def delete_user_identity(%UserIdentity{} = identity) do
   Repo.delete(identity)
+end
+
+@doc """
+Links an OAuth identity directly to an existing user.
+Used by the settings connect flow where the logged-in user is already known —
+do not use `find_or_create_user_from_oauth` for this, as that resolves by
+provider email and would link to the wrong user if the OAuth email differs
+from the current user's email.
+"""
+def link_identity_to_user(%User{} = user, provider, uid) do
+  %UserIdentity{}
+  |> UserIdentity.changeset(%{provider: provider, uid: uid, user_id: user.id})
+  |> Repo.insert()
 end
 ```
 
@@ -698,6 +722,11 @@ Remove from the authenticated scope:
 post "/users/update-password", UserSessionController, :update_password
 ```
 
+Also remove from the `pipe_through [:browser]` scope (the `create` action no longer exists):
+```elixir
+post "/users/log-in", UserSessionController, :create
+```
+
 The auth routes scope (`pipe_through [:browser]`) should now look like:
 
 ```elixir
@@ -715,7 +744,7 @@ scope "/", SpeechwaveWeb do
 end
 ```
 
-Note: `post "/users/log-in"` is removed — nothing will POST there after the Confirmation LiveView is deleted in Task 8. The `confirm-email` route stays in the authenticated `live_session :require_authenticated_user` block since the email-change flow still uses it.
+Note: `live "/users/log-in/:token"` (the Confirmation LiveView route) is removed in Task 8 alongside the LiveView file itself. The `confirm-email` route stays in the authenticated `live_session :require_authenticated_user` block since the email-change flow still uses it.
 
 - [ ] **Step 3: Compile and run tests**
 
@@ -752,12 +781,13 @@ rm test/speechwave_web/live/user_live/registration_test.exs
 rm test/speechwave_web/live/user_live/confirmation_test.exs
 ```
 
-- [ ] **Step 2: Remove registration route from router**
+- [ ] **Step 2: Remove registration and confirmation routes from router**
 
-In `lib/speechwave_web/router.ex`, remove:
+In `lib/speechwave_web/router.ex`, remove both of these lines — deleting the modules without removing the routes causes a compile error:
 
 ```elixir
 live "/users/register", UserLive.Registration, :new
+live "/users/log-in/:token", UserLive.Confirmation, :new
 ```
 
 The `live_session :current_user` block now only contains:
@@ -798,18 +828,20 @@ git commit -m "refactor: remove Registration and Confirmation LiveViews"
 Add the following actions to `lib/speechwave_web/controllers/user_session_controller.ex`:
 
 ```elixir
+@known_providers ~w[google github microsoft]
+
 @doc "Initiates OAuth authorization for the given provider."
 def oauth_authorize(conn, %{"provider" => provider}) do
   config = assent_config(provider, conn)
 
-  case Assent.authorize_url(config) do
+  case config && Assent.authorize_url(config) do
     {:ok, %{url: url, session_params: session_params}} ->
       conn
       |> put_session(:assent_session_params, session_params)
       |> put_session(:oauth_context, oauth_context(conn))
       |> redirect(external: url)
 
-    {:error, _} ->
+    _ ->
       conn
       |> put_flash(:error, "Authentication provider is not configured.")
       |> redirect(to: ~p"/users/log-in")
@@ -821,7 +853,7 @@ def oauth_callback(conn, %{"provider" => provider} = params) do
   session_params = get_session(conn, :assent_session_params)
   config = assent_config(provider, conn)
 
-  case Assent.callback(config, params, session_params) do
+  case config && Assent.callback(config, params, session_params) do
     {:ok, %{user: user_info}} ->
       context = get_session(conn, :oauth_context)
       current_user = conn.assigns.current_scope && conn.assigns.current_scope.user
@@ -832,7 +864,7 @@ def oauth_callback(conn, %{"provider" => provider} = params) do
         handle_oauth_login(conn, provider, user_info)
       end
 
-    {:error, _} ->
+    _ ->
       conn
       |> put_flash(:error, "Authentication failed. Please try again.")
       |> redirect(to: ~p"/users/log-in")
@@ -865,7 +897,11 @@ defp handle_oauth_connect(conn, provider, user_info, current_user) do
 
   case Accounts.get_identity_by_provider_uid(provider, uid) do
     nil ->
-      case Accounts.find_or_create_user_from_oauth(provider, user_info) do
+      # Link directly to current_user, not to whoever owns the OAuth email.
+      # Using find_or_create_user_from_oauth here would be wrong: it resolves
+      # by provider email, which may differ from current_user's email and would
+      # link the identity to a different (possibly new) user.
+      case Accounts.link_identity_to_user(current_user, provider, uid) do
         {:ok, _} ->
           conn
           |> delete_session(:assent_session_params)
@@ -899,6 +935,10 @@ defp oauth_context(conn) do
     "login"
   end
 end
+
+# Returns nil for unknown providers, causing oauth_authorize/oauth_callback to
+# redirect gracefully rather than raising ArgumentError from String.to_existing_atom.
+defp assent_config(provider, _conn) when provider not in @known_providers, do: nil
 
 defp assent_config(provider, conn) do
   provider_atom = String.to_existing_atom(provider)
@@ -966,7 +1006,16 @@ oauth_providers =
 config :speechwave, :oauth_providers, oauth_providers
 ```
 
-> **Note on Microsoft:** Check the Assent docs (`mix hex.docs open assent`) for the exact module name — it may be `Assent.Strategy.Microsoft` instead of `Assent.Strategy.AzureAD`. Search for "microsoft" in the Assent source: `grep -r "microsoft\|azure" deps/assent/lib --include="*.ex" -li`
+> **Note on Microsoft:** The correct module in Assent 0.3 is `Assent.Strategy.AzureAD`. Verify after fetching deps with: `grep -r "microsoft\|azure" deps/assent/lib --include="*.ex" -li`
+
+Also add this to `config/config.exs` (not `runtime.exs` — it's not a secret):
+
+```elixir
+# Tell Assent to use castore for TLS when making OAuth requests
+config :assent, http_adapter: {Assent.HTTPAdapter.Httpc, []}
+```
+
+> **Note:** Assent 0.3 defaults to `:httpc` but needs `:castore` on the path for TLS verification. Adding `:castore` to deps (Task 1) is sufficient — no further config is required. The line above is included for explicitness and can be omitted if you verify OAuth works without it.
 
 - [ ] **Step 4: Compile**
 
@@ -1676,7 +1725,7 @@ Remove tests for:
 - Password-based login (`POST /users/log-in` with email+password)
 - `update_password` action
 
-Add a test for the magic link controller action:
+Add tests for the magic link controller action and OAuth error handling:
 
 ```elixir
 describe "magic_link/2" do
@@ -1695,6 +1744,33 @@ describe "magic_link/2" do
 
     assert redirected_to(conn) == ~p"/users/log-in"
     assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "invalid or has expired"
+  end
+
+  test "token is single-use — second use redirects to login", %{conn: conn} do
+    user = user_fixture()
+    {token, _} = generate_user_magic_link_token(user)
+
+    get(conn, ~p"/users/magic_link/#{token}")
+    conn2 = get(build_conn(), ~p"/users/magic_link/#{token}")
+
+    assert redirected_to(conn2) == ~p"/users/log-in"
+    assert Phoenix.Flash.get(conn2.assigns.flash, :error) =~ "invalid or has expired"
+  end
+
+  test "malformed (non-base64) token redirects to login", %{conn: conn} do
+    conn = get(conn, ~p"/users/magic_link/not!!valid!!base64")
+
+    assert redirected_to(conn) == ~p"/users/log-in"
+    assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "invalid or has expired"
+  end
+end
+
+describe "oauth_authorize/2" do
+  test "unknown provider redirects to login with error", %{conn: conn} do
+    conn = get(conn, "/auth/notaprovider")
+
+    assert redirected_to(conn) == ~p"/users/log-in"
+    assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "not configured"
   end
 end
 ```
