@@ -12,10 +12,11 @@ defmodule SpeechwaveWeb.UserLive.Settings do
       <div class="text-center">
         <.header>
           Account Settings
-          <:subtitle>Manage your account email address and password settings</:subtitle>
+          <:subtitle>Manage your email and connected accounts</:subtitle>
         </.header>
       </div>
 
+      <%!-- Email section --%>
       <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
         <.input
           field={@email_form[:email]}
@@ -30,44 +31,45 @@ defmodule SpeechwaveWeb.UserLive.Settings do
 
       <div class="divider" />
 
-      <.form
-        for={@password_form}
-        id="password_form"
-        action={~p"/users/update-password"}
-        method="post"
-        phx-change="validate_password"
-        phx-submit="update_password"
-        phx-trigger-action={@trigger_submit}
-      >
-        <input
-          name={@password_form[:email].name}
-          type="hidden"
-          id="hidden_user_email"
-          spellcheck="false"
-          value={@current_email}
-        />
-        <.input
-          field={@password_form[:password]}
-          type="password"
-          label="New password"
-          autocomplete="new-password"
-          spellcheck="false"
-          required
-        />
-        <.input
-          field={@password_form[:password_confirmation]}
-          type="password"
-          label="Confirm new password"
-          autocomplete="new-password"
-          spellcheck="false"
-        />
-        <.button variant="primary" phx-disable-with="Saving...">
-          Save Password
-        </.button>
-      </.form>
+      <%!-- Connected OAuth accounts --%>
+      <div id="connected-accounts" class="space-y-4">
+        <h3 class="font-semibold text-base-content">Connected accounts</h3>
+        <p class="text-sm text-base-content/70">
+          Sign in faster using a linked account. Magic link is always available as a fallback.
+        </p>
+
+        <div class="space-y-2">
+          <%= for provider <- ["google", "microsoft", "github"] do %>
+            <% identity = Enum.find(@identities, &(&1.provider == provider)) %>
+            <div id={"identity-#{provider}"} class="flex items-center justify-between p-3 rounded-lg border border-base-300">
+              <span class="font-medium capitalize">{provider}</span>
+              <%= if identity do %>
+                <button
+                  id={"disconnect-#{provider}"}
+                  phx-click="disconnect_identity"
+                  phx-value-id={identity.id}
+                  data-confirm={"Disconnect your #{provider} account?"}
+                  class="text-sm text-error hover:underline"
+                >
+                  Disconnect
+                </button>
+              <% else %>
+                <.link
+                  id={"connect-#{provider}"}
+                  href={~p"/auth/#{provider}"}
+                  class="text-sm text-primary hover:underline"
+                >
+                  Connect
+                </.link>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
 
       <div class="divider" />
 
+      <%!-- API Key section --%>
       <div class="space-y-2">
         <h3 class="font-semibold text-base-content">Browser Extension API Key</h3>
         <p class="text-sm text-base-content/70">
@@ -119,15 +121,13 @@ defmodule SpeechwaveWeb.UserLive.Settings do
   def mount(_params, _session, socket) do
     user = socket.assigns.current_scope.user
     email_changeset = Accounts.change_user_email(user, %{}, validate_unique: false)
-    password_changeset = Accounts.change_user_password(user, %{}, hash_password: false)
 
     socket =
       socket
       |> assign(:current_email, user.email)
       |> assign(:email_form, to_form(email_changeset))
-      |> assign(:password_form, to_form(password_changeset))
-      |> assign(:trigger_submit, false)
       |> assign(:api_key, user.api_key)
+      |> assign(:identities, Accounts.list_user_identities(user))
 
     {:ok, socket}
   end
@@ -166,29 +166,15 @@ defmodule SpeechwaveWeb.UserLive.Settings do
     end
   end
 
-  def handle_event("validate_password", params, socket) do
-    %{"user" => user_params} = params
-
-    password_form =
-      socket.assigns.current_scope.user
-      |> Accounts.change_user_password(user_params, hash_password: false)
-      |> Map.put(:action, :validate)
-      |> to_form()
-
-    {:noreply, assign(socket, password_form: password_form)}
-  end
-
-  def handle_event("update_password", params, socket) do
-    %{"user" => user_params} = params
+  def handle_event("disconnect_identity", %{"id" => id}, socket) do
     user = socket.assigns.current_scope.user
-    true = Accounts.sudo_mode?(user)
+    identity = Enum.find(socket.assigns.identities, &(to_string(&1.id) == id))
 
-    case Accounts.change_user_password(user, user_params) do
-      %{valid?: true} = changeset ->
-        {:noreply, assign(socket, trigger_submit: true, password_form: to_form(changeset))}
-
-      changeset ->
-        {:noreply, assign(socket, password_form: to_form(changeset, action: :insert))}
+    if identity && identity.user_id == user.id do
+      {:ok, _} = Accounts.delete_user_identity(identity)
+      {:noreply, assign(socket, :identities, Accounts.list_user_identities(user))}
+    else
+      {:noreply, put_flash(socket, :error, "Could not disconnect that account.")}
     end
   end
 
