@@ -1,0 +1,27 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="mx-auto max-w-sm space-y-6">
+    <.header>Dev Login</.header>
+
+    <.form for={%{}} action={~p"/dev/login"} method="post" id="dev-freeform-form">
+      <.input name="email" type="email" label="Any email (creates account if new)" value="" />
+      <.button class="w-full">Log in</.button>
+    </.form>
+
+    <div class="divider">Existing users</div>
+
+    <div id="dev-user-list" class="space-y-2">
+      <%= for user <- @users do %>
+        <.form for={%{}} action={~p"/dev/login"} method="post" id={"dev-user-#{user.id}"}>
+          <input type="hidden" name="user_id" value={user.id} />
+          <button type="submit" class="w-full text-left px-3 py-2 rounded border border-base-300 hover:bg-base-200 text-sm">
+            {user.email}
+            <span class="text-base-content/50 ml-2">{user.plan}</span>
+            <%= if user.is_admin do %>
+              <span class="text-primary ml-1">admin</span>
+            <% end %>
+          </button>
+        </.form>
+      <% end %>
+    </div>
+  </div>
+</Layouts.app>
