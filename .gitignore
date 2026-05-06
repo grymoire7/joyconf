@@ -31,6 +31,8 @@ dist/
 # Git worktrees
 .worktrees/
 
+.rodney/
+
 docs/_site/
 
 .superpowers/
