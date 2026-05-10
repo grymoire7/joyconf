@@ -917,7 +917,51 @@ children = [
 </div></div>
     </div>
     <div id="chapter-db-backup" class="chapter">
-      <div class="content"><!-- Task 9 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 8 — New</div>
+<h1 class="chapter-title">DB Backup</h1>
+<p class="chapter-lead"><code>Speechwave.DbBackup</code> is a GenServer that runs hourly SQLite backups and uploads them to S3-compatible object storage. It only starts when the <code>STORAGE_BUCKET</code> environment variable is set — so it never runs in development.</p>
+
+<h3>How It Works</h3>
+<div class="code-block"><span class="kw">use</span> GenServer
+
+<span class="at">@initial_delay</span> :timer.minutes(<span class="num">5</span>)   <span class="cm"># wait for app to stabilize after boot</span>
+<span class="at">@interval</span>      :timer.hours(<span class="num">1</span>)
+
+<span class="kw">def</span> <span class="fn">init</span>(_opts) <span class="kw">do</span>
+  Process.send_after(self(), <span class="at">:backup</span>, <span class="at">@initial_delay</span>)
+  {:ok, %{}}
+<span class="kw">end</span>
+
+<span class="kw">def</span> <span class="fn">handle_info</span>(<span class="at">:backup</span>, state) <span class="kw">do</span>
+  run_backup()
+  Process.send_after(self(), <span class="at">:backup</span>, <span class="at">@interval</span>)
+  {:noreply, state}
+<span class="kw">end</span></div>
+
+<h3>VACUUM INTO — Live Snapshot</h3>
+<p>SQLite's <code>VACUUM INTO</code> creates a fully consistent, compacted copy of the database at a given path while the database remains live and writable. It's equivalent to an online backup — no locking, no downtime.</p>
+<div class="code-block">SQL.query!(Repo, <span class="str">"VACUUM INTO '/tmp/speechwave_backup.db'"</span>, [])</div>
+<div class="callout">
+  <div class="callout-label">Why VACUUM INTO and not file copy?</div>
+  <p>A plain file copy of a live SQLite database can capture it mid-transaction, producing a corrupt backup. <code>VACUUM INTO</code> is SQLite's purpose-built solution: it produces a clean, compacted snapshot that's guaranteed consistent. The file is also smaller because it compacts free pages.</p>
+</div>
+
+<h3>S3 Upload via Req</h3>
+<p>After the snapshot is created, it's uploaded to S3-compatible object storage using <code>Req.put!/2</code> with the <code>aws_sigv4</code> option. The temporary file is deleted in the <code>after</code> block regardless of whether the upload succeeds.</p>
+<div class="code-block">Req.put!(<span class="str">"#{endpoint}/#{bucket}/backup/speechwave.db"</span>,
+  <span class="at">body:</span> File.read!(path),
+  <span class="at">aws_sigv4:</span> [
+    <span class="at">access_key_id:</span>     System.fetch_env!(<span class="str">"STORAGE_ACCESS_KEY_ID"</span>),
+    <span class="at">secret_access_key:</span> System.fetch_env!(<span class="str">"STORAGE_SECRET_ACCESS_KEY"</span>),
+    <span class="at">region:</span>            <span class="str">"auto"</span>,
+    <span class="at">service:</span>           <span class="str">"s3"</span>
+  ]
+)</div>
+<p>Required environment variables: <code>STORAGE_URL</code>, <code>STORAGE_BUCKET</code>, <code>STORAGE_ACCESS_KEY_ID</code>, <code>STORAGE_SECRET_ACCESS_KEY</code>. The presence of <code>STORAGE_BUCKET</code> is also the signal that tells the supervisor to start this process at all.</p>
+
+<h3>Manual Trigger</h3>
+<p>The GenServer is registered under its own module name, so you can trigger an immediate backup from IEx without waiting for the timer:</p>
+<div class="code-block">Speechwave.DbBackup.run_now()</div></div>
     </div>
     <div id="chapter-chrome-extension" class="chapter">
       <div class="content"><!-- Task 10 fills this --></div>
