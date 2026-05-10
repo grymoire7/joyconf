@@ -744,7 +744,65 @@ code {
 </div></div>
     </div>
     <div id="chapter-websockets" class="chapter">
-      <div class="content"><!-- Task 6 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 5</div>
+<h1 class="chapter-title">WebSockets</h1>
+<p class="chapter-lead">Two distinct WebSocket connections run simultaneously. They serve different clients, use different Phoenix abstractions, and connect through PubSub — without knowing about each other.</p>
+
+<h3>The LiveView Socket — /live</h3>
+<p>This powers the attendee's interactive page. Phoenix LiveView manages it completely automatically — no manual setup needed. When an attendee opens <code>/t/my-talk</code>, LiveView renders HTML server-side, then upgrades to a WebSocket for all subsequent interactions.</p>
+<p>What it does:</p>
+<ul>
+  <li>Delivers <code>phx-click</code> events from the browser to <code>TalkLive.handle_event/3</code></li>
+  <li>Receives <code>push_event</code> calls from the server to run client-side JS hooks</li>
+  <li>Keeps the page in sync with diffs (partial re-renders)</li>
+</ul>
+<div class="code-block"><span class="cm"># endpoint.ex</span>
+socket <span class="str">"/live"</span>, Phoenix.LiveView.Socket,
+  <span class="at">websocket:</span> [<span class="at">connect_info:</span> [<span class="at">session:</span> <span class="at">@session_options</span>]]</div>
+
+<h3>The Channel Socket — /socket</h3>
+<p>A lower-level bare Phoenix Channel socket used by the Chrome extension. The extension isn't a web page, so it can't use LiveView. It only needs to <em>receive</em> messages and control sessions — Channels handle this perfectly.</p>
+<p>Key differences from the LiveView socket:</p>
+<ul>
+  <li><strong>Authentication at join time</strong> — the extension passes <code>api_key</code> when joining the channel; the server verifies ownership against the talk</li>
+  <li><strong><code>check_origin: false</code></strong> — allows connections from the <code>chrome-extension://</code> origin (which would otherwise be rejected)</li>
+  <li><strong>Manual connect</strong> — the extension's content script creates a <code>Phoenix.Socket</code> object and calls <code>.connect()</code> and <code>.channel(topic).join()</code> explicitly</li>
+</ul>
+<div class="code-block"><span class="cm"># endpoint.ex</span>
+socket <span class="str">"/socket"</span>, SpeechwaveWeb.UserSocket,
+  <span class="at">websocket:</span> [<span class="at">check_origin:</span> <span class="kw">false</span>]
+
+<span class="cm"># user_socket.ex</span>
+channel <span class="str">"reactions:*"</span>, SpeechwaveWeb.ReactionChannel
+
+<span class="kw">def</span> <span class="fn">connect</span>(_params, socket, _info), <span class="at">do:</span> {:ok, socket}
+<span class="kw">def</span> <span class="fn">id</span>(_socket), <span class="at">do:</span> <span class="kw">nil</span></div>
+
+<h3>Channel Join — API Key Auth</h3>
+<p>When the extension joins, the server runs a <code>with</code> chain that must pass four checks. If any fails, the join is rejected with a reason the extension can surface to the speaker.</p>
+<div class="code-block"><span class="kw">def</span> <span class="fn">join</span>(<span class="str">"reactions:"</span> &lt;&gt; slug, %{<span class="str">"api_key"</span> =&gt; api_key}, socket) <span class="kw">do</span>
+  <span class="kw">with</span> {:talk,  %Talk{} = talk} &lt;- {:talk,  Talks.get_talk_by_slug(slug)},
+       {:user,  %User{} = user} &lt;- {:user,  Accounts.get_user_by_api_key(api_key)},
+       {:owner, <span class="kw">true</span>}          &lt;- {:owner, talk.user_id == user.id},
+       {:capacity, :ok}         &lt;- {:capacity, Plans.check(:max_participants, user.plan,
+                                     Presence.list(<span class="str">"reactions:#{slug}"</span>) |&gt; map_size())} <span class="kw">do</span>
+    Phoenix.PubSub.subscribe(Speechwave.PubSub, <span class="str">"user:#{user.id}:disconnect"</span>)
+    send(self(), :after_join)
+    {:ok, assign(socket, <span class="at">talk:</span> talk, <span class="at">user:</span> user)}
+  <span class="kw">else</span>
+    {:talk,     <span class="kw">nil</span>}                      -&gt; {:error, %{<span class="at">reason:</span> <span class="str">"not_found"</span>}}
+    {:user,     <span class="kw">nil</span>}                      -&gt; {:error, %{<span class="at">reason:</span> <span class="str">"unauthorized"</span>}}
+    {:owner,    <span class="kw">false</span>}                    -&gt; {:error, %{<span class="at">reason:</span> <span class="str">"unauthorized"</span>}}
+    {:capacity, {:error, :limit_reached}} -&gt; {:error, %{<span class="at">reason:</span> <span class="str">"capacity_reached"</span>}}
+  <span class="kw">end</span>
+<span class="kw">end</span></div>
+
+<h3>Why PubSub Connects Them</h3>
+<p><code>Endpoint.broadcast!/3</code> doesn't know or care whether subscribers are LiveView processes or Channel processes. It sends to everyone subscribed to the topic. This is what keeps the architecture clean — <code>handle_event</code> in <code>TalkLive</code> broadcasts the reaction without knowing anything about the extension or how many viewers are watching.</p>
+<div class="callout">
+  <div class="callout-label">Attendee count via Presence</div>
+  <p>The <code>:after_join</code> message calls <code>Presence.track/3</code> to register the extension as a participant on the <code>"reactions:slug"</code> topic. <code>Presence.list/1</code> is then used at channel join time to count current participants and enforce plan capacity limits. See the Plans chapter for details.</p>
+</div></div>
     </div>
     <div id="chapter-plans" class="chapter">
       <div class="content"><!-- Task 7 fills this --></div>
