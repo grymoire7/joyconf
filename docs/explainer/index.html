@@ -805,7 +805,64 @@ channel <span class="str">"reactions:*"</span>, SpeechwaveWeb.ReactionChannel
 </div></div>
     </div>
     <div id="chapter-plans" class="chapter">
-      <div class="content"><!-- Task 7 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 6 — New</div>
+<h1 class="chapter-title">Plans &amp; Limits</h1>
+<p class="chapter-lead">Speechwave has three tiers — free, pro, and org. The <code>Plans</code> module is a pure function library that maps features to limits. Enforcement is scattered across the channel join and session start paths.</p>
+
+<h3>The Plans Module</h3>
+<div class="code-block"><span class="kw">defmodule</span> Speechwave.Plans <span class="kw">do</span>
+  <span class="cm"># limit/2 — pure: what is the cap for this feature × plan?</span>
+  <span class="kw">def</span> <span class="fn">limit</span>(<span class="at">:max_participants</span>,       <span class="at">:free</span>), <span class="at">do:</span> <span class="num">50</span>
+  <span class="kw">def</span> <span class="fn">limit</span>(<span class="at">:full_sessions_per_month</span>, <span class="at">:free</span>), <span class="at">do:</span> <span class="num">10</span>
+  <span class="kw">def</span> <span class="fn">limit</span>(<span class="at">:max_participants</span>,       <span class="at">:pro</span>),  <span class="at">do:</span> <span class="at">:unlimited</span>
+  <span class="kw">def</span> <span class="fn">limit</span>(<span class="at">:full_sessions_per_month</span>, <span class="at">:pro</span>),  <span class="at">do:</span> <span class="at">:unlimited</span>
+  <span class="kw">def</span> <span class="fn">limit</span>(feature, <span class="at">:org</span>), <span class="at">do:</span> limit(feature, <span class="at">:pro</span>)
+
+  <span class="cm"># check/3 — :ok or {:error, :limit_reached}</span>
+  <span class="kw">def</span> <span class="fn">check</span>(feature, plan, current_count) <span class="kw">do</span>
+    <span class="kw">case</span> limit(feature, plan) <span class="kw">do</span>
+      <span class="at">:unlimited</span>              -&gt; :ok
+      max <span class="kw">when</span> current_count &lt; max -&gt; :ok
+      _                       -&gt; {:error, <span class="at">:limit_reached</span>}
+    <span class="kw">end</span>
+  <span class="kw">end</span>
+<span class="kw">end</span></div>
+
+<h3>Two Enforced Limits</h3>
+<table class="schema-table">
+  <thead><tr><th>Feature</th><th>Free</th><th>Pro / Org</th><th>Enforced where</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>:max_participants</code></td>
+      <td>50</td>
+      <td>Unlimited</td>
+      <td>Channel join — <code>Presence.list/1 |&gt; map_size()</code></td>
+    </tr>
+    <tr>
+      <td><code>:full_sessions_per_month</code></td>
+      <td>10</td>
+      <td>Unlimited</td>
+      <td>Channel <code>start_session</code> handler + DashboardLive mount</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Participant Counting via Presence</h3>
+<p><code>SpeechwaveWeb.Presence</code> tracks every connected Channel socket on the <code>"reactions:slug"</code> topic. At channel join, before accepting, the server counts current presences with <code>Presence.list("reactions:my-talk") |&gt; map_size()</code> and passes the result to <code>Plans.check/3</code>. If the free-tier limit of 50 is reached, the join is rejected with <code>"capacity_reached"</code>.</p>
+
+<h3>Full Session Counting</h3>
+<p>A "full session" is a completed <code>TalkSession</code> lasting more than 10 minutes (600 seconds). <code>Talks.count_full_sessions_this_month/1</code> queries across all of the user's talks for the current calendar month.</p>
+<div class="code-block"><span class="cm"># Talks.count_full_sessions_this_month/1 (simplified)</span>
+<span class="kw">from</span>(s <span class="kw">in</span> TalkSession,
+  <span class="at">join:</span> t <span class="kw">in</span> Talk, <span class="at">on:</span> t.id == s.talk_id <span class="kw">and</span> t.user_id == ^user.id,
+  <span class="at">where:</span> s.started_at &gt;= ^beginning_of_month,
+  <span class="at">where:</span> not is_nil(s.ended_at),
+  <span class="at">where:</span> fragment(<span class="str">"(strftime('%s', ?) - strftime('%s', ?)) > 600"</span>, s.ended_at, s.started_at)
+)</div>
+<div class="callout">
+  <div class="callout-label">Where the check fires</div>
+  <p>The session limit is checked in the <code>ReactionChannel</code> when the extension sends <code>"start_session"</code>. If the limit is reached, the channel replies with <code>{:error, %{reason: "session_limit_reached"}}</code> and no session is created. The dashboard also reads the count at mount to display usage to the speaker.</p>
+</div></div>
     </div>
     <div id="chapter-supervision" class="chapter">
       <div class="content"><!-- Task 8 fills this --></div>
