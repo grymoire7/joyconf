@@ -527,7 +527,113 @@ code {
 </table></div>
     </div>
     <div id="chapter-authentication" class="chapter">
-      <div class="content"><!-- Task 4 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 3 — New</div>
+<h1 class="chapter-title">Authentication</h1>
+<p class="chapter-lead">Speechwave is passwordless. Speakers sign in via magic link or OAuth (Google, GitHub, Microsoft). No passwords are stored. The Chrome extension authenticates with a per-user API key.</p>
+
+<div class="two-col">
+  <div class="info-card">
+    <div class="info-card-label">Magic Link</div>
+    <p>User enters email → server emails a one-time token → user clicks link → session created. Token is deleted on use.</p>
+  </div>
+  <div class="info-card">
+    <div class="info-card-label">OAuth (Assent)</div>
+    <p>User clicks provider button → redirected to Google/GitHub/Microsoft → callback creates or finds user by email → session created.</p>
+  </div>
+</div>
+
+<h3>Magic Link Flow</h3>
+<div class="stepper">
+  <div class="stepper-header">
+    <span class="stepper-title">Magic Link — step by step</span>
+    <div class="stepper-dots"></div>
+  </div>
+  <div class="stepper-body">
+    <div class="stepper-step">
+      <div class="step-title">Step 1 — User submits email on /users/log-in</div>
+      <div class="step-diagram">
+        <div class="node active">📱 Browser</div>
+        <div class="arrow">→</div>
+        <div class="node">UserLive.Login</div>
+        <div class="arrow">→</div>
+        <div class="node">handle_event "submit_magic"</div>
+      </div>
+      <div class="step-desc"><code>register_or_get_user_by_email/1</code> finds an existing user or inserts a new one. Either way, a magic link is always sent — the response never reveals whether the account existed. This prevents user enumeration.</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-title">Step 2 — Server creates a UserToken and emails the link</div>
+      <div class="step-diagram">
+        <div class="node dim">📱 Browser</div>
+        <div class="arrow">→</div>
+        <div class="node active">Accounts context</div>
+        <div class="arrow">→</div>
+        <div class="node">UserToken (type: "login")</div>
+        <div class="arrow">→</div>
+        <div class="node">Swoosh email</div>
+      </div>
+      <div class="step-desc"><code>deliver_login_instructions/2</code> builds a signed token via <code>UserToken.build_email_token/2</code>, inserts it in <code>user_tokens</code>, and sends the magic link email. The token expires in 15 minutes.</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-title">Step 3 — User clicks the link in their inbox</div>
+      <div class="step-diagram">
+        <div class="node dim">📱 Email client</div>
+        <div class="arrow">→</div>
+        <div class="node active">GET /users/magic_link/:token</div>
+        <div class="arrow">→</div>
+        <div class="node">UserSessionController</div>
+      </div>
+      <div class="step-desc">The controller calls <code>login_user_by_magic_link/1</code>. If the token is valid, the token record is deleted (single-use) and <code>UserAuth.log_in_user/2</code> creates a session.</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-title">Step 4 — Session created, user redirected to dashboard</div>
+      <div class="step-diagram">
+        <div class="node active">Session token</div>
+        <div class="arrow">→</div>
+        <div class="node">user_tokens (context: "session")</div>
+        <div class="arrow">→</div>
+        <div class="node">redirect /dashboard</div>
+      </div>
+      <div class="step-desc"><code>log_in_user/2</code> generates a session token via <code>generate_user_session_token/1</code>, stores it in the browser session cookie, and redirects. The session is verified on every request by the <code>:fetch_current_scope_for_user</code> plug.</div>
+    </div>
+  </div>
+  <div class="stepper-footer">
+    <span class="step-counter"></span>
+    <div class="step-btns">
+      <button type="button" class="btn-step btn-prev">← Prev</button>
+      <button type="button" class="btn-step btn-next">Next →</button>
+    </div>
+  </div>
+</div>
+
+<h3>OAuth Flow (Assent)</h3>
+<p>Clicking a provider button hits <code>GET /auth/:provider</code>. The controller uses the Assent library to build an authorization URL and redirect. On return, <code>GET /auth/:provider/callback</code> exchanges the code for user info.</p>
+<p>There are two contexts for OAuth, determined by whether a user is already logged in:</p>
+<ul>
+  <li><strong>Login context</strong> — calls <code>find_or_create_user_from_oauth/2</code>. Looks up existing <code>UserIdentity</code> by <code>{provider, uid}</code>. If not found, upserts the user by email and inserts a new identity.</li>
+  <li><strong>Connect context</strong> — user is already logged in (visiting Settings). Links a new OAuth provider to their existing account via <code>link_identity_to_user/3</code>.</li>
+</ul>
+<div class="callout">
+  <div class="callout-label">Email verification guard</div>
+  <p>OAuth login requires <code>email_verified: true</code> in the provider's user info. A missing or <code>false</code> value returns <code>{:error, :email_not_verified}</code>. This prevents OAuth providers from assigning someone else's unverified email to a new account.</p>
+</div>
+
+<h3>The Scope Struct</h3>
+<p>Every context function that touches user-owned data takes a <code>%Scope{user: user}</code> as its first argument. This makes ownership filtering explicit and impossible to accidentally skip.</p>
+<div class="code-block"><span class="cm"># accounts/scope.ex</span>
+<span class="kw">defmodule</span> Speechwave.Accounts.Scope <span class="kw">do</span>
+  <span class="kw">defstruct</span> [:user]
+<span class="kw">end</span>
+
+<span class="cm"># Usage in Talks context:</span>
+<span class="kw">def</span> <span class="fn">list_talks</span>(%Scope{user: user}) <span class="kw">do</span>
+  Repo.all(<span class="kw">from</span> t <span class="kw">in</span> Talk, <span class="kw">where:</span> t.user_id == ^user.id, ...)
+<span class="kw">end</span></div>
+
+<h3>API Key — Chrome Extension Auth</h3>
+<p>The Chrome extension can't do magic links or OAuth — it's not a web page. Instead, every <code>User</code> gets a 32-byte hex API key (auto-generated on insert, visible in Settings). The extension sends this key when joining the Phoenix Channel. The server looks up the user by key and verifies they own the talk.</p>
+
+<h3>Sudo Mode</h3>
+<p><code>Accounts.sudo_mode?/2</code> returns <code>true</code> if the user authenticated within the last 20 minutes. Used to gate sensitive actions (e.g. changing email) without requiring a re-login on every visit. The <code>authenticated_at</code> field on the User struct is a virtual field set when the session token is verified.</p></div>
     </div>
     <div id="chapter-emoji-journey" class="chapter">
       <div class="content"><!-- Task 5 fills this --></div>
