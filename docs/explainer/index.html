@@ -865,7 +865,56 @@ channel <span class="str">"reactions:*"</span>, SpeechwaveWeb.ReactionChannel
 </div></div>
     </div>
     <div id="chapter-supervision" class="chapter">
-      <div class="content"><!-- Task 8 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 7</div>
+<h1 class="chapter-title">Supervision Tree</h1>
+<p class="chapter-lead">Every long-lived process in Elixir/OTP lives under a supervisor that restarts it if it crashes. Here's Speechwave's tree — and what happens when each child fails.</p>
+
+<div class="code-block"><span class="cm"># application.ex</span>
+children = [
+  SpeechwaveWeb.Telemetry,       <span class="cm"># metrics</span>
+  Speechwave.Repo,               <span class="cm"># Ecto / SQLite</span>
+  {DNSCluster, <span class="at">query:</span> ...},     <span class="cm"># multi-node discovery</span>
+  {Phoenix.PubSub, <span class="at">name:</span> Speechwave.PubSub},
+  Speechwave.RateLimiter,        <span class="cm"># GenServer + ETS</span>
+  SpeechwaveWeb.Endpoint,        <span class="cm"># HTTP + both WebSocket endpoints</span>
+  SpeechwaveWeb.Presence,        <span class="cm"># participant tracking</span>
+] ++ backup_children()           <span class="cm"># DbBackup if STORAGE_BUCKET is set</span>
+
+<span class="kw">defp</span> <span class="fn">backup_children</span> <span class="kw">do</span>
+  <span class="kw">if</span> System.get_env(<span class="str">"STORAGE_BUCKET"</span>), <span class="at">do:</span> [Speechwave.DbBackup], <span class="at">else:</span> []
+<span class="kw">end</span></div>
+
+<h3>What happens when each child crashes?</h3>
+<table class="schema-table">
+  <thead><tr><th>Process</th><th>On crash</th><th>Data loss?</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>RateLimiter</code></td>
+      <td>Supervisor restarts it. New ETS table created empty.</td>
+      <td>Yes — all cooldown state lost. Every user gets a fresh window. Acceptable for rate limiting.</td>
+    </tr>
+    <tr>
+      <td><code>Presence</code></td>
+      <td>Supervisor restarts it. Tracked presences cleared.</td>
+      <td>Yes — participant count resets to 0 until extensions reconnect. Capacity checks temporarily permissive.</td>
+    </tr>
+    <tr>
+      <td><code>DbBackup</code></td>
+      <td>Supervisor restarts it. Timer resets (5-minute delay before next attempt).</td>
+      <td>No database data lost — backup failure only means a snapshot wasn't uploaded.</td>
+    </tr>
+    <tr>
+      <td><code>Repo</code></td>
+      <td>Supervisor restarts it. All DB connections re-established.</td>
+      <td>Any in-flight transaction is rolled back. Unlikely to crash in normal operation.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <div class="callout-label">strategy: :one_for_one</div>
+  <p>The supervisor uses <code>:one_for_one</code> — when a child crashes, only that child is restarted. The other children keep running. This is safe here because the processes don't share state with each other (beyond PubSub, which is itself supervised).</p>
+</div></div>
     </div>
     <div id="chapter-db-backup" class="chapter">
       <div class="content"><!-- Task 9 fills this --></div>
