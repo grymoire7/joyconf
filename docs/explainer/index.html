@@ -964,7 +964,76 @@ children = [
 <div class="code-block">Speechwave.DbBackup.run_now()</div></div>
     </div>
     <div id="chapter-chrome-extension" class="chapter">
-      <div class="content"><!-- Task 10 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 9</div>
+<h1 class="chapter-title">Chrome Extension</h1>
+<p class="chapter-lead">The speaker-side client. Two parts: a popup UI for connection control, and a content script injected into Google Slides that connects to the Phoenix Channel and overlays emoji animations.</p>
+
+<div class="two-col">
+  <div class="info-card">
+    <div class="info-card-label">Popup (popup.html + popup.js)</div>
+    <p>The extension icon UI. Speaker enters their talk slug and clicks Connect. Sends a message to the content script via <code>chrome.runtime.sendMessage</code>. Also shows current slide number and a fireworks toggle.</p>
+  </div>
+  <div class="info-card">
+    <div class="info-card-label">Content Script (content.js)</div>
+    <p>Injected into Google Slides pages. Connects a Phoenix <code>Socket</code> to <code>/socket</code>, joins the <code>reactions:slug</code> Channel with the API key, listens for messages, and renders animations in an overlay div.</p>
+  </div>
+</div>
+
+<h3>Channel Connection</h3>
+<p>The content script connects using the phoenix.js client library, passing the API key as a join parameter:</p>
+<div class="code-block"><span class="cm">// content.js (JavaScript)</span>
+<span class="kw">const</span> socket = <span class="kw">new</span> <span class="fn">Phoenix.Socket</span>(<span class="str">"wss://speechwave.fly.dev/socket"</span>)
+socket.<span class="fn">connect</span>()
+<span class="kw">const</span> channel = socket.<span class="fn">channel</span>(<span class="str">`reactions/${slug}`</span>, { <span class="at">api_key:</span> apiKey })
+channel.<span class="fn">join</span>()
+  .<span class="fn">receive</span>(<span class="str">"ok"</span>, () =&gt; console.<span class="fn">log</span>(<span class="str">"connected"</span>))
+  .<span class="fn">receive</span>(<span class="str">"error"</span>, ({ reason }) =&gt; console.<span class="fn">error</span>(reason))</div>
+
+<h3>Fireworks Animation</h3>
+<p>When the crowd converges on a single emoji, a radial burst fires instead of individual floaters. The trigger condition is intentionally compound:</p>
+<div class="code-block"><span class="cm">// From lib/fireworks.js — pure function, tested with Jest</span>
+<span class="kw">function</span> <span class="fn">checkFireworksTrigger</span>(inFlight, emoji, opts) {
+  <span class="kw">const</span> count = inFlight[emoji] ?? <span class="num">0</span>
+  <span class="kw">const</span> total = Object.<span class="fn">values</span>(inFlight).<span class="fn">reduce</span>((a, b) =&gt; a + b, <span class="num">0</span>)
+  <span class="kw">return</span> count &gt;= opts.minCount &amp;&amp; (total &gt; <span class="num">0</span> &amp;&amp; count / total &gt;= opts.minPercent)
+}</div>
+
+<div class="collapsible">
+  <div class="collapsible-trigger">
+    <span class="collapsible-icon">&#x25B6;</span>
+    Why the compound trigger condition?
+  </div>
+  <div class="collapsible-body">
+    <p>The absolute count guard (<code>MIN_COUNT = 5</code>) prevents bursts with tiny audiences &mdash; a single person tapping rapidly shouldn&rsquo;t trigger fireworks. The percentage guard (<code>MIN_PERCENT = 0.4</code>) prevents bursts when the crowd is diverse &mdash; the emoji must be <em>dominant</em>, not just frequent. A global cooldown (<code>8000ms</code>) prevents back-to-back bursts.</p>
+  </div>
+</div>
+
+<h3>In-Flight Tracking</h3>
+<p><code>spawnEmoji()</code> increments a per-emoji counter (<code>inFlight["&#x2764;&#xFE0F;"]++</code>) when an element is created, and decrements it in the <code>animationend</code> listener. The 2.5s animation duration acts as a natural sliding window &mdash; <code>total_in_flight</code> reflects only the last ~2.5 seconds of reactions, making it a real-time proxy for current crowd engagement.</p>
+
+<h3>Slide Tracking</h3>
+<p>The extension detects slide changes using a <code>MutationObserver</code> watching for attribute changes on the Google Slides DOM. When the slide number changes, a <code>slide_changed</code> message is pushed to the Channel. The server broadcasts this to the <code>"slides:slug"</code> PubSub topic, which <code>TalkLive</code> is subscribed to &mdash; updating <code>current_slide</code> in assigns so the next reaction tap carries the right slide number.</p>
+
+<div class="collapsible">
+  <div class="collapsible-trigger">
+    <span class="collapsible-icon">&#x25B6;</span>
+    The adapter registry
+  </div>
+  <div class="collapsible-body">
+    <p>Different presentation tools expose the slide number differently. <code>adapters/index.js</code> picks the right adapter by URL pattern. The Google Slides adapter reads the slide number from a DOM input (<code>input[aria-label*="Slide"]</code>). This is brittle by nature &mdash; Google could change the DOM &mdash; but fixture-based Jest tests snapshot the selector so regressions are caught before they ship.</p>
+  </div>
+</div>
+
+<h3>Fullscreen Re-parenting</h3>
+<p>When Google Slides enters fullscreen mode, the browser creates a new stacking context for the fullscreen element. Any <code>position: fixed</code> overlays on <code>&lt;body&gt;</code> become invisible. The content script handles this by moving the overlay <code>&lt;div&gt;</code> into the fullscreen element when <code>fullscreenchange</code> fires:</p>
+<div class="code-block">document.<span class="fn">addEventListener</span>(<span class="str">"fullscreenchange"</span>, () =&gt; {
+  <span class="kw">const</span> overlay = document.<span class="fn">getElementById</span>(<span class="str">"speechwave-overlay"</span>)
+  <span class="kw">if</span> (document.fullscreenElement) {
+    document.fullscreenElement.<span class="fn">appendChild</span>(overlay) <span class="cm">// move into fullscreen</span>
+  } <span class="kw">else</span> {
+    document.body.<span class="fn">appendChild</span>(overlay)              <span class="cm">// move back</span>
+  }
+})</div></div>
     </div>
     <div id="chapter-analytics" class="chapter">
       <div class="content"><!-- Task 11 fills this --></div>
