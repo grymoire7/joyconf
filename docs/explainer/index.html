@@ -382,7 +382,86 @@ code {
 
   <main class="main">
     <div id="chapter-overview" class="chapter active">
-      <div class="content"><!-- Task 2 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 1</div>
+<h1 class="chapter-title">Overview</h1>
+<p class="chapter-lead">Speechwave lets conference attendees send live emoji reactions that float up on the speaker's screen in real time. Three actors, two WebSocket connections, one PubSub bus tying it all together.</p>
+
+<h3>The Three Actors</h3>
+<div class="arch-diagram">
+  <div class="arch-node">
+    <span class="arch-node-emoji">📱</span>
+    <span class="arch-node-label">Attendee</span>
+    <span class="arch-node-sub">opens /t/:slug, taps emoji</span>
+  </div>
+  <div class="arch-arrow">
+    <span class="arch-arrow-line">→</span>
+    <span class="arch-arrow-label">LiveView WebSocket /live</span>
+  </div>
+  <div class="arch-node highlight">
+    <span class="arch-node-emoji">⚡</span>
+    <span class="arch-node-label">Phoenix Server</span>
+    <span class="arch-node-sub">rate-limits &amp; broadcasts</span>
+  </div>
+  <div class="arch-arrow">
+    <span class="arch-arrow-line">→</span>
+    <span class="arch-arrow-label">Channel WebSocket /socket</span>
+  </div>
+  <div class="arch-node">
+    <span class="arch-node-emoji">💻</span>
+    <span class="arch-node-label">Speaker</span>
+    <span class="arch-node-sub">Chrome extension on laptop</span>
+  </div>
+</div>
+
+<p>Two different WebSocket connections are in play:</p>
+<table class="schema-table">
+  <thead><tr><th>Connection</th><th>Path</th><th>Protocol</th><th>Used by</th></tr></thead>
+  <tbody>
+    <tr><td class="field">/live</td><td class="type">Phoenix LiveView</td><td>Managed automatically</td><td>Attendee browser</td></tr>
+    <tr><td class="field">/socket</td><td class="type">Phoenix Channel</td><td>Manual connect + join</td><td>Chrome extension</td></tr>
+  </tbody>
+</table>
+
+<h3>Project File Tree</h3>
+<div class="code-block"><span class="cm">lib/
+  speechwave/
+    application.ex              OTP supervision tree
+    accounts.ex                 User auth context (magic links, OAuth, API keys)
+    accounts/
+      user.ex                   User schema (email, plan, api_key, is_admin)
+      user_identity.ex          OAuth identity (provider + uid, one per account)
+      user_token.ex             Session + magic-link tokens
+      scope.ex                  Scope struct wrapping authenticated user
+      user_notifier.ex          Email delivery (magic link, email change)
+    talks.ex                    Talk + session context (CRUD, lifecycle)
+    talks/talk.ex               Talk schema (belongs_to user)
+    talks/talk_session.ex       TalkSession schema
+    reactions.ex                Reactions context (create, totals query)
+    reactions/reaction.ex       Reaction schema
+    rate_limiter.ex             GenServer + ETS rate limiting
+    plans.ex                    Tier limits (free / pro / org)
+    qr_code.ex                  QR code generation
+    db_backup.ex                Hourly SQLite backup to S3 (GenServer)
+  speechwave_web/
+    live/
+      talk_live.ex              Attendee reaction page (LiveView)
+      dashboard_live.ex         Speaker dashboard: talks, sessions, QR codes
+      session_analytics_live.ex Per-session analytics
+      user_live/login.ex        Magic link + OAuth login page
+      user_live/settings.ex     Email change + connected accounts
+    channels/
+      user_socket.ex            Socket definition (API-key auth)
+      reaction_channel.ex       Channel: reactions, sessions, slide_changed
+    controllers/
+      user_session_controller.ex Magic link click + OAuth callback
+    presence.ex                 Tracks attendees per talk (plan enforcement)
+    router.ex                   Route definitions
+    user_auth.ex                Auth plugs + LiveView on_mount hooks</span></div>
+
+<div class="callout">
+  <div class="callout-label">What changed from older versions?</div>
+  <p>Admin HTTP Basic Auth is gone. Talks are now owned by registered users (not a global admin). Authentication is passwordless — magic links and OAuth only. Three new systems: <code>Plans</code> for tier enforcement, <code>Presence</code> for participant counting, and <code>DbBackup</code> for hourly SQLite snapshots.</p>
+</div></div>
     </div>
     <div id="chapter-data-model" class="chapter">
       <div class="content"><!-- Task 3 fills this --></div>
