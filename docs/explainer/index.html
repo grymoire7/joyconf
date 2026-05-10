@@ -636,7 +636,112 @@ code {
 <p><code>Accounts.sudo_mode?/2</code> returns <code>true</code> if the user authenticated within the last 20 minutes. Used to gate sensitive actions (e.g. changing email) without requiring a re-login on every visit. The <code>authenticated_at</code> field on the User struct is a virtual field set when the session token is verified.</p></div>
     </div>
     <div id="chapter-emoji-journey" class="chapter">
-      <div class="content"><!-- Task 5 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 4</div>
+<h1 class="chapter-title">The Emoji Journey</h1>
+<p class="chapter-lead">What happens from the moment an attendee taps a button to the moment a floating emoji appears on the speaker's slides. Six steps across the WebSocket, rate limiter, database, PubSub, and two different subscriber types.</p>
+
+<div class="stepper">
+  <div class="stepper-header">
+    <span class="stepper-title">Tap → floating emoji — step by step</span>
+    <div class="stepper-dots"></div>
+  </div>
+  <div class="stepper-body">
+    <div class="stepper-step">
+      <div class="step-title">Step 1 — Attendee taps a button</div>
+      <div class="step-diagram">
+        <div class="node active">📱 phx-click="react"</div>
+        <div class="arrow">→</div>
+        <div class="node">LiveView WebSocket</div>
+        <div class="arrow">→</div>
+        <div class="node">TalkLive.handle_event</div>
+      </div>
+      <div class="step-desc">The template uses <code>phx-click="react"</code> and <code>phx-value-emoji="🔥"</code>. Phoenix LiveView sends this over the existing WebSocket to <code>handle_event/3</code> on the server. No HTTP request is made — it's a push over the already-open connection.</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-title">Step 2 — Rate limiter check</div>
+      <div class="step-diagram">
+        <div class="node dim">📱 Tap</div>
+        <div class="arrow">→</div>
+        <div class="node active">RateLimiter.allow?(socket.id)</div>
+        <div class="arrow">→</div>
+        <div class="node">ETS table lookup</div>
+      </div>
+      <div class="step-desc"><code>RateLimiter.allow?/1</code> checks an ETS table keyed by the LiveView socket ID (one bucket per browser tab). If less than 3 seconds have elapsed since the last allowed tap, it returns <code>false</code> and the event is silently dropped. If allowed, the current timestamp is written to ETS.</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-title">Step 3 — Persist to database (if session active)</div>
+      <div class="step-diagram">
+        <div class="node dim">📱 Tap</div>
+        <div class="arrow">→</div>
+        <div class="node dim">Rate limit ✓</div>
+        <div class="arrow">→</div>
+        <div class="node active">Reactions.create_reaction/3</div>
+        <div class="arrow">→</div>
+        <div class="node">reactions table</div>
+      </div>
+      <div class="step-desc">If <code>Talks.get_active_session/1</code> returns a session, the reaction is inserted with <code>emoji</code>, the session ID, and <code>current_slide</code> (tracked in socket assigns, updated when <code>slide_changed</code> arrives). If no session is active, the reaction still broadcasts — it just isn't stored.</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-title">Step 4 — Broadcast via PubSub</div>
+      <div class="step-diagram">
+        <div class="node dim">📱 Tap</div>
+        <div class="arrow">→</div>
+        <div class="node active">Endpoint.broadcast! "reactions:slug"</div>
+        <div class="arrow">→</div>
+        <div class="node">Phoenix.PubSub</div>
+        <div class="arrow">→</div>
+        <div class="node">all subscribers</div>
+      </div>
+      <div class="step-desc"><code>Endpoint.broadcast!/3</code> delivers to everyone subscribed to <code>"reactions:my-talk"</code> regardless of their type. Two things are subscribed: the LiveView process itself (subscribed on mount) and any ReactionChannel processes (subscribed on extension join). Neither knows the other exists.</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-title">Step 5 — Back to the attendee's browser</div>
+      <div class="step-diagram">
+        <div class="node dim">PubSub</div>
+        <div class="arrow">→</div>
+        <div class="node active">TalkLive.handle_info</div>
+        <div class="arrow">→</div>
+        <div class="node">push_event "new_reaction"</div>
+        <div class="arrow">→</div>
+        <div class="node">EmojiStream JS hook</div>
+      </div>
+      <div class="step-desc"><code>handle_info/2</code> receives the broadcast and calls <code>push_event/3</code> to deliver a client-side event over the LiveView socket. The <code>EmojiStream</code> hook picks it up via <code>this.handleEvent("new_reaction", …)</code> and animates a floating emoji in the browser.</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-title">Step 6 — To the speaker's Chrome extension</div>
+      <div class="step-diagram">
+        <div class="node dim">PubSub</div>
+        <div class="arrow">→</div>
+        <div class="node active">ReactionChannel</div>
+        <div class="arrow">→</div>
+        <div class="node">Channel WebSocket push</div>
+        <div class="arrow">→</div>
+        <div class="node">spawnEmoji()</div>
+      </div>
+      <div class="step-desc"><code>ReactionChannel</code> also receives the PubSub broadcast and pushes it directly to the extension's WebSocket. The content script receives it and calls <code>spawnEmoji()</code>, which creates a floating <code>&lt;span&gt;</code> over the slide presentation in the speaker's browser.</div>
+    </div>
+  </div>
+  <div class="stepper-footer">
+    <span class="step-counter"></span>
+    <div class="step-btns">
+      <button type="button" class="btn-step btn-prev">← Prev</button>
+      <button type="button" class="btn-step btn-next">Next →</button>
+    </div>
+  </div>
+</div>
+
+<h3>Rate Limiting — Why ETS?</h3>
+<div class="code-block"><span class="kw">def</span> <span class="fn">allow?</span>(session_id) <span class="kw">do</span>
+  now = System.monotonic_time(<span class="at">:millisecond</span>)
+  <span class="kw">case</span> :ets.lookup(<span class="at">@table</span>, session_id) <span class="kw">do</span>
+    [{^session_id, last_at}] <span class="kw">when</span> now - last_at &lt; <span class="at">@cooldown_ms</span> -&gt; <span class="kw">false</span>
+    _ -&gt; :ets.insert(<span class="at">@table</span>, {session_id, now}); <span class="kw">true</span>
+  <span class="kw">end</span>
+<span class="kw">end</span></div>
+<div class="callout">
+  <div class="callout-label">Why ETS and not the GenServer directly?</div>
+  <p>The <code>RateLimiter</code> GenServer owns the ETS table but the table is <code>:public</code> with <code>read_concurrency: true</code>. Any process calls <code>allow?/1</code> directly against ETS — no message passing through the GenServer. With hundreds of attendees tapping simultaneously, routing everything through one GenServer mailbox would become a bottleneck. ETS reads are lock-free concurrent operations.</p>
+</div></div>
     </div>
     <div id="chapter-websockets" class="chapter">
       <div class="content"><!-- Task 6 fills this --></div>
