@@ -344,6 +344,11 @@ code {
 .info-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; }
 .info-card-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 6px; }
 .info-card p { font-size: 12.5px; margin: 0; }
+
+/* ── Focus styles ── */
+.nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.btn-step:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.collapsible-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 </style>
 </head>
 <body>
@@ -475,8 +480,11 @@ function initSteppers() {
 // ── Collapsibles ────────────────────────────────────────────────────────────
 function initCollapsibles() {
   document.querySelectorAll('.collapsible').forEach(el => {
-    el.querySelector('.collapsible-trigger').addEventListener('click', () => {
+    const trigger = el.querySelector('.collapsible-trigger');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.addEventListener('click', () => {
       el.classList.toggle('open');
+      trigger.setAttribute('aria-expanded', String(el.classList.contains('open')));
     });
   });
 }
