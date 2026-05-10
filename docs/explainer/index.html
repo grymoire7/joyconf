@@ -1036,7 +1036,36 @@ channel.<span class="fn">join</span>()
 })</div></div>
     </div>
     <div id="chapter-analytics" class="chapter">
-      <div class="content"><!-- Task 11 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 10</div>
+<h1 class="chapter-title">Analytics</h1>
+<p class="chapter-lead">After a talk, the speaker reviews per-slide engagement at <code>/sessions/:id</code>. A comparison mode at <code>/sessions/:id/compare/:other_id</code> renders two sessions side by side &mdash; useful for comparing a practice run to the real thing.</p>
+
+<h3>The Aggregation Query</h3>
+<p><code>Reactions.slide_reaction_totals/1</code> groups all reactions in a session by <code>(slide_number, emoji)</code> and returns a count per pair.</p>
+<div class="code-block"><span class="kw">def</span> <span class="fn">slide_reaction_totals</span>(session_id) <span class="kw">do</span>
+  <span class="kw">from</span>(r <span class="kw">in</span> Reaction,
+    <span class="at">where:</span>    r.talk_session_id == ^session_id,
+    <span class="at">group_by:</span> [r.slide_number, r.emoji],
+    <span class="at">select:</span>   %{<span class="at">slide_number:</span> r.slide_number, <span class="at">emoji:</span> r.emoji, <span class="at">count:</span> count(r.id)},
+    <span class="at">order_by:</span> [<span class="at">asc:</span> r.slide_number]
+  ) |&gt; Repo.<span class="fn">all</span>()
+<span class="kw">end</span></div>
+
+<h3>Bar Charts Without a JS Library</h3>
+<p><code>SessionAnalyticsLive</code> groups the query results by <code>slide_number</code> into a map, then renders a bar chart for each slide using Tailwind CSS. Heights are computed as percentages of the slide&rsquo;s maximum count &mdash; no JS charting library required.</p>
+
+<div class="callout">
+  <div class="callout-label">Slide 0 = &ldquo;General&rdquo;</div>
+  <p>Reactions recorded before a session starts, or when no slide adapter could read the current slide, have <code>slide_number: 0</code>. The template renders these under a &ldquo;General&rdquo; label rather than &ldquo;Slide 0&rdquo;.</p>
+</div>
+
+<h3>Comparison Mode</h3>
+<p>At <code>/sessions/:id/compare/:other_id</code>, <code>SessionAnalyticsLive</code> loads both sessions and renders two charts side by side. The union of all slide numbers from both sessions is used &mdash; gaps are visible where one session had reactions on a slide the other didn&rsquo;t.</p>
+
+<h3>Route Placement</h3>
+<p>Analytics routes live inside the <code>:require_authenticated_user</code> live_session &mdash; a speaker must be logged in to view their session data.</p>
+<div class="code-block">live <span class="str">"/sessions/:id"</span>,                     SessionAnalyticsLive, <span class="at">:show</span>
+live <span class="str">"/sessions/:id/compare/:other_id"</span>,    SessionAnalyticsLive, <span class="at">:compare</span></div></div>
     </div>
   </main>
 </div>
