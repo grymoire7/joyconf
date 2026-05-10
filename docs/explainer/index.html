@@ -464,7 +464,67 @@ code {
 </div></div>
     </div>
     <div id="chapter-data-model" class="chapter">
-      <div class="content"><!-- Task 3 fills this --></div>
+      <div class="content"><div class="chapter-eyebrow">Chapter 2</div>
+<h1 class="chapter-title">Data Model</h1>
+<p class="chapter-lead">Five database tables. The slug on <code>talks</code> is the key that ties all three actors together — it appears in the URL, the PubSub topic, and the Channel topic.</p>
+
+<h3>users</h3>
+<p>One row per registered speaker. Created automatically on first login (magic link or OAuth).</p>
+<table class="schema-table">
+  <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td class="field">email</td><td class="type">:string</td><td>Lowercased, unique. The primary identity.</td></tr>
+    <tr><td class="field">plan</td><td class="type">:enum</td><td><code>:free</code> | <code>:pro</code> | <code>:org</code>. Defaults to <code>:free</code>. Drives limits in the Plans module.</td></tr>
+    <tr><td class="field">api_key</td><td class="type">:string</td><td>32-byte hex token. Auto-generated on insert. Used by the Chrome extension to authenticate on Channel join.</td></tr>
+    <tr><td class="field">is_admin</td><td class="type">:boolean</td><td>Staff flag. Defaults false. Not tied to route-level auth.</td></tr>
+    <tr><td class="field">authenticated_at</td><td class="type">:utc_datetime (virtual)</td><td>Set when a session token is verified. Used for sudo-mode checks (20-minute window).</td></tr>
+  </tbody>
+</table>
+
+<h3>user_identities</h3>
+<p>One row per OAuth provider account. A single user can have multiple identities (e.g. Google + GitHub).</p>
+<table class="schema-table">
+  <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td class="field">provider</td><td class="type">:string</td><td><code>"google"</code>, <code>"github"</code>, or <code>"microsoft"</code></td></tr>
+    <tr><td class="field">uid</td><td class="type">:string</td><td>The <code>sub</code> claim from the OAuth provider. Stable unique ID.</td></tr>
+    <tr><td class="field">user_id</td><td class="type">:integer</td><td>Foreign key → users. <code>unique_constraint([:provider, :uid])</code> prevents duplicate links.</td></tr>
+  </tbody>
+</table>
+
+<h3>talks</h3>
+<p>One row per presentation. A speaker creates talks in the dashboard; each gets a unique slug used in the audience URL.</p>
+<table class="schema-table">
+  <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td class="field">title</td><td class="type">:string</td><td>Human-readable name, e.g. "My Conference Talk"</td></tr>
+    <tr><td class="field">slug</td><td class="type">:string</td><td>URL-safe key, e.g. <code>"my-conference-talk"</code>. Auto-generated from title; unique across all talks.</td></tr>
+    <tr><td class="field">user_id</td><td class="type">:integer</td><td>Foreign key → users. All Talks queries that touch user data require a <code>Scope</code> struct and filter by this field.</td></tr>
+  </tbody>
+</table>
+
+<h3>talk_sessions</h3>
+<p>A recording window within a talk — the span of time during which reactions are persisted. Start/stop controlled by the speaker via the Chrome extension or dashboard.</p>
+<table class="schema-table">
+  <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td class="field">label</td><td class="type">:string</td><td>Auto-increments ("Session 1", "Session 2", …). Speaker can rename from the dashboard.</td></tr>
+    <tr><td class="field">started_at</td><td class="type">:utc_datetime</td><td>Set when <code>start_session/1</code> is called.</td></tr>
+    <tr><td class="field">ended_at</td><td class="type">:utc_datetime</td><td><code>nil</code> while active. <code>get_active_session/1</code> queries for <code>IS NULL</code>.</td></tr>
+    <tr><td class="field">talk_id</td><td class="type">:integer</td><td>Foreign key → talks.</td></tr>
+  </tbody>
+</table>
+
+<h3>reactions</h3>
+<p>One row per emoji tap. Only persisted when a session is active.</p>
+<table class="schema-table">
+  <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td class="field">emoji</td><td class="type">:string</td><td>One of the 9 emojis: ❤️ 😂 👏 🤯 🙋🏻 🎉 💩 😮 🎯</td></tr>
+    <tr><td class="field">slide_number</td><td class="type">:integer</td><td>Current slide when the tap happened. <code>0</code> means unknown (no adapter or pre-session). Analytics groups slide-0 reactions under "General".</td></tr>
+    <tr><td class="field">talk_session_id</td><td class="type">:integer</td><td>Foreign key → talk_sessions. Cascades delete when session is deleted.</td></tr>
+  </tbody>
+</table></div>
     </div>
     <div id="chapter-authentication" class="chapter">
       <div class="content"><!-- Task 4 fills this --></div>
