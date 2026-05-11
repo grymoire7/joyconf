@@ -116,6 +116,9 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Req
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+  config :speechwave, Speechwave.Mailer,
+    adapter: Swoosh.Adapters.Resend,
+    api_key: System.fetch_env!("RESEND_API_KEY")
 end
 
 # OAuth provider configuration
