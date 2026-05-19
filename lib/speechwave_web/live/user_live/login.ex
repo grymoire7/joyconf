@@ -56,31 +56,33 @@ defmodule SpeechwaveWeb.UserLive.Login do
             </.button>
           </.form>
 
-          <div class="divider text-sm">or continue with</div>
+          <%= if any_oauth_provider_configured?() do %>
+            <div class="divider text-sm">or continue with</div>
 
-          <div id="oauth-buttons" class="flex flex-col gap-3">
-            <.link
-              :if={oauth_provider_configured?(:google)}
-              href={~p"/auth/google"}
-              class="btn btn-outline w-full"
-            >
-              <.icon name="hero-globe-alt" class="size-5" /> Google
-            </.link>
-            <.link
-              :if={oauth_provider_configured?(:microsoft)}
-              href={~p"/auth/microsoft"}
-              class="btn btn-outline w-full"
-            >
-              <.icon name="hero-building-office" class="size-5" /> Microsoft
-            </.link>
-            <.link
-              :if={oauth_provider_configured?(:github)}
-              href={~p"/auth/github"}
-              class="btn btn-outline w-full"
-            >
-              <.icon name="hero-code-bracket" class="size-5" /> GitHub
-            </.link>
-          </div>
+            <div id="oauth-buttons" class="flex flex-col gap-3">
+              <.link
+                :if={oauth_provider_configured?(:google)}
+                href={~p"/auth/google"}
+                class="btn btn-outline w-full"
+              >
+                <.icon name="hero-globe-alt" class="size-5" /> Google
+              </.link>
+              <.link
+                :if={oauth_provider_configured?(:microsoft)}
+                href={~p"/auth/microsoft"}
+                class="btn btn-outline w-full"
+              >
+                <.icon name="hero-building-office" class="size-5" /> Microsoft
+              </.link>
+              <.link
+                :if={oauth_provider_configured?(:github)}
+                href={~p"/auth/github"}
+                class="btn btn-outline w-full"
+              >
+                <.icon name="hero-code-bracket" class="size-5" /> GitHub
+              </.link>
+            </div>
+          <% end %>
         <% end %>
       </div>
     </Layouts.app>
@@ -113,5 +115,9 @@ defmodule SpeechwaveWeb.UserLive.Login do
   defp oauth_provider_configured?(provider) do
     providers = Application.get_env(:speechwave, :oauth_providers, [])
     Keyword.has_key?(providers, provider) && providers[provider] != nil
+  end
+
+  defp any_oauth_provider_configured? do
+    Enum.any?([:google, :microsoft, :github], &oauth_provider_configured?/1)
   end
 end
