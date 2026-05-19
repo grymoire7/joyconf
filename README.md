@@ -6,12 +6,12 @@ presentation via a Chrome extension.
 
 ## How it works
 
-1. Speaker creates a talk in the admin panel → gets a QR code
+1. Speaker creates a talk in the dashboard → gets a QR code
 2. Attendees scan the QR code → land on `/t/<slug>` → tap emojis
 3. Reactions broadcast in real time via Phoenix PubSub
 4. Chrome extension connected to the same talk slug shows floating emoji overlay on Google Slides — when enough attendees send the same emoji at once, a fireworks burst animation plays
 5. Speaker starts a session from the extension (or via the channel) — reactions are persisted with a slide number
-6. After the talk, the admin analytics view shows per-slide reaction breakdowns; sessions from the same talk can be compared side-by-side
+6. After the talk, the analytics view shows per-slide reaction breakdowns; sessions from the same talk can be compared side-by-side
 
 For a full explainer on the technical implementation see [this explainer](docs/explainer.md).
 For the story of writing the project (the whys and the bugs), see [this blog post](https://tracyatteberry.com/posts/speechwave/).
@@ -41,9 +41,10 @@ mix setup        # installs deps, creates & migrates DB, builds assets
 mix phx.server   # starts the server at http://localhost:4000
 ```
 
-The admin panel is at `http://localhost:4000/admin`. Use HTTP Basic Auth with
-any username and password `devpassword` (the dev default set in
-`config/dev.exs`).
+Log in at `http://localhost:4000/users/log-in` via magic link (email sent to
+`/dev/mailbox`) or use the dev backdoor at `http://localhost:4000/dev/login`
+to authenticate instantly without email. The main dashboard is at
+`http://localhost:4000/dashboard`.
 
 ### Running tests
 
@@ -58,14 +59,15 @@ The Chrome extension lives in a separate repo ([speechwave-live/chrome-extension
 ### End-to-end test flow
 
 1. Start the server: `mix phx.server`
-2. Go to `http://localhost:4000/admin/talks/new`
-3. Enter a title (slug auto-generates from title), click **Create Talk**
-4. A QR code appears — note the slug (e.g. `my-talk`)
-5. Open `http://localhost:4000/t/my-talk` in another tab
-6. Tap an emoji — it should float up on the attendee page
-7. (Optional) Load the Chrome extension pointed at `my-talk` and open a Google Slides presentation. Connect the extension, then start the slideshow (click **Slideshow** or press F5 — it stays on the same tab and goes fullscreen). Open the extension popup — it shows the current slide number ("Slide 3") updating in real time, confirming the adapter is reading the DOM correctly. The slide number only appears once the slideshow is running; it shows "Slide —" in the editor view.
-8. (Optional) In the extension popup, click **Start Session** — reactions are now persisted with slide numbers
-9. After tapping some emojis, go to `http://localhost:4000/admin` → select the talk → click **Analytics** next to the session to see the per-slide breakdown
+2. Go to `http://localhost:4000/dev/login` and log in (or create a new user by entering any email)
+3. Go to `http://localhost:4000/dashboard` and create a new talk
+4. Enter a title (slug auto-generates from title), click **Create Talk**
+5. A QR code appears — note the slug (e.g. `my-talk`)
+6. Open `http://localhost:4000/t/my-talk` in another tab
+7. Tap an emoji — it should float up on the attendee page
+8. (Optional) Load the Chrome extension pointed at `my-talk` and open a Google Slides presentation. Connect the extension, then start the slideshow (click **Slideshow** or press F5 — it stays on the same tab and goes fullscreen). Open the extension popup — it shows the current slide number ("Slide 3") updating in real time, confirming the adapter is reading the DOM correctly. The slide number only appears once the slideshow is running; it shows "Slide —" in the editor view.
+9. (Optional) In the extension popup, click **Start Session** — reactions are now persisted with slide numbers
+10. After tapping some emojis, go to `http://localhost:4000/dashboard` → select the talk → click **Analytics** next to the session to see the per-slide breakdown
 
 ---
 
@@ -98,7 +100,27 @@ fly auth login
 fly launch --name speechwave --region iad --no-deploy
 fly secrets set SECRET_KEY_BASE=$(mix phx.gen.secret)
 fly secrets set ADMIN_PASSWORD=choose-a-strong-password
+fly secrets set RESEND_API_KEY=re_...
 fly deploy
+```
+
+### OAuth providers (optional)
+
+To enable Google, GitHub, and/or Microsoft sign-in, set the corresponding
+secrets before deploying. Any provider whose `CLIENT_ID` is absent is silently
+omitted from the login page.
+
+```bash
+# Google
+fly secrets set GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=...
+
+# GitHub
+fly secrets set GITHUB_CLIENT_ID=... GITHUB_CLIENT_SECRET=...
+
+# Microsoft
+fly secrets set MICROSOFT_CLIENT_ID=... MICROSOFT_CLIENT_SECRET=...
+# Optionally restrict to a single tenant (default is "common"):
+fly secrets set MICROSOFT_TENANT_ID=...
 ```
 
 ### Subsequent deploys
@@ -136,14 +158,20 @@ fly secrets list
 | `lib/speechwave/talks/talk_session.ex`               | TalkSession schema (label, started_at, ended_at)               |
 | `lib/speechwave/reactions.ex`                        | Context: create reactions, per-slide totals query              |
 | `lib/speechwave/reactions/reaction.ex`               | Reaction schema (emoji, slide_number, talk_session_id)         |
+| `lib/speechwave/accounts.ex`                         | Context: users, magic link tokens, OAuth identity upsert       |
+| `lib/speechwave/accounts/user.ex`                    | User schema (email, api_key, plan, is_admin)                   |
+| `lib/speechwave/accounts/user_identity.ex`           | OAuth identity link (provider + uid → user)                    |
 | `lib/speechwave/rate_limiter.ex`                     | ETS-backed GenServer: 1 reaction per session per 5s            |
 | `lib/speechwave/qr_code.ex`                          | Wraps `eqrcode` → base64 PNG data URI                          |
-| `lib/speechwave_web/live/admin_live.ex`              | Admin panel: talks, QR codes, sessions panel                   |
+| `lib/speechwave_web/live/dashboard_live.ex`          | Speaker dashboard: create talks, QR codes, sessions panel      |
 | `lib/speechwave_web/live/session_analytics_live.ex`  | Per-session analytics: slide breakdown + comparison mode       |
 | `lib/speechwave_web/live/talk_live.ex`               | Attendee page: emoji buttons, stamps reactions with slide      |
+| `lib/speechwave_web/live/user_live/login.ex`         | Magic link + OAuth login/signup page                           |
+| `lib/speechwave_web/live/user_live/settings.ex`      | User settings: connected OAuth accounts                        |
 | `lib/speechwave_web/channels/reaction_channel.ex`    | Channel: reactions, session start/stop, slide_changed          |
-| `lib/speechwave_web/plugs/admin_auth.ex`             | HTTP Basic Auth plug for `/admin` routes                       |
+| `lib/speechwave_web/controllers/user_session_controller.ex` | Magic link verification, OAuth initiation + callback    |
+| `lib/speechwave_web/controllers/dev_login_controller.ex`    | Dev-only login bypass (never compiled in prod)          |
+| `lib/speechwave_web/plugs/admin_auth.ex`             | HTTP Basic Auth plug for admin routes                          |
 | `assets/js/hooks/emoji_buttons.js`                | Client-side 5s cooldown UI                                     |
 | `assets/js/hooks/emoji_stream.js`                 | Floating emoji animation on `new_reaction` event               |
 | [speechwave-live/chrome-extension](https://github.com/speechwave-live/chrome-extension) | Chrome Manifest V3 extension (separate repo) |
-
