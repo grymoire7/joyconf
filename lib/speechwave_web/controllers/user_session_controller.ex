@@ -145,7 +145,10 @@ defmodule SpeechwaveWeb.UserSessionController do
     provider_atom = String.to_existing_atom(provider)
     base_config = Application.get_env(:speechwave, :oauth_providers, [])[provider_atom] || []
     redirect_uri = url(~p"/auth/#{provider}/callback")
-    Keyword.put(base_config, :redirect_uri, redirect_uri)
+
+    base_config
+    |> Keyword.put(:redirect_uri, redirect_uri)
+    |> Keyword.put(:http_adapter, Assent.HTTPAdapter.Req)
   end
 
   def delete(conn, _params) do
