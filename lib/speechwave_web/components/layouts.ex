@@ -35,12 +35,12 @@ defmodule SpeechwaveWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="fixed top-0 left-0 right-0 z-50 bg-canvas border-b border-hairline">
-      <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
-        <a href={~p"/"} class="flex items-center gap-2 text-ink font-semibold text-sm shrink-0">
-          <span class="text-base leading-none">🎤</span> Speechwave
-        </a>
-        <%= if @current_scope do %>
+    <%= if @current_scope do %>
+      <header class="fixed top-0 left-0 right-0 z-50 bg-canvas border-b border-hairline">
+        <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
+          <a href={~p"/"} class="flex items-center gap-2 text-ink font-semibold text-sm shrink-0">
+            <span class="text-base leading-none">🎤</span> Speechwave
+          </a>
           <div class="flex items-center gap-4 text-sm ml-auto">
             <a href={~p"/dashboard"} class="text-steel hover:text-ink transition-colors">Dashboard</a>
             <a href={~p"/users/settings"} class="text-steel hover:text-ink transition-colors">
@@ -55,16 +55,83 @@ defmodule SpeechwaveWeb.Layouts do
               Log out
             </.link>
           </div>
-        <% end %>
-      </div>
-    </header>
-    <main class="pt-14 px-4 py-8 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
-        {render_slot(@inner_block)}
-      </div>
-    </main>
+        </div>
+      </header>
+      <main class="pt-14 px-4 py-8 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl space-y-4">
+          {render_slot(@inner_block)}
+        </div>
+      </main>
+    <% else %>
+      <.public_nav current_scope={@current_scope} />
+      <main class="pt-16 px-4 py-8 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl space-y-4">
+          {render_slot(@inner_block)}
+        </div>
+      </main>
+    <% end %>
 
     <.flash_group flash={@flash} />
+    """
+  end
+
+  attr :current_scope, :map, default: nil
+
+  def public_nav(assigns) do
+    ~H"""
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-hairline">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+        <a
+          href="/"
+          class="flex items-center gap-2 text-ink font-semibold text-[15px] tracking-tight shrink-0"
+        >
+          <span class="text-xl leading-none">🎤</span> Speechwave
+        </a>
+        <nav class="flex items-center gap-1">
+          <a href={~p"/pricing"} class="px-3 py-2 text-sm text-steel hover:text-ink transition-colors">
+            Pricing
+          </a>
+          <%= if @current_scope do %>
+            <a
+              href={~p"/dashboard"}
+              class="px-3 py-2 text-sm text-steel hover:text-ink transition-colors"
+            >
+              Dashboard
+            </a>
+            <a
+              href={~p"/users/settings"}
+              class="hidden sm:block px-3 py-2 text-sm text-steel hover:text-ink transition-colors"
+            >
+              Settings
+            </a>
+            <span class="hidden md:inline text-xs text-muted px-2 truncate max-w-40">
+              {@current_scope.user.email}
+            </span>
+            <.link
+              href={~p"/users/log-out"}
+              method="delete"
+              class="ml-2 px-4 py-2 text-sm font-medium text-ink border border-hairline rounded-full hover:bg-surface transition-colors whitespace-nowrap"
+            >
+              Log out
+            </.link>
+          <% else %>
+            <a
+              href={~p"/users/log-in"}
+              class="hidden sm:block px-3 py-2 text-sm text-steel hover:text-ink transition-colors"
+            >
+              Log in
+            </a>
+            <a
+              href={~p"/users/log-in"}
+              class="ml-2 px-4 py-2 text-sm font-medium text-canvas bg-ink rounded-full hover:bg-charcoal transition-colors whitespace-nowrap"
+            >
+              <span class="hidden sm:inline">Get started free</span>
+              <span class="sm:hidden">Sign up</span>
+            </a>
+          <% end %>
+        </nav>
+      </div>
+    </header>
     """
   end
 
