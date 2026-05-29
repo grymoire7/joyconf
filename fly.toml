@@ -5,7 +5,7 @@ console_command = '/app/bin/speechwave remote'
 [build]
 
 [env]
-  PHX_HOST = 'speechwave.fly.dev'
+  PHX_HOST = 'speechwave.live'
   PORT = '8080'
   DATABASE_PATH = '/data/speechwave.db'
   POOL_SIZE = '2'
