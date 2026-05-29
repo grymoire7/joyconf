@@ -52,7 +52,7 @@ if config_env() == :prod do
          System.get_env("ADMIN_PASSWORD") ||
            raise("ADMIN_PASSWORD environment variable is missing")
 
-  host = System.get_env("PHX_HOST") || "example.com"
+  host = System.get_env("PHX_HOST") || "speechwave.live"
 
   config :speechwave, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
