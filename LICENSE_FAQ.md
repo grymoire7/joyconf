@@ -14,7 +14,7 @@ Here is what that means in plain language.
 
 You may not use Speechwave to build a product or service that competes with Speechwave
 or with any product that Tracy Atteberry provides using Speechwave. This includes
-hosted transcription/captioning services, live speech-to-text tools, or similar products.
+hosted audience participation services, live emoji-casting tools, or similar products.
 
 ## What about the hosted version at speechwave.live?
 
