@@ -112,6 +112,18 @@ defmodule Speechwave.Accounts do
   identity record. Returns {:error, :email_not_verified} if the provider
   did not verify the email.
   """
+  # Microsoft doesn't send email_verified; email comes from the optional "email" claim
+  # or falls back to preferred_username (which is the account's email for personal accounts).
+  def find_or_create_user_from_oauth("microsoft", %{"sub" => uid} = user_info) do
+    email = user_info["email"] || user_info["preferred_username"]
+
+    if is_nil(email) do
+      {:error, :email_not_verified}
+    else
+      Repo.transaction(fn -> oauth_upsert("microsoft", uid, email) end)
+    end
+  end
+
   def find_or_create_user_from_oauth(provider, %{"sub" => uid, "email" => email} = user_info) do
     # Reject if explicitly false OR absent — a missing field is not the same as verified.
     if user_info["email_verified"] != true do

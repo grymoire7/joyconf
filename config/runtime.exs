@@ -147,7 +147,8 @@ oauth_providers =
           client_id: client_id,
           client_secret: System.get_env("MICROSOFT_CLIENT_SECRET"),
           tenant_id: System.get_env("MICROSOFT_TENANT_ID", "common"),
-          strategy: Assent.Strategy.AzureAD
+          strategy: Assent.Strategy.AzureAD,
+          authorization_params: [response_mode: "query", scope: "openid profile email"]
         ]
       )
   ]
