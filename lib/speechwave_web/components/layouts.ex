@@ -69,9 +69,9 @@ defmodule SpeechwaveWeb.Layouts do
           {render_slot(@inner_block)}
         </div>
       </main>
-      <.public_footer />
     <% end %>
 
+    <.public_footer />
     <.flash_group flash={@flash} />
     """
   end
