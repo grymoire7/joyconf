@@ -44,28 +44,36 @@ defmodule SpeechwaveWeb.UserSessionController do
     session_params = get_session(conn, :assent_session_params)
     config = assent_config(provider, conn)
 
-    result =
-      config &&
-        config
-        |> Keyword.put(:session_params, session_params)
-        |> config[:strategy].callback(params)
+    if is_nil(session_params) do
+      conn
+      |> put_flash(:error, "Your login session expired. Please try again.")
+      |> redirect(to: ~p"/users/log-in")
+    else
+      result =
+        config &&
+          config
+          |> Keyword.put(:session_params, session_params)
+          |> config[:strategy].callback(params)
 
-    case result do
-      {:ok, %{user: user_info}} ->
-        context = get_session(conn, :oauth_context)
-        current_user = conn.assigns.current_scope && conn.assigns.current_scope.user
-
-        if context == "connect" && current_user do
-          handle_oauth_connect(conn, provider, user_info, current_user)
-        else
-          handle_oauth_login(conn, provider, user_info)
-        end
-
-      _ ->
-        conn
-        |> put_flash(:error, "Authentication failed. Please try again.")
-        |> redirect(to: ~p"/users/log-in")
+      handle_oauth_result(conn, provider, result)
     end
+  end
+
+  defp handle_oauth_result(conn, provider, {:ok, %{user: user_info}}) do
+    context = get_session(conn, :oauth_context)
+    current_user = conn.assigns.current_scope && conn.assigns.current_scope.user
+
+    if context == "connect" && current_user do
+      handle_oauth_connect(conn, provider, user_info, current_user)
+    else
+      handle_oauth_login(conn, provider, user_info)
+    end
+  end
+
+  defp handle_oauth_result(conn, _provider, _error) do
+    conn
+    |> put_flash(:error, "Authentication failed. Please try again.")
+    |> redirect(to: ~p"/users/log-in")
   end
 
   defp handle_oauth_login(conn, provider, user_info) do
