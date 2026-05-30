@@ -34,12 +34,13 @@
         <ul class="space-y-3">
           <%= for feature <- [
             "Up to 50 participants per talk",
-            "10 full sessions per month",
+            "10 full sessions per month†",
             "Live emoji reactions",
             "Session analytics",
             "QR code sharing",
             "Fireworks mode",
-            "Google Slides support"
+            "Browswer extension",
+            "Google Slides analytics support"
           ] do %>
             <li class="flex items-center gap-2.5 text-sm text-ink">
               <.icon name="hero-check" class="size-4 text-mint shrink-0" />
@@ -75,7 +76,9 @@
           <%= for feature <- [
             "Everything in Free",
             "Unlimited participants",
-            "Unlimited sessions"
+            "Unlimited sessions",
+            "PowerPoint plugin",
+            "Keynote plugin"
           ] do %>
             <li class="flex items-center gap-2.5 text-sm text-muted">
               <.icon name="hero-check" class="size-4 text-mint-soft shrink-0" />
@@ -96,7 +99,7 @@
               —
             </span>
           </div>
-          <p class="text-sm text-muted">Custom pricing.</p>
+          <p class="text-sm text-muted">Launches after Pro.</p>
         </div>
         <button
           disabled
@@ -108,6 +111,8 @@
           <%= for feature <- [
             "Everything in Pro",
             "Priority support",
+            "Team pricing",
+            "Conference pricing",
             "Custom integrations"
           ] do %>
             <li class="flex items-center gap-2.5 text-sm text-muted">
@@ -120,7 +125,7 @@
     </div>
 
     <p class="text-center text-xs text-muted mt-10">
-      A "full session" is a session lasting longer than 10 minutes.
+      †A "full session" is a session lasting longer than 10 minutes.
     </p>
   </div>
 </div>
